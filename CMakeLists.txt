@@ -3,4 +3,4 @@ project(SimpleSatSolver)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(SimpleSatSolver main.cpp)
+add_executable(SimpleSatSolver main.cc src/solver.cc src/solver.h src/types.h)
