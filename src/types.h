@@ -18,14 +18,14 @@ struct Lit {
 };
 
 // TODO
-Lit operator ~(Lit p) { return p; }
-bool Sign(Lit p) { return true; }
-int GetVar(Lit p) { return p.x; } // is var in the paper
-int Index(Lit p) { return p.x; }
+inline Lit operator ~(Lit p) { return p; }
+inline bool Sign(Lit p) { return true; }
+inline int GetVar(Lit p) { return p.x; } // is var in the paper
+inline int Index(Lit p) { return p.x; }
 
 enum class LBool { kUnknown, kTrue, kFalse};
 
-LBool operator ~(LBool x) {
+inline LBool operator ~(LBool x) {
   switch (x) {
     case LBool::kUnknown:
       return LBool::kUnknown;
