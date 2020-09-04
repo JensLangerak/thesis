@@ -19,4 +19,13 @@ void Constr::Undo(Solver *s, Lit p) {
 void Constr::CalcReason(Solver *s, Lit p, Vec<Lit> out_reason) {
 
 }
+Constr::~Constr() {
+
+}
+void Constr::PrintConstraint() {
+
+}
+void Constr::PrintFilledConstraint(const Vec<LBool> &vars) {
+
+}
 }

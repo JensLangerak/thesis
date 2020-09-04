@@ -11,11 +11,15 @@
 namespace simple_sat_solver {
 class Solver;
 class Constr {
+ public:
+  virtual ~Constr();
   virtual void Remove(Solver* s);
   virtual bool Propagate(Solver* s, Lit p);
   virtual bool Simplify(Solver* s);
   virtual void Undo(Solver* s, Lit p);
   virtual void CalcReason(Solver* s, Lit p, Vec<Lit> out_reason);
+  virtual void PrintConstraint();
+  virtual void PrintFilledConstraint(const Vec<LBool> &vars);
 };
 }
 

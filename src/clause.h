@@ -12,6 +12,7 @@ class Clause : public Constr {
  public:
 //static bool NewClause(Solver &S, Vec<Lit> ps, bool learnt, Clause &out_clause);
   Clause(Vec<Lit> ps, bool learnt);
+  ~Clause() override;
 
   bool Locked(Solver* s);
   void Remove(Solver* s) override;
@@ -23,6 +24,9 @@ class Clause : public Constr {
   void Undo(Solver* s, Lit p) override;
 
   void CalcReason(Solver* S, Lit p, Vec<Lit> out_reason) override;
+  void PrintConstraint() override;
+  void PrintFilledConstraint(const Vec<LBool> &vars) override;
+
 
  private:
   bool learnt_;

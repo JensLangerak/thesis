@@ -15,14 +15,20 @@ namespace simple_sat_solver {
 class Solver {
  public:
   Solver();
+  ~Solver();
   Var NewVar();
   bool AddClause(Vec<Lit> literals);
   bool SimplifyDb();
   bool Solve(Vec<Lit> assumptions);
   inline Vec<bool> GetModel() { return model_; };
 
+  void PrintProblem();
+  void PrintAssinments();
+  void PrintFilledProblem();
  private:
   Vec<bool> model_; //TODO not sure if needed
+  Vec<Constr*> constraints_;
+  Vec<LBool> varAssignments_;
 };
 }
 
