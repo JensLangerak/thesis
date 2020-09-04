@@ -10,16 +10,19 @@ namespace simple_sat_solver {
 class Solver;
 class Clause : public Constr {
  public:
-  static bool NewClause(Solver S, Vec<Lit> ps, bool learnt, Clause out_clause);
+//static bool NewClause(Solver &S, Vec<Lit> ps, bool learnt, Clause &out_clause);
+  static Clause NewClause(Solver &S, Vec<Lit> ps, bool learnt); //TODO not sure why the other syntax is needed, for now use this
 
   bool Locked(Solver* s);
-  void Remove(Solver* s);
+  void Remove(Solver* s) override;
 
-  bool Simplify(Solver* S);
+  bool Simplify(Solver* S) override;
 
-  bool Propagate(Solver* S, Lit p);
+  bool Propagate(Solver* S, Lit p) override;
 
-  void CalcReason(Solver* S, Lit p, Vec<Lit> out_reason);
+  void Undo(Solver* s, Lit p) override;
+
+  void CalcReason(Solver* S, Lit p, Vec<Lit> out_reason) override;
 
  private:
   Clause();

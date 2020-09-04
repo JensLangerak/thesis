@@ -9,12 +9,14 @@
 #include <queue>
 // TODO currently it are mainly placeholders for the actual types.
 namespace simple_sat_solver {
+class Constr;
 typedef int Var; // TODO not sure if this is the same
 template<typename T> using Vec = std::vector<T>;
 template<typename T> using Queue = std::queue<T>;
 
 struct Lit {
   Var x;
+  Vec<Constr*> watchers_;
 };
 
 // TODO

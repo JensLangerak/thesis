@@ -8,7 +8,8 @@
 #include "types.h"
 namespace simple_sat_solver {
 class VarOrder {
-  VarOrder(Vec<LBool> ref_to_assigns, Vec<double> ref_to_activity);
+ public:
+  VarOrder(Vec<LBool> &ref_to_assigns, Vec<double> &ref_to_activity);
 
   void NewVar();
   void Update(Var x);

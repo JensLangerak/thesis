@@ -19,7 +19,7 @@ class Solver {
   bool AddClause(Vec<Lit> literals);
   bool SimplifyDb();
   bool Solve(Vec<Lit> assumptions);
-  Vec<bool> Model();
+  inline Vec<bool> GetModel() { return model_; };
 
  private:
   inline int NVars() { return assigns_.size(); }
@@ -55,6 +55,7 @@ class Solver {
   Vec<int> level_;
   int root_level_;
 
+  Vec<bool> model_; //TODO not sure if needed
 };
 }
 
