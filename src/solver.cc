@@ -85,6 +85,7 @@ bool Solver::SetLitTrue(Lit lit) {
   if (varAssignments_[x] == LBool::kUnknown) {
     varAssignments_[x] = value;
     propagationQueue_.push(~lit);
+    learnt_.push(~lit);
   } else if (varAssignments_[x] != value) {
     return false;
   }
@@ -105,10 +106,19 @@ const LBool Solver::GetLitValue(Lit l) {
   LBool var = varAssignments_[l.x];
   return l.complement ? ~var : var;
 }
+
+void Solver::UndoDecisions(int level) {
+  while (learnt_.size() > level) {
+    Lit l = learnt_.top();
+    learnt_.pop();
+    varAssignments_[l.x] = LBool::kUnknown;
+  }
+}
 bool Solver::Backtrack() {
   while ((!assumptions_.empty()) && assumptions_.top().complement) {
-    std::cout << "pop: " << assumptions_.top().x << std::endl;
-    varAssignments_[assumptions_.top().x] = LBool::kUnknown;
+    //std::cout << "pop: " << assumptions_.top().x << std::endl;
+    UndoDecisions(decisionLevels_.top());
+    decisionLevels_.pop();
     assumptions_.pop();
   }
   if (assumptions_.empty())
@@ -116,17 +126,19 @@ bool Solver::Backtrack() {
   //TODO
   Lit assume = assumptions_.top();
   assumptions_.pop();
-  varAssignments_[assume.x] = LBool::kUnknown;
+  UndoDecisions(decisionLevels_.top());
+  decisionLevels_.pop();
+  //varAssignments_[assume.x] = LBool::kUnknown;
   assume.complement = !assume.complement;
   Assume(assume);
 
   return true;
 }
 void Solver::Assume(Lit lit) {
-  std::cout << "Assume: " << lit.x << (lit.complement ? "F" : "T") << std::endl;
+  //std::cout << "Assume: " << lit.x << (lit.complement ? "F" : "T") << std::endl;
+  decisionLevels_.push(learnt_.size());
   assumptions_.push(lit);
   SetLitTrue(lit);
-
 }
 bool Solver::AllAssigned() {
   for (LBool b : varAssignments_) {

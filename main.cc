@@ -4,18 +4,18 @@
 
 
 int testDir() {
-  std::string path = "/home/jens/Downloads/uf20-91";
+  std::string path = "/home/jens/Downloads/uuf50-218/UUF50.218.1000";
   int solved = 0;
   int total = 0;
   for (const auto & entry : std::filesystem::directory_iterator(path)) {
     ++total;
-    //std::cout<<"Solving " << entry.path() << std::endl;
+    std::cout<<"Solving " << entry.path() << std::endl;
     simple_sat_solver::Solver *s = simple_sat_solver::Parser::Dimacs(entry.path());
     if (s->Solve()) {
       //std::cout << "Solved" <<std::endl;
       ++solved;
     } else {
-      std::cout << "Wrong result for: " << entry.path() << std::endl;
+      std::cout << "Unsolved: " << entry.path() << std::endl;
     }
     delete s;
   }
@@ -34,12 +34,13 @@ int testFile(std::string file) {
     std::cout << std::endl << std::endl;
     s->PrintFilledProblem();
   } else {
+    s->PrintAssinments();
     std::cout << "Cannot be solved" << std::endl;
   }
   return 0;
 }
 int main() {
-  testFile("/home/jens/Downloads/uf20-91/uf20-0799.cnf");
-  //testDir();
+  //testFile("/home/jens/Downloads/uf20-91/uf20-0716.cnf");
+  testDir();
   return 0;
 }

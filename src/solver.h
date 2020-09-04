@@ -38,10 +38,14 @@ class Solver {
   Vec<LBool> varAssignments_;
   Queue<Lit> propagationQueue_;
 
+
   std::stack<Lit> assumptions_;
+  std::stack<Lit> learnt_;
+  std::stack<int> decisionLevels_;
   bool Backtrack();
   void Assume(Lit lit);
   bool AllAssigned();
+  void UndoDecisions(int level);
 };
 }
 
