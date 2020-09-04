@@ -22,10 +22,10 @@ void Constr::CalcReason(Solver *s, Lit p, Vec<Lit> out_reason) {
 Constr::~Constr() {
 
 }
-void Constr::PrintConstraint() {
+const void Constr::PrintConstraint() {
 
 }
-void Constr::PrintFilledConstraint(const Vec<LBool> &vars) {
+const void Constr::PrintFilledConstraint(const Vec<LBool> &vars) {
 
 }
 }

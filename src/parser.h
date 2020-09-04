@@ -11,6 +11,7 @@ namespace simple_sat_solver {
 class Parser {
  public:
   static Solver *ReadFile(const std::string path);
+  static Solver *Dimacs(const std::string path);
 };
 }
 #endif //SIMPLESATSOLVER_SRC_PARSER_H_

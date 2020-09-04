@@ -18,8 +18,8 @@ class Constr {
   virtual bool Simplify(Solver* s);
   virtual void Undo(Solver* s, Lit p);
   virtual void CalcReason(Solver* s, Lit p, Vec<Lit> out_reason);
-  virtual void PrintConstraint();
-  virtual void PrintFilledConstraint(const Vec<LBool> &vars);
+  virtual const void PrintConstraint();
+  virtual const void PrintFilledConstraint(const Vec<LBool> &vars);
 };
 }
 
