@@ -22,39 +22,6 @@ class Solver {
   inline Vec<bool> GetModel() { return model_; };
 
  private:
-  inline int NVars() { return assigns_.size(); }
-  inline int NAssigns() { return trail_.size(); }
-  inline int NConstraints() { return constrs_.size(); }
-  inline int NLearnts() { return learnts_.size(); }
-  inline LBool Value(Var x) { return assigns_[x]; }
-  inline LBool value(Lit p) { return Sign(p) ? ~assigns_[GetVar(p)] : assigns_[GetVar(p)]; }
-  inline int DecisionLevel() { return trail_lim_.size(); }
-  // Internal state
-  // Constraint database
-  Vec<Constr> constrs_;
-  Vec<Clause> learnts_;
-  double cla_inc_;
-  double cla_decay_;
-
-  // Variable order
-  Vec<double> activity_;
-  double var_inc_;
-  double var_decay_;
-  VarOrder order_;
-
-  // Propagation
-  Vec<Vec<Constr>> watches_;
-  Vec<Vec<Constr>> undos_;
-  Queue<Lit> prop_q_;
-
-  // Assignments
-  Vec<LBool> assigns_;
-  Vec<Lit> trail_;
-  Vec<int> trail_lim_;
-  Vec<Constr> reason_;
-  Vec<int> level_;
-  int root_level_;
-
   Vec<bool> model_; //TODO not sure if needed
 };
 }

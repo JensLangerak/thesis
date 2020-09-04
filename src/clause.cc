@@ -4,12 +4,6 @@
 
 #include "clause.h"
 namespace simple_sat_solver {
-Clause Clause::NewClause(simple_sat_solver::Solver &S,
-                                                               simple_sat_solver::Vec<simple_sat_solver::Lit> ps,
-                                                               bool learnt) {
-  // TODO
-  return Clause();
-}
 bool Clause::Locked(simple_sat_solver::Solver *s) {
   return false; //TODO
 }
@@ -27,10 +21,10 @@ void Clause::CalcReason(simple_sat_solver::Solver *S,
                                            simple_sat_solver::Vec<simple_sat_solver::Lit> out_reason) {
 //TODO
 }
-Clause::Clause() {
-//TODO
-}
 void Clause::Undo(Solver *s, Lit p) {
 //TODO
+}
+Clause::Clause(Vec<Lit> ps, bool learnt) {
+
 }
 }

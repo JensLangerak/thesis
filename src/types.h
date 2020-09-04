@@ -10,20 +10,10 @@
 // TODO currently it are mainly placeholders for the actual types.
 namespace simple_sat_solver {
 class Constr;
-typedef int Var; // TODO not sure if this is the same
+typedef int Var;
 template<typename T> using Vec = std::vector<T>;
 template<typename T> using Queue = std::queue<T>;
 
-struct Lit {
-  Var x;
-  Vec<Constr*> watchers_;
-};
-
-// TODO
-inline Lit operator ~(Lit p) { return p; }
-inline bool Sign(Lit p) { return true; }
-inline int GetVar(Lit p) { return p.x; } // is var in the paper
-inline int Index(Lit p) { return p.x; }
 
 enum class LBool { kUnknown, kTrue, kFalse};
 
@@ -38,5 +28,15 @@ inline LBool operator ~(LBool x) {
   }
   return LBool::kUnknown;
 }
+struct Lit {
+  Var x;
+  bool complement;
+};
+
+// TODO
+inline Lit operator ~(Lit p) { Lit q; q.x = p.x; q.complement = !p.complement; return q;}
+inline bool Sign(Lit p) { return p.complement; }
+inline int GetVar(Lit p) { return p.x; } // is var in the paper
+inline int Index(Lit p) { return p.x; }
 }
 #endif //SIMPLESATSOLVER_SRC_TYPES_H_

@@ -11,7 +11,7 @@ class Solver;
 class Clause : public Constr {
  public:
 //static bool NewClause(Solver &S, Vec<Lit> ps, bool learnt, Clause &out_clause);
-  static Clause NewClause(Solver &S, Vec<Lit> ps, bool learnt); //TODO not sure why the other syntax is needed, for now use this
+  Clause(Vec<Lit> ps, bool learnt);
 
   bool Locked(Solver* s);
   void Remove(Solver* s) override;
@@ -25,10 +25,7 @@ class Clause : public Constr {
   void CalcReason(Solver* S, Lit p, Vec<Lit> out_reason) override;
 
  private:
-  Clause();
-
   bool learnt_;
-  float activity_;
   Vec<Lit> lits_;
 };
 }
