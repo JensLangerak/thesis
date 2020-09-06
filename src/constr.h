@@ -17,7 +17,8 @@ class Constr {
   virtual bool Propagate(Solver* s, Lit p);
   virtual bool Simplify(Solver* s);
   virtual void Undo(Solver* s, Lit p);
-  virtual void CalcReason(Solver* s, Lit p, Vec<Lit> out_reason);
+  virtual Vec<Lit> CalcReason(Lit p);
+  virtual Vec<Lit> CalcReason();
   virtual const void PrintConstraint();
   virtual const void PrintFilledConstraint(const Vec<LBool> &vars);
 };

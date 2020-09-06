@@ -12,6 +12,8 @@ Solver::Solver() {
 
 Var Solver::NewVar() {
   varAssignments_.push_back(LBool::kUnknown);
+  reason_.push_back(nullptr);
+  level_.push_back(-1);
   return varAssignments_.size() - 1;
 }
 bool Solver::AddClause(const Vec<Lit> &literals) {
@@ -59,10 +61,27 @@ bool Solver::Solve() {
   while (!stop) {
     if (!Propagate()) {
       //TODO conflict
-      if (assumptions_.empty())
+      if (decisionLevels_.empty())
         return false;
-      if (!Backtrack())
+      Vec<Lit> c = Analyze(conflictReason_);
+      Clause *clause = new Clause(c, true);
+      int backtrackLevel = -1;
+      Lit unit;
+      for(Lit l : c) {
+        int level = level_[l.x];
+        if (level != decisionLevels_.top()) {
+          backtrackLevel = std::max(backtrackLevel, level);
+        } else {
+          unit = l;
+        }
+      }
+      // TODO backtrack
+      // Find if/how conflict is unit append to propagate
+
+      if (!Backtrack(backtrackLevel))
         return false;
+      constraints_.push_back(clause);
+      SetLitTrue(unit, clause);
     } else {
       stop = true;
       for (int i = 0; i < varAssignments_.size(); i++) {
@@ -79,13 +98,15 @@ bool Solver::Solve() {
   }
     return true;
 }
-bool Solver::SetLitTrue(Lit lit) {
+bool Solver::SetLitTrue(Lit lit, Constr * constr) {
   LBool value = lit.complement ? LBool::kFalse : LBool::kTrue;
   Var x = lit.x;
   if (varAssignments_[x] == LBool::kUnknown) {
     varAssignments_[x] = value;
     propagationQueue_.push(~lit);
-    learnt_.push(~lit);
+    learnt_.push(lit);
+    level_[x] = (decisionLevels_.empty() ? -1 : decisionLevels_.top());
+    reason_[x] = constr;
   } else if (varAssignments_[x] != value) {
     return false;
   }
@@ -96,13 +117,15 @@ bool Solver::Propagate() {
     Lit lit = propagationQueue_.front();
     propagationQueue_.pop();
     for (auto c : constraints_) {
-      if (!c->Propagate(this, lit))
+      if (!c->Propagate(this, lit)){
+        this->conflictReason_ = c;
         return false;
+      }
     }
   }
   return true;
 }
-const LBool Solver::GetLitValue(Lit l) {
+LBool Solver::GetLitValue(Lit l) {
   LBool var = varAssignments_[l.x];
   return l.complement ? ~var : var;
 }
@@ -112,33 +135,38 @@ void Solver::UndoDecisions(int level) {
     Lit l = learnt_.top();
     learnt_.pop();
     varAssignments_[l.x] = LBool::kUnknown;
+    level_[l.x] = -1;
+    reason_[l.x] = nullptr;
   }
 }
-bool Solver::Backtrack() {
-  while ((!assumptions_.empty()) && assumptions_.top().complement) {
-    //std::cout << "pop: " << assumptions_.top().x << std::endl;
+bool Solver::Backtrack(int level) {
+  while ((decisionLevels_.empty() ? -1 : decisionLevels_.top()) > level) {
+    //std::cout << "Pop: " << decisionLevels_.top() << std::endl;
     UndoDecisions(decisionLevels_.top());
     decisionLevels_.pop();
-    assumptions_.pop();
   }
-  if (assumptions_.empty())
-    return false;
-  //TODO
-  Lit assume = assumptions_.top();
-  assumptions_.pop();
-  UndoDecisions(decisionLevels_.top());
-  decisionLevels_.pop();
-  //varAssignments_[assume.x] = LBool::kUnknown;
-  assume.complement = !assume.complement;
-  Assume(assume);
-
   return true;
 }
+bool Solver::Backtrack() {
+    while (!decisionLevels_.empty()) {
+      UndoDecisions(decisionLevels_.top() + 1);
+      Lit lastDecision = learnt_.top();
+      UndoDecisions(decisionLevels_.top());
+      decisionLevels_.pop();
+      //std::cout << "Pop: " << lastDecision.x << std::endl;
+      if (!lastDecision.complement) {
+        lastDecision.complement = true;
+        Assume(lastDecision);
+        return true;
+      }
+    }
+
+  return false;
+}
 void Solver::Assume(Lit lit) {
-  //std::cout << "Assume: " << lit.x << (lit.complement ? "F" : "T") << std::endl;
+  //std::cout <<learnt_.size() <<  " Assume: " << lit.x << (lit.complement ? "F" : "T") << std::endl;
   decisionLevels_.push(learnt_.size());
-  assumptions_.push(lit);
-  SetLitTrue(lit);
+  SetLitTrue(lit, nullptr);
 }
 bool Solver::AllAssigned() {
   for (LBool b : varAssignments_) {
@@ -146,6 +174,34 @@ bool Solver::AllAssigned() {
       return false;
   }
   return true;
+}
+Vec<Lit> Solver::Analyze(Constr *constr) {
+  Vec<Lit> learnt;
+  Vec<bool> seen(varAssignments_.size());
+  std::queue<Lit> conflictReason;
+  for (Lit l : conflictReason_->CalcReason()) {
+    conflictReason.push(l);
+  }
+  while(!conflictReason.empty()) {
+    Lit l = conflictReason.front();
+    conflictReason.pop();
+    if (seen[l.x])
+      continue;
+    seen[l.x] = true;
+    // todo check if (assert l == false)
+    if (level_[l.x] == decisionLevels_.top()) {
+      if (reason_[l.x] == nullptr) {
+        learnt.push_back(l);
+      } else {
+        for (Lit l : reason_[l.x]->CalcReason(l)) {
+          conflictReason.push(l);
+        }
+      }
+    } else { // TODO exclude top
+      learnt.push_back(l);
+    }
+  }
+  return learnt;
 }
 
 }

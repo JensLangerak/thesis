@@ -23,7 +23,8 @@ class Clause : public Constr {
 
   void Undo(Solver* s, Lit p) override;
 
-  void CalcReason(Solver* S, Lit p, Vec<Lit> out_reason) override;
+  Vec<Lit> CalcReason(Lit p) override;
+  Vec<Lit> CalcReason() override;
   const void PrintConstraint() override;
   const void PrintFilledConstraint(const Vec<LBool> &vars) override;
 

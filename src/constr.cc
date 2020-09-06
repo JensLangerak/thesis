@@ -16,9 +16,6 @@ bool Constr::Simplify(Solver *s) {
 void Constr::Undo(Solver *s, Lit p) {
 
 }
-void Constr::CalcReason(Solver *s, Lit p, Vec<Lit> out_reason) {
-
-}
 Constr::~Constr() {
 
 }
@@ -27,5 +24,11 @@ const void Constr::PrintConstraint() {
 }
 const void Constr::PrintFilledConstraint(const Vec<LBool> &vars) {
 
+}
+Vec<Lit> Constr::CalcReason(Lit p) {
+  return simple_sat_solver::Vec<Lit>();
+}
+Vec<Lit> Constr::CalcReason() {
+  return simple_sat_solver::Vec<Lit>();
 }
 }

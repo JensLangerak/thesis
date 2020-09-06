@@ -24,28 +24,33 @@ class Solver {
   bool Solve();
   inline Vec<bool> GetModel() { return model_; };
 
-  bool SetLitTrue(Lit lit);
   const void PrintProblem();
   const void PrintAssinments();
   const void PrintFilledProblem();
 
-  const LBool GetLitValue(Lit l);
+  bool SetLitTrue(Lit lit, Constr *constr);
+  LBool GetLitValue(Lit l);
  private:
   bool Propagate();
 
   Vec<bool> model_; //TODO not sure if needed
   Vec<Constr*> constraints_;
   Vec<LBool> varAssignments_;
+  Vec<int> level_;
+  Vec<Constr*> reason_;
+  Constr* conflictReason_;
   Queue<Lit> propagationQueue_;
 
 
-  std::stack<Lit> assumptions_;
   std::stack<Lit> learnt_;
   std::stack<int> decisionLevels_;
+
   bool Backtrack();
   void Assume(Lit lit);
   bool AllAssigned();
   void UndoDecisions(int level);
+  Vec<Lit> Analyze(Constr *p_constr);
+  bool Backtrack(int level);
 };
 }
 

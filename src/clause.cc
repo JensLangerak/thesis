@@ -19,26 +19,12 @@ bool Clause::Simplify(simple_sat_solver::Solver *s) {
     return p.x == q.x ? p.complement < q.complement : p.x < q.x;
   });
 
-  //TODO should be a better way to do this
-  std::stack<int> removeVars;
-  for (int i = 0; i < lits_.size() - 1; i++) {
-    if (lits_[i].x == lits_[i+1].x) {
-      removeVars.push(i);
-      removeVars.push(i + 1);
-      ++i;
-    }
-  }
-  while(!removeVars.empty()) {
-    int index = removeVars.top();
-    removeVars.pop();
-    lits_.erase(lits_.begin() + index);
-  }
-
+  //TODO
   if (lits_.size() == 1) {
-    s->SetLitTrue(lits_[0]);
+    s->SetLitTrue(lits_[0], this);
   }
 
-  return !lits_.empty();//TODO
+  return !lits_.empty();
 }
 bool Clause::Propagate(simple_sat_solver::Solver *s, simple_sat_solver::Lit p) {
   // TODO keep track of the assigned values
@@ -57,13 +43,8 @@ bool Clause::Propagate(simple_sat_solver::Solver *s, simple_sat_solver::Lit p) {
   if (possibleUnit.x < 0)
     return false;
 
-  s->SetLitTrue(possibleUnit);
+  s->SetLitTrue(possibleUnit, this);
   return true;
-}
-void Clause::CalcReason(simple_sat_solver::Solver *S,
-                                           simple_sat_solver::Lit p,
-                                           simple_sat_solver::Vec<simple_sat_solver::Lit> out_reason) {
-//TODO
 }
 void Clause::Undo(Solver *s, Lit p) {
 //TODO
@@ -100,5 +81,19 @@ const void Clause::PrintFilledConstraint(const Vec<LBool> &vars) {
     std::cout << " ";
   }
   std::cout << std::endl;
+}
+Vec<Lit> Clause::CalcReason() {
+  return lits_;
+}
+Vec<Lit> Clause::CalcReason(Lit p) {
+  // TODO maybe check if clause had a reason for p
+  Vec<Lit> reason;
+  for (Lit l : lits_) {
+    if (l.x == p.x)
+      continue;
+    else
+      reason.push_back(l);
+  }
+  return reason;
 }
 }
