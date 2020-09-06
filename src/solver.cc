@@ -69,7 +69,7 @@ bool Solver::Solve() {
       Lit unit;
       for(Lit l : c) {
         int level = level_[l.x];
-        if (level != decisionLevels_.top()) {
+        if (level != -1) {
           backtrackLevel = std::max(backtrackLevel, level);
         } else {
           unit = l;
@@ -130,13 +130,20 @@ LBool Solver::GetLitValue(Lit l) {
   return l.complement ? ~var : var;
 }
 
+bool Solver::UndoOne() {
+  if (learnt_.empty())
+    return false;
+  Lit l = learnt_.top();
+  learnt_.pop();
+  varAssignments_[l.x] = LBool::kUnknown;
+  level_[l.x] = -1;
+  reason_[l.x] = nullptr;
+  return true;
+}
+
 void Solver::UndoDecisions(int level) {
   while (learnt_.size() > level) {
-    Lit l = learnt_.top();
-    learnt_.pop();
-    varAssignments_[l.x] = LBool::kUnknown;
-    level_[l.x] = -1;
-    reason_[l.x] = nullptr;
+    UndoOne();
   }
 }
 bool Solver::Backtrack(int level) {
@@ -178,29 +185,36 @@ bool Solver::AllAssigned() {
 Vec<Lit> Solver::Analyze(Constr *constr) {
   Vec<Lit> learnt;
   Vec<bool> seen(varAssignments_.size());
-  std::queue<Lit> conflictReason;
-  for (Lit l : conflictReason_->CalcReason()) {
-    conflictReason.push(l);
-  }
-  while(!conflictReason.empty()) {
-    Lit l = conflictReason.front();
-    conflictReason.pop();
-    if (seen[l.x])
-      continue;
-    seen[l.x] = true;
-    // todo check if (assert l == false)
-    if (level_[l.x] == decisionLevels_.top()) {
-      if (reason_[l.x] == nullptr) {
-        learnt.push_back(l);
+  Vec<Lit> conflictReason = conflictReason_->CalcReason();
+  int level_count = 0;
+  do {
+    // handle current conflict reasons
+    for(Lit l : conflictReason) {
+      if (seen[l.x])
+        continue;
+      seen[l.x] = true;
+      if (level_[l.x] == decisionLevels_.top()) {
+        ++level_count;
       } else {
-        for (Lit l : reason_[l.x]->CalcReason(l)) {
-          conflictReason.push(l);
-        }
+        learnt.push_back(l);
       }
-    } else { // TODO exclude top
-      learnt.push_back(l);
     }
-  }
+
+    // go back in time, doing so will reveal an uip
+    Lit p;
+    Constr* r;
+    do {
+      p = learnt_.top();
+      r = reason_[p.x];
+      UndoOne();
+    } while(!seen[p.x]);
+    if (level_count == 1) { // UIP found
+      learnt.push_back(~p);
+      break;
+    }
+    conflictReason = r->CalcReason(p);
+    --level_count;
+  } while(level_count > 0);//UIP found
   return learnt;
 }
 

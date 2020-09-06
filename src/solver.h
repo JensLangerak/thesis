@@ -51,6 +51,7 @@ class Solver {
   void UndoDecisions(int level);
   Vec<Lit> Analyze(Constr *p_constr);
   bool Backtrack(int level);
+  bool UndoOne();
 };
 }
 
