@@ -41,7 +41,7 @@ const void Solver::PrintProblem() {
   for(auto c : constraints_)
     c->PrintConstraint();
 }
-const void Solver::PrintAssinments() {
+const void Solver::PrintAssignments() {
   for(int i = 0; i < varAssignments_.size(); i++) {
     LBool v = varAssignments_[i];
     std::cout << i << ": " << (v == LBool::kTrue ? "T" : v == LBool::kFalse ? "F" : "U" ) << std::endl;
@@ -54,70 +54,6 @@ const void Solver::PrintFilledProblem() {
       c->PrintFilledConstraint(varAssignments_);
 }
 
-bool Solver::CheckWatches() {
-  for (int i =0; i < watches_.size(); i++) {
-    Lit l;
-    l.complement = i & 1;
-    l.x = i >> 1;
-    for (int j = 0; j < watches_[i].size(); j++) {
-      Clause * clause = (Clause *) watches_[i][j];
-      if (!(clause->lits_[clause->watchA] == l || clause->lits_[clause->watchB] == l)) {
-       throw "error";
-      }
-      if (GetLitValue(l) == LBool::kFalse)
-        throw "error";
-      for (int l = j + 1; l < watches_[i].size(); l++) {
-        if (watches_[i][j] == watches_[i][l])
-          throw "error";
-      }
-    }
-  }
-  for (int i =0; i < constraints_.size(); i++) {
-    Clause *clause = (Clause *) constraints_[i];
-    int indexA = LitIndex(clause->lits_[clause->watchA]);
-    int indexB = LitIndex(clause->lits_[clause->watchB]);
-    bool fail = true;
-    for (auto constr : watches_[indexA]) {
-      if (constr == constraints_[i]){
-        fail = false;
-        break;
-      }
-    }
-    if (fail)
-      throw "error";
-    fail = true;
-    for (auto constr : watches_[indexB]) {
-      if (constr == constraints_[i]){
-        fail = false;
-        break;
-      }
-    }
-    if (fail)
-      throw "error";
-
-    if (indexA == indexB) {
-      if (GetLitValue(clause->lits_[clause->watchA]) != LBool::kTrue) {
-        for (int i = 0; i < clause->lits_.size(); i++) {
-
-          if (GetLitValue(clause->lits_[i]) == LBool::kUnknown) {
-            throw "error";
-          }
-        }
-        if (GetLitValue(clause->lits_[clause->watchA]) == LBool::kFalse)
-          throw "error";
-      }
-    } else {
-      if (GetLitValue(clause->lits_[clause->watchA]) == LBool::kFalse)
-        throw "error";
-
-      if (GetLitValue(clause->lits_[clause->watchB]) == LBool::kFalse)
-        throw "error";
-    }
-
-  }
-  return true;
-}
-
 bool Solver::Solve() {
   //for (auto c: constraints_) {
   //  if (!c->Simplify(this))
@@ -125,48 +61,16 @@ bool Solver::Solve() {
   //}
   bool stop = false;
   while (!stop) {
-    if (!Propagate()) {
+    if (!Propagate()) { // conflict found
       while(!propagationQueue_.empty())
         propagationQueue_.pop();
-      if (decisionLevels_.empty())
+      if (!HandleConflict())
         return false;
-      Vec<Lit> c = Analyze(conflictReason_);
-      int backtrackLevel = -1;
-      Lit unit;
-      for(Lit l : c) {
-        int level = level_[l.x];
-        if (level != -1) {
-          backtrackLevel = std::max(backtrackLevel, level);
-        } else {
-          unit = l;
-        }
-      }
-      // TODO backtrack
-      // Find if/how conflict is unit append to propagate
-
-      if (!Backtrack(backtrackLevel))
-        return false;
-      CheckWatches();
-      Clause *clause = new Clause(c, true, *this, unit);
-
-      constraints_.push_back(clause);
-      SetLitTrue(unit, clause);
     } else {
-      CheckWatches();
-      stop = true;
-      for (int i = 0; i < varAssignments_.size(); i++) {
-        if (varAssignments_[i] == LBool::kUnknown) {
-          stop = false;
-          Lit assume;
-          assume.x = i;
-          assume.complement = false;
-          Assume(assume);
-          break;
-        }
-      }
+      stop = !AddAssumption();
     }
   }
-    return true;
+  return true;
 }
 bool Solver::SetLitTrue(Lit lit, Constr * constr) {
   LBool value = lit.complement ? LBool::kFalse : LBool::kTrue;
@@ -189,14 +93,18 @@ bool Solver::Propagate() {
     propagationQueue_.pop();
     //std::cout << "Propagat: " << lit.x << " " << (lit.complement ? "F" : "T") << std::endl;
     int index = LitIndex(lit);
+    // clear original watch list, clauses should re add themselves to the list.
     Vec<Constr *> watchList = watches_[index];
     watches_[index].clear();
+
     for (int i = 0; i < watchList.size(); i++) {
       auto c = watchList[i];
       if (GetLitValue(lit) == LBool::kUnknown)
-        throw "error";
+        throw "Should not propagate unknown literals";
       if (!c->Propagate(this, lit)){
+        // conflict found
         this->conflictReason_ = c;
+        // re-add the unhandled watches, including the current one.
         for (; i < watchList.size(); i++)
           watches_[index].push_back(watchList[i]);
         return false;
@@ -218,16 +126,17 @@ bool Solver::UndoOne() {
   varAssignments_[l.x] = LBool::kUnknown;
   //std::cout << "Undo: " << l.x << std::endl;
   level_[l.x] = -1;
+  reason_[l.x] = nullptr;
+
+  // Update the unit watches that might be no longer unit
   Lit complL = ~l;
   for (Constr * c : watches_[LitIndex(l)]) {
-    Clause * cl = (Clause * ) c;
-    ((Clause *) c)->UpdateWatches(this);
+    ((Clause *) c)->UndoUnitWatch(this);
   }
+  // TODO check if it correct that this is triggered
   for (Constr * c : watches_[LitIndex(complL)]) {
-    Clause * cl = (Clause * ) c;
-    ((Clause *) c)->UpdateWatches(this);
+    ((Clause *) c)->UndoUnitWatch(this);
   }
-  reason_[l.x] = nullptr;
   return true;
 }
 
@@ -262,6 +171,7 @@ bool Solver::Backtrack() {
 }
 void Solver::Assume(Lit lit) {
  //std::cout <<learnt_.size() <<  " Assume: " << lit.x << (lit.complement ? "F" : "T") << std::endl;
+ // TODO decisionLevels 0 -1
   decisionLevels_.push(learnt_.size());
   SetLitTrue(lit, nullptr);
 }
@@ -313,6 +223,69 @@ void Solver::AddWatch(Lit &lit, Clause *p_clause) {
 
 int Solver::LitIndex(Lit &lit) {
   return lit.x * 2 + (lit.complement ? 1 : 0);
+}
+int Solver::GetMostRecentLitIndex(Vec<Lit> lits) {
+  std::stack<Lit> hist;
+  int indexLast = -1;
+  while(!learnt_.empty()) {
+    for (int i = 0; i < lits.size(); i++) {
+      if (lits[i].x == learnt_.top().x) {
+        indexLast = i;
+        break;
+      }
+    }
+    if (indexLast != -1)
+      break;
+
+    hist.push(learnt_.top());
+    learnt_.pop();
+  }
+  while (!hist.empty()) {
+    learnt_.push(hist.top());
+    hist.pop();
+  };
+  return indexLast;
+}
+bool Solver::HandleConflict() {
+  if (decisionLevels_.empty()) // cannot backtrack, so un sat
+    return false;
+
+  Vec<Lit> c = Analyze(conflictReason_);
+
+  // Find the clause that will be unit and find the lowest backtrackLevel
+  int backtrackLevel = -1;
+  Lit unit;
+  for(Lit l : c) {
+    int level = level_[l.x];
+    if (level != -1) {  // TODO fix level should start with 0 for base learns
+      backtrackLevel = std::max(backtrackLevel, level);
+    } else {
+      unit = l;
+    }
+  }
+
+  if (!Backtrack(backtrackLevel)) // cannot backtrack, so it is unsatisfiable
+    return false;
+
+  int mostRecentLitIndex = GetMostRecentLitIndex(c); // needed for the watchers
+  Clause *clause = new Clause(c, true, *this, unit, mostRecentLitIndex);
+
+  // Added clause is unit, so set lit
+  constraints_.push_back(clause);
+  SetLitTrue(unit, clause);
+  return true;
+}
+bool Solver::AddAssumption() {
+  for (int i = 0; i < varAssignments_.size(); i++) {
+    if (varAssignments_[i] == LBool::kUnknown) {
+      Lit assume;
+      assume.x = i;
+      assume.complement = false;
+      Assume(assume);
+      return true;
+    }
+  }
+  return false;
 }
 
 }

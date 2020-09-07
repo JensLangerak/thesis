@@ -25,13 +25,12 @@ class Solver {
   inline Vec<bool> GetModel() { return model_; };
 
   const void PrintProblem();
-  const void PrintAssinments();
+  const void PrintAssignments();
   const void PrintFilledProblem();
 
   bool SetLitTrue(Lit lit, Constr *constr);
   LBool GetLitValue(Lit l);
   void AddWatch(Lit &lit, Clause *p_clause);
-  std::stack<Lit> learnt_;
  private:
   bool Propagate();
 
@@ -44,6 +43,7 @@ class Solver {
   Constr* conflictReason_;
   Queue<Lit> propagationQueue_;
 
+  std::stack<Lit> learnt_;
 
   std::stack<int> decisionLevels_;
 
@@ -55,7 +55,9 @@ class Solver {
   bool Backtrack(int level);
   bool UndoOne();
   static int LitIndex(Lit &lit);
-  bool CheckWatches();
+  int GetMostRecentLitIndex(Vec<Lit> lits);
+  bool HandleConflict();
+  bool AddAssumption();
 };
 }
 

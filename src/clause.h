@@ -10,9 +10,8 @@ namespace simple_sat_solver {
 class Solver;
 class Clause : public Constr {
  public:
-//static bool NewClause(Solver &S, Vec<Lit> ps, bool learnt, Clause &out_clause);
   Clause(Vec<Lit> ps, bool learnt, Solver &s);
-  Clause(Vec<Lit> lits, bool learnt, Solver &s, Lit watchLit);
+  Clause(Vec<Lit> lits, bool learnt, Solver &s, Lit unitLit, int mostRecentLearntIndex);
   ~Clause() override;
 
   bool Locked(Solver* s);
@@ -28,14 +27,14 @@ class Clause : public Constr {
   Vec<Lit> CalcReason() override;
   const void PrintConstraint() override;
   const void PrintFilledConstraint(const Vec<LBool> &vars) override;
-  void UpdateWatches(Solver *s) override;
+  void UndoUnitWatch(Solver *s) override;
 
 
-  int watchA;
-  int watchB;
+  private:
+  int watchA_;
+  int watchB_;
   int watchLast;
   Vec<Lit> lits_;
- private:
   bool learnt_;
 };
 }

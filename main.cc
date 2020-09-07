@@ -30,11 +30,11 @@ int testFile(std::string file) {
   std::cout<<std::endl << std::endl;
   bool res = s->Solve();
   if (res) {
-    s->PrintAssinments();
+    s->PrintAssignments();
     std::cout << std::endl << std::endl;
     s->PrintFilledProblem();
   } else {
-    s->PrintAssinments();
+    s->PrintAssignments();
     std::cout << "Cannot be solved" << std::endl;
   }
   return 0;

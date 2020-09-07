@@ -31,7 +31,7 @@ Vec<Lit> Constr::CalcReason(Lit p) {
 Vec<Lit> Constr::CalcReason() {
   return simple_sat_solver::Vec<Lit>();
 }
-void Constr::UpdateWatches(Solver *s) {
+void Constr::UndoUnitWatch(Solver *s) {
 
 }
 }
