@@ -36,29 +36,29 @@ Solver::~Solver() {
     delete c;
   constraints_.clear();
 }
-const void Solver::PrintProblem() {
+void Solver::PrintProblem() {
   std::cout << "Nr vars: " << varAssignments_.size() << std::endl;
   for(auto c : constraints_)
     c->PrintConstraint();
 }
-const void Solver::PrintAssignments() {
+void Solver::PrintAssignments() {
   for(int i = 0; i < varAssignments_.size(); i++) {
     LBool v = varAssignments_[i];
     std::cout << i << ": " << (v == LBool::kTrue ? "T" : v == LBool::kFalse ? "F" : "U" ) << std::endl;
   }
 
 }
-const void Solver::PrintFilledProblem() {
+void Solver::PrintFilledProblem() {
     std::cout << "Nr vars: " << varAssignments_.size() << std::endl;
     for(auto c : constraints_)
       c->PrintFilledConstraint(varAssignments_);
 }
 
 bool Solver::Solve() {
-  //for (auto c: constraints_) {
-  //  if (!c->Simplify(this))
-  //    return false;
-  //}
+  for (auto c: constraints_) {
+    if (!c->Simplify(this))
+      return false;
+  }
   bool stop = false;
   while (!stop) {
     if (!Propagate()) { // conflict found
@@ -80,7 +80,7 @@ bool Solver::SetLitTrue(Lit lit, Constr * constr) {
     varAssignments_[x] = value;
     propagationQueue_.push(~lit);
     learnt_.push(lit);
-    level_[x] = (decisionLevels_.empty() ? -1 : decisionLevels_.top());
+    level_[x] = (decisionLevels_.empty() ? 0 : decisionLevels_.top());
     reason_[x] = constr;
   } else if (varAssignments_[x] != value) {
     return false;
@@ -141,12 +141,12 @@ bool Solver::UndoOne() {
 }
 
 void Solver::UndoDecisions(int level) {
-  while (learnt_.size() > level) {
+  while (learnt_.size() >= level) {
     UndoOne();
   }
 }
 bool Solver::Backtrack(int level) {
-  while ((decisionLevels_.empty() ? -1 : decisionLevels_.top()) > level) {
+  while (!decisionLevels_.empty() && decisionLevels_.top() > level) {
     //std::cout << "Pop: " << decisionLevels_.top() << std::endl;
     UndoDecisions(decisionLevels_.top());
     decisionLevels_.pop();
@@ -172,7 +172,7 @@ bool Solver::Backtrack() {
 void Solver::Assume(Lit lit) {
  //std::cout <<learnt_.size() <<  " Assume: " << lit.x << (lit.complement ? "F" : "T") << std::endl;
  // TODO decisionLevels 0 -1
-  decisionLevels_.push(learnt_.size());
+  decisionLevels_.push(learnt_.size() + 1);
   SetLitTrue(lit, nullptr);
 }
 bool Solver::AllAssigned() {

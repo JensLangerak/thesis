@@ -24,9 +24,9 @@ class Solver {
   bool Solve();
   inline Vec<bool> GetModel() { return model_; };
 
-  const void PrintProblem();
-  const void PrintAssignments();
-  const void PrintFilledProblem();
+  void PrintProblem();
+  void PrintAssignments();
+  void PrintFilledProblem();
 
   bool SetLitTrue(Lit lit, Constr *constr);
   LBool GetLitValue(Lit l);

@@ -15,13 +15,10 @@ void Clause::Remove(simple_sat_solver::Solver *s) {
 //TODO
 }
 bool Clause::Simplify(simple_sat_solver::Solver *s) {
-  std::sort(lits_.begin(), lits_.end(), [](const Lit &p, const Lit &q) -> bool {
-    return p.x == q.x ? p.complement < q.complement : p.x < q.x;
-  });
-
-  //TODO
   if (lits_.size() == 1) {
-    s->SetLitTrue(lits_[0], this);
+    if (!s->SetLitTrue(lits_[0], this)) {
+      return false;
+    }
   }
 
   return !lits_.empty();
