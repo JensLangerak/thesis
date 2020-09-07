@@ -35,6 +35,7 @@ struct Lit {
 
 // TODO
 inline Lit operator ~(Lit p) { Lit q; q.x = p.x; q.complement = !p.complement; return q;}
+inline bool operator ==(Lit p, Lit q) { return p.x == q.x && p.complement == q.complement;}
 inline bool Sign(Lit p) { return p.complement; }
 inline int GetVar(Lit p) { return p.x; } // is var in the paper
 inline int Index(Lit p) { return p.x; }

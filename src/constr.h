@@ -21,6 +21,7 @@ class Constr {
   virtual Vec<Lit> CalcReason();
   virtual const void PrintConstraint();
   virtual const void PrintFilledConstraint(const Vec<LBool> &vars);
+  virtual void UpdateWatches(Solver *s) ;
 };
 }
 

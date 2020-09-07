@@ -30,6 +30,8 @@ class Solver {
 
   bool SetLitTrue(Lit lit, Constr *constr);
   LBool GetLitValue(Lit l);
+  void AddWatch(Lit &lit, Clause *p_clause);
+  std::stack<Lit> learnt_;
  private:
   bool Propagate();
 
@@ -38,11 +40,11 @@ class Solver {
   Vec<LBool> varAssignments_;
   Vec<int> level_;
   Vec<Constr*> reason_;
+  Vec<Vec<Constr*>> watches_;
   Constr* conflictReason_;
   Queue<Lit> propagationQueue_;
 
 
-  std::stack<Lit> learnt_;
   std::stack<int> decisionLevels_;
 
   bool Backtrack();
@@ -52,6 +54,8 @@ class Solver {
   Vec<Lit> Analyze(Constr *p_constr);
   bool Backtrack(int level);
   bool UndoOne();
+  static int LitIndex(Lit &lit);
+  bool CheckWatches();
 };
 }
 
