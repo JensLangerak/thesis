@@ -34,20 +34,21 @@ class Solver {
  private:
   bool Propagate();
 
+  //TODO perhaps add undo list
+  VarOrder varOrder;
   Vec<bool> model_; //TODO not sure if needed
   Vec<Constr*> constraints_;
   Vec<LBool> varAssignments_;
   Vec<int> level_;
   Vec<Constr*> reason_;
   Vec<Vec<Constr*>> watches_;
-  Constr* conflictReason_;
+  Constr* conflictReason_; //TODO don't like this
   Queue<Lit> propagationQueue_;
 
   std::stack<Lit> learnt_;
 
   std::stack<int> decisionLevels_;
 
-  bool Backtrack();
   void Assume(Lit lit);
   bool AllAssigned();
   void UndoDecisions(int level);

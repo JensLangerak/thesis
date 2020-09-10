@@ -71,6 +71,7 @@ bool Clause::Propagate(simple_sat_solver::Solver *s, simple_sat_solver::Lit p) {
     // Could not update watcher. This means that the class is either Unit or False.
     if (watchA_ == watchB_)
       return false;
+    //TODO do not update? Perhaps watchLast is then not needed?
     if (p == lits_[watchA_]) {
       watchLast = watchA_;
       watchA_ = watchB_;

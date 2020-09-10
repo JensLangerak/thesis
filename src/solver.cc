@@ -16,6 +16,7 @@ Var Solver::NewVar() {
   level_.push_back(-1);
   watches_.push_back(Vec<Constr*>());
   watches_.push_back(Vec<Constr*>());
+  varOrder.NewVar();
   return varAssignments_.size() - 1;
 }
 bool Solver::AddClause(const Vec<Lit> &literals) {
@@ -124,6 +125,7 @@ bool Solver::UndoOne() {
   Lit l = learnt_.top();
   learnt_.pop();
   varAssignments_[l.x] = LBool::kUnknown;
+  varOrder.Undo(l.x);
   //std::cout << "Undo: " << l.x << std::endl;
   level_[l.x] = -1;
   reason_[l.x] = nullptr;
@@ -153,22 +155,7 @@ bool Solver::Backtrack(int level) {
   }
   return true;
 }
-bool Solver::Backtrack() {
-    while (!decisionLevels_.empty()) {
-      UndoDecisions(decisionLevels_.top() + 1);
-      Lit lastDecision = learnt_.top();
-      UndoDecisions(decisionLevels_.top());
-      decisionLevels_.pop();
-      //std::cout << "Pop: " << lastDecision.x << std::endl;
-      if (!lastDecision.complement) {
-        lastDecision.complement = true;
-        Assume(lastDecision);
-        return true;
-      }
-    }
 
-  return false;
-}
 void Solver::Assume(Lit lit) {
  //std::cout <<learnt_.size() <<  " Assume: " << lit.x << (lit.complement ? "F" : "T") << std::endl;
  // TODO decisionLevels 0 -1
@@ -193,6 +180,7 @@ Vec<Lit> Solver::Analyze(Constr *constr) {
       if (seen[l.x])
         continue;
       seen[l.x] = true;
+      varOrder.Update(l.x);
       if (level_[l.x] == decisionLevels_.top()) {
         ++level_count;
       } else {
@@ -215,6 +203,7 @@ Vec<Lit> Solver::Analyze(Constr *constr) {
     conflictReason = r->CalcReason(p);
     --level_count;
   } while(level_count > 0);//UIP found
+
   return learnt;
 }
 void Solver::AddWatch(Lit &lit, Clause *p_clause) {
@@ -251,13 +240,14 @@ bool Solver::HandleConflict() {
     return false;
 
   Vec<Lit> c = Analyze(conflictReason_);
+  varOrder.UpdateAll();
 
   // Find the clause that will be unit and find the lowest backtrackLevel
   int backtrackLevel = -1;
   Lit unit;
   for(Lit l : c) {
     int level = level_[l.x];
-    if (level != -1) {  // TODO fix level should start with 0 for base learns
+    if (level != -1) {
       backtrackLevel = std::max(backtrackLevel, level);
     } else {
       unit = l;
@@ -276,6 +266,15 @@ bool Solver::HandleConflict() {
   return true;
 }
 bool Solver::AddAssumption() {
+  Var v = varOrder.Select(varAssignments_);
+  if (v < 0)
+    return false;
+  Lit assume;
+  assume.x = v;
+  assume.complement = false;
+  Assume(assume);
+  return true;
+/*
   for (int i = 0; i < varAssignments_.size(); i++) {
     if (varAssignments_[i] == LBool::kUnknown) {
       Lit assume;
@@ -285,7 +284,7 @@ bool Solver::AddAssumption() {
       return true;
     }
   }
-  return false;
+  return false; */
 }
 
 }

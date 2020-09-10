@@ -41,9 +41,15 @@ int testFile(std::string file) {
 }
 int main() {
   //testFile("../data/example2_dimacs.txt");
-  testDir("/home/jens/Downloads/uf50-218", true);
-  testDir("/home/jens/Downloads/uf20-91", true);
-  testDir("/home/jens/Downloads/uuf50-218/UUF50.218.1000", false);
+  testDir("/home/jens/Downloads/sat_problems/uf20-91", true);
+  testDir("/home/jens/Downloads/sat_problems/uf50-218", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf50-218", false);
+  testDir("/home/jens/Downloads/sat_problems/uf75-325", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf75-325", false);
+  testDir("/home/jens/Downloads/sat_problems/uf100-430", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf100-430", false);
+  testDir("/home/jens/Downloads/sat_problems/uf125-538", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf125-538", false);
   //testFile("/home/jens/Downloads/uf20-91/uf20-0716.cnf");
   return 0;
 }

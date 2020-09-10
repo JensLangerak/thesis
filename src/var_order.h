@@ -9,14 +9,30 @@
 namespace simple_sat_solver {
 class VarOrder {
  public:
-  VarOrder(Vec<LBool> &ref_to_assigns, Vec<double> &ref_to_activity);
+  VarOrder();
 
   void NewVar();
   void Update(Var x);
   void UpdateAll();
-  void Undo(Var x);
-  Var Select();
+  Var Select(const Vec<LBool> &values);
 
+  void Undo(Var i);
+ private:
+  struct VarActivity {
+    VarActivity(Var i, double activity);
+    Var var;
+    double activity;
+    inline bool operator<(const VarActivity & rhs) const {
+      return this->activity < rhs.activity;
+    }
+  };
+  Vec<double> activities_;
+  Vec<bool> inQueue_;
+  std::priority_queue<VarActivity, Vec<VarActivity>> queue_;
+  double varDecayFactor;
+  double varIncValue;
+
+  void RescaleVars();
 };
 }
 #endif //SIMPLESATSOLVER_SRC_VAR_ORDER_H_
