@@ -14,7 +14,9 @@ class Clause : public Constr {
   Clause(Vec<Lit> lits, bool learnt, Solver &s, Lit unitLit, int mostRecentLearntIndex);
   ~Clause() override;
 
-  bool Locked(Solver* s);
+  void Lock() override;
+  void Unlock() override;
+  bool Locked();
   void Remove(Solver* s) override;
 
   bool Simplify(Solver* S) override;
@@ -29,13 +31,17 @@ class Clause : public Constr {
   const void PrintFilledConstraint(const Vec<LBool> &vars) override;
   void UndoUnitWatch(Solver *s) override;
 
-
-  private:
+  void RescaleActivity();
+  bool Value(Solver * s) override;
+  void CheckWatchers(Solver *s) override;
+  Vec<Lit> lits_;
+ private:
   int watchA_;
   int watchB_;
   int watchLast;
-  Vec<Lit> lits_;
   bool learnt_;
+  int locks_;
+  double activity_;
 };
 }
 

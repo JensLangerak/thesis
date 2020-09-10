@@ -5,9 +5,11 @@
 #include <iostream>
 #include "solver.h"
 #include "var_order.h"
+#include <bits/stdc++.h>
 namespace simple_sat_solver {
 Solver::Solver() {
-
+  constrIncActivity = 1.0;
+  constrDecayFactor = 1.0 / 0.95;
 }
 
 Var Solver::NewVar() {
@@ -35,6 +37,8 @@ bool Solver::Solve(const Vec<Lit> &assumptions) {
 Solver::~Solver() {
   for (auto c : constraints_)
     delete c;
+  for (auto c: learntClauses_)
+    delete c;
   constraints_.clear();
 }
 void Solver::PrintProblem() {
@@ -56,9 +60,23 @@ void Solver::PrintFilledProblem() {
 }
 
 bool Solver::Solve() {
+  int maxLearnt = 20;
+  LBool res = LBool::kUnknown;
+  while(res == LBool::kUnknown) {
+    maxLearnt *= 1.1;
+    res = Solve(maxLearnt);
+    //CheckWatchers();
+  }
+  return res == LBool::kTrue;
+}
+LBool Solver::Solve(int maxLearnt) {
   for (auto c: constraints_) {
     if (!c->Simplify(this))
-      return false;
+      return LBool::kFalse;
+  }
+  for (auto c: learntClauses_) {
+    if (!c->Simplify(this))
+      return LBool::kFalse;
   }
   bool stop = false;
   while (!stop) {
@@ -66,12 +84,33 @@ bool Solver::Solve() {
       while(!propagationQueue_.empty())
         propagationQueue_.pop();
       if (!HandleConflict())
-        return false;
+        return LBool::kFalse;
     } else {
+      if (learntClauses_.size() > maxLearnt) {
+        //CheckWatchers();
+        ReduceDB(maxLearnt);
+        //CheckWatchers();
+        Backtrack(0);
+        //CheckWatchers();
+        while (!propagationQueue_.empty())
+          propagationQueue_.pop();
+        return LBool::kUnknown; //TODO not return
+      }
+      if (!propagationQueue_.empty()) {
+        int ikSnapHetNiet = 2;
+      }
+      //CheckWatchers();
       stop = !AddAssumption();
+      constrIncActivity *= constrDecayFactor;
     }
+
+
   }
-  return true;
+
+  if (AllAssigned() && (CheckConstraints() == LBool::kFalse)) {
+    int faesg = 325;
+  }
+  return AllAssigned() ? CheckConstraints() : LBool::kUnknown;
 }
 bool Solver::SetLitTrue(Lit lit, Constr * constr) {
   LBool value = lit.complement ? LBool::kFalse : LBool::kTrue;
@@ -83,6 +122,8 @@ bool Solver::SetLitTrue(Lit lit, Constr * constr) {
     learnt_.push(lit);
     level_[x] = (decisionLevels_.empty() ? 0 : decisionLevels_.top());
     reason_[x] = constr;
+    if (constr != nullptr)
+      constr->Lock();
   } else if (varAssignments_[x] != value) {
     return false;
   }
@@ -90,6 +131,7 @@ bool Solver::SetLitTrue(Lit lit, Constr * constr) {
 }
 bool Solver::Propagate() {
   while(!propagationQueue_.empty()) {
+    //CheckWatchers();
     Lit lit = propagationQueue_.front();
     propagationQueue_.pop();
     //std::cout << "Propagat: " << lit.x << " " << (lit.complement ? "F" : "T") << std::endl;
@@ -105,13 +147,15 @@ bool Solver::Propagate() {
       if (!c->Propagate(this, lit)){
         // conflict found
         this->conflictReason_ = c;
-        // re-add the unhandled watches, including the current one.
-        for (; i < watchList.size(); i++)
+        // re-add the unhandled watches, excluding the current one.
+        for (i = i+1; i < watchList.size(); i++)
           watches_[index].push_back(watchList[i]);
         return false;
       }
     }
   }
+
+  //CheckWatchers();
   return true;
 }
 LBool Solver::GetLitValue(Lit l) {
@@ -128,6 +172,8 @@ bool Solver::UndoOne() {
   varOrder.Undo(l.x);
   //std::cout << "Undo: " << l.x << std::endl;
   level_[l.x] = -1;
+  if (reason_[l.x] != nullptr)
+    reason_[l.x]->Unlock();
   reason_[l.x] = nullptr;
 
   // Update the unit watches that might be no longer unit
@@ -198,7 +244,7 @@ Vec<Lit> Solver::Analyze(Constr *constr) {
     } while(!seen[p.x]);
     if (level_count <= 1) { // UIP found
       learnt.push_back(~p);
-      break;
+      return learnt;
     }
     conflictReason = r->CalcReason(p);
     --level_count;
@@ -239,7 +285,13 @@ bool Solver::HandleConflict() {
   if (decisionLevels_.empty()) // cannot backtrack, so un sat
     return false;
 
-  Vec<Lit> c = Analyze(conflictReason_);
+  std::stack<Lit> hist = learnt_;
+  Vec<Lit> c = ((Clause *) conflictReason_)->lits_;
+  if (c.size() == 3&& c[0].x == 2 && c[1].x == 42 && c[2].x == 43) {
+    int test= 2;
+  }
+  std::stack<int> highestLevel = decisionLevels_;
+  c = Analyze(conflictReason_);
   varOrder.UpdateAll();
 
   // Find the clause that will be unit and find the lowest backtrackLevel
@@ -257,12 +309,15 @@ bool Solver::HandleConflict() {
   if (!Backtrack(backtrackLevel)) // cannot backtrack, so it is unsatisfiable
     return false;
 
+  //CheckWatchers();
   int mostRecentLitIndex = GetMostRecentLitIndex(c); // needed for the watchers
   Clause *clause = new Clause(c, true, *this, unit, mostRecentLitIndex);
 
   // Added clause is unit, so set lit
-  constraints_.push_back(clause);
+  learntClauses_.push_back(clause);
   SetLitTrue(unit, clause);
+  //clause->CheckWatchers(this);
+  //CheckWatchers();
   return true;
 }
 bool Solver::AddAssumption() {
@@ -286,5 +341,61 @@ bool Solver::AddAssumption() {
   }
   return false; */
 }
+void Solver::RescaleClauseActivity() {
+  for (Clause *c : learntClauses_)
+    c->RescaleActivity();
+  constrIncActivity *= 1e-100;
 
 }
+void Solver::ReduceDB(int learnt) {
+  std::priority_queue<Clause *> queue;
+  for (Clause * c : learntClauses_) {
+    queue.push(c);
+  }
+  while(!learntClauses_.empty())
+    learntClauses_.pop_back();
+  for (int i = 0; i < learntClauses_.size(); i++) {
+    learntClauses_.push_back(queue.top());
+    queue.pop();
+  }
+  while(!queue.empty()) {
+    Clause * c = queue.top();
+    queue.pop();
+    if (c->Locked()) {
+      learntClauses_.push_back(c);
+    } else {
+      c->Remove(this);
+      delete c;
+    }
+  }
+}
+void Solver::RemoveFromWatchList(Lit &lit, Clause *clause) {
+  int index = this->LitIndex(lit);
+  watches_[index].erase(
+      std::remove(watches_[index].begin(), watches_[index].end(), clause),
+      watches_[index].end());
+  for(auto c : watches_[index]){
+    if (c == clause)
+      throw "ERROR";
+  }
+}
+LBool Solver::CheckConstraints() {
+  for (auto c : constraints_) {
+    if (!c->Value(this)) {
+      throw "should not happen";
+    }
+  }
+  return LBool::kTrue;
+}
+void Solver::CheckWatchers() {
+  for(auto c: constraints_) {
+    c->CheckWatchers(this);
+  }
+  for(auto c: learntClauses_) {
+    c->CheckWatchers(this);
+  }
+
+
+}
+}
+

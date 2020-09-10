@@ -22,6 +22,10 @@ class Constr {
   virtual const void PrintConstraint();
   virtual const void PrintFilledConstraint(const Vec<LBool> &vars);
   virtual void UndoUnitWatch(Solver *s) ;
+  virtual void Lock();
+  virtual void Unlock();
+  virtual bool Value(Solver *s);
+  virtual void CheckWatchers(Solver *p_solver);
 };
 }
 

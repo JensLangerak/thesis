@@ -11,7 +11,7 @@ void VarOrder::NewVar() {
   queue_.push(VarActivity(v, 1.0));
   inQueue_.push_back(true);
   varIncValue = 1.0;
-  varDecayFactor = 0.95;
+  varDecayFactor = 1.0 / 0.95;
 
 }
 void VarOrder::Update(Var x) {

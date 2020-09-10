@@ -34,4 +34,16 @@ Vec<Lit> Constr::CalcReason() {
 void Constr::UndoUnitWatch(Solver *s) {
 
 }
+void Constr::Lock() {
+
+}
+void Constr::Unlock() {
+
+}
+bool Constr::Value(Solver *s) {
+  return false;
+}
+void Constr::CheckWatchers(Solver *p_solver) {
+
+}
 }

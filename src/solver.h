@@ -31,6 +31,14 @@ class Solver {
   bool SetLitTrue(Lit lit, Constr *constr);
   LBool GetLitValue(Lit l);
   void AddWatch(Lit &lit, Clause *p_clause);
+
+  double constrIncActivity;
+  double constrDecayFactor;
+  void RescaleClauseActivity();
+  void RemoveFromWatchList(Lit &lit, Clause *p_clause);
+  Queue<Lit> propagationQueue_;
+  Vec<Vec<Constr*>> watches_;
+  static int LitIndex(Lit &lit);
  private:
   bool Propagate();
 
@@ -38,12 +46,11 @@ class Solver {
   VarOrder varOrder;
   Vec<bool> model_; //TODO not sure if needed
   Vec<Constr*> constraints_;
+  Vec<Clause*> learntClauses_;
   Vec<LBool> varAssignments_;
   Vec<int> level_;
   Vec<Constr*> reason_;
-  Vec<Vec<Constr*>> watches_;
   Constr* conflictReason_; //TODO don't like this
-  Queue<Lit> propagationQueue_;
 
   std::stack<Lit> learnt_;
 
@@ -55,10 +62,13 @@ class Solver {
   Vec<Lit> Analyze(Constr *p_constr);
   bool Backtrack(int level);
   bool UndoOne();
-  static int LitIndex(Lit &lit);
   int GetMostRecentLitIndex(Vec<Lit> lits);
   bool HandleConflict();
   bool AddAssumption();
+  LBool Solve(int maxLearnt);
+  void ReduceDB(int learnt);
+  LBool CheckConstraints();
+  void CheckWatchers();
 };
 }
 
