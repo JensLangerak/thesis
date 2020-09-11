@@ -12,6 +12,7 @@ class Clause {
 public:
   /// Creates a new clause and add watchers to the first two literals.
   /// Duplicated literals are removed.
+  ///
   /// \param lits literals for the clause.
   /// \param learnt true if this is a learnt clause.
   /// \param s solver whose literals should be watched.
@@ -23,6 +24,7 @@ public:
   /// anything to the propagation list. Thus after creating such class the
   /// literal must be set to true. It assumes that there are no duplicates in
   /// lits. If the clause has only 1 literal, mostRecentLearnt will be ignored.
+  ///
   /// \param lits literals for the clause.
   /// \param learnt true if this is a learnt clause.
   /// \param s solve whose literals should be watched.
@@ -30,7 +32,7 @@ public:
   /// propagation.
   /// \param mostRecentLearnt the most recent learnt literal in
   /// lits. This is needed to handle undo's.
-  Clause(Vec<Lit> lits, bool learnt, Solver &s, Lit unitLit,
+  Clause(const Vec<Lit> &lits, bool learnt, Solver &s, Lit unitLit,
          Lit mostRecentLearnt);
 
   ~Clause();
@@ -41,6 +43,7 @@ public:
   /// clause db.
   void Unlock();
   /// Returns True if the clause is locked.
+  /// \Return true if the clause is locked.
   bool Locked() const;
   /// Removes the clause from the watch lists in s.
   /// \param s solver that contains the watchers.
@@ -50,6 +53,8 @@ public:
   /// Should be called at the start of each solve attempt to set fill the
   /// propagation queue with the unit vars. Returns false if is is not possible
   /// to make the clause true with the current partial assignment.
+  /// \param S the solver that contains the clause.
+  /// \return false if it is not possible to make the clause true.
   bool Simplify(Solver &S);
 
   /// Propagates p over this clause and update the clause activity.
@@ -73,6 +78,7 @@ public:
   /// On returning the clause will always have added itself to a watcher list.
   /// The clause should always watch two different literals, unless it has only
   /// 1 literal.
+  ///
   /// \param S solver that contains the clause.
   /// \param p is a literal in the clause and is watched by this clause.
   /// \return false if all literals evaluate to true. Otherwise return true.
@@ -81,6 +87,7 @@ public:
   /// Returns all literals except the literals over the same var as p.
   /// Should be called on the clause that set p to true. Thus its other literals
   /// are false.
+  ///
   /// \param p the literal that was set to true by this clause.
   /// \return the literals in this clause except p.
   Vec<Lit> CalcReason(Lit p) const;

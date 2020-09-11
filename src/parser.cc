@@ -2,118 +2,84 @@
 // Created by jens on 04-09-20.
 //
 
+#include "parser.h"
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "parser.h"
+
 namespace simple_sat_solver {
-//TODO fault handling and closing
-Solver *Parser::ReadFile(const std::string path) {
-  std::ifstream satFile(path);
-  if (satFile.is_open()) {
-    Solver *s = new Solver();
-    std::string line;
-
-    // get number of vars
-    if (!getline(satFile, line))
-      return nullptr;
-    int nrVars = std::stoi(line);
-    for (int i = 0; i < nrVars; i++)
-      s->NewVar();
-
-    //empty line
-    getline(satFile, line);
-
-    std::string lit;
-    Vec<Lit> clause;
-    while(getline(satFile, line)) {
-      clause.clear();
-      std::istringstream sstream(line);
-      while (sstream >> lit) {
-        Lit l;
-        l.complement = false;
-        if (lit[0] == '~') {
-          l.complement = true;
-          lit.erase(0,1);
-        }
-        l.x = std::stoi(lit);
-        if (l.x >= nrVars) {
-          std::cout << std::endl << "ID is higher than expected " << std::endl;
-          delete s;
-          return nullptr;
-        }
-        clause.push_back(l);
-      }
-
-      s->AddClause(clause);
-
-    }
-    satFile.close();
-    return s;
-  } else {
+Solver *DimacsFileParser::Parse(std::string path) {
+  std::ifstream satFileStream(path);
+  if (!satFileStream.is_open()) {
     std::cout << "Cannot open file: " << path << std::endl;
+    satFileStream.close();
     return nullptr;
   }
+
+  s_ = new Solver();
+  if (!ReadHeader(satFileStream)) {
+    std::cout << "Wrong type or format" << std::endl;
+    satFileStream.close();
+    delete s_;
+    s_ = nullptr;
+    return nullptr;
+  }
+
+  if (!ReadClauses(satFileStream)) {
+    delete s_;
+    s_ = nullptr;
+  }
+
+  satFileStream.close();
+  return s_;
 }
-Solver *Parser::Dimacs(const std::string path) {
-  std::ifstream satFile(path);
-  if (satFile.is_open()) {
-    Solver *s = new Solver();
-    std::string line;
+bool DimacsFileParser::ReadHeader(std::ifstream &satFileStream) {
+  std::string line;
 
+  while (getline(satFileStream, line)) {
+    if (line[0] != 'c')
+      break;
+  }
 
-    while(getline(satFile, line)) {
-       if(line[0] == 'c')
-         continue;
-       else
-         break;
-    }
+  std::string type = "p cnf ";
+  if (line.rfind(type, 0) != 0) {
+    return false;
+  }
 
-    std::string type = "p cnf ";
-    if (line.rfind(type, 0) != 0)
-      return nullptr;
-
-    line.erase(0, type.length());
-    std::stringstream sstream;
-    sstream << line;
-    int nrVars, nrClauses;
-    sstream >> nrVars;
-    sstream >> nrClauses;
-
-    for (int i = 0; i < nrVars; i++)
-      s->NewVar();
-
+  line.erase(0, type.length());
+  std::stringstream sstream;
+  sstream << line;
+  sstream >> nrVars_;
+  sstream >> nrClauses_;
+  for (int i = 0; i < nrVars_; i++)
+    s_->NewVar();
+  return true;
+}
+bool DimacsFileParser::ReadClauses(std::ifstream &satFileStream) {
+  std::string line;
+  while (getline(satFileStream, line)) {
+    --nrClauses_;
     Vec<Lit> clause;
+    std::stringstream ss;
+    ss << line;
+
     int lit;
-    while(getline(satFile, line)) {
-      --nrClauses;
-      clause.clear();
-      std::stringstream ss;
-      ss << line;
-
-      ss >> lit;
-      while (lit != 0) {
-        Lit l;
-        l.complement = (lit < 0);
-        l.x = abs(lit) - 1;
-        if (l.x >= nrVars) {
-          std::cout << std::endl << "ID is higher than expected " << std::endl;
-          delete s;
-          return nullptr;
-        }
-        clause.push_back(l);
-        ss >> lit;
+    ss >> lit;
+    while (lit != 0) {
+      Lit l(abs(lit) - 1, lit < 0);
+      if (l.x >= nrVars_) {
+        std::cout << std::endl << "ID is higher than expected " << std::endl;
+        return false;
       }
-
-      s->AddClause(clause);
-      if(nrClauses == 0)
-        break;
+      clause.push_back(l);
+      ss >> lit;
     }
-    satFile.close();
-    return s;
-  } else {
-    std::cout << "Cannot open file: " << path << std::endl;
-    return nullptr;
+
+    s_->AddClause(clause);
+    if (nrClauses_ == 0)
+      break;
   }
+  return true;
 }
-}
+} // namespace simple_sat_solver

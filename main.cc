@@ -7,10 +7,11 @@ int testDir(std::string path, bool result) {
   std::cout <<path << " ---  " << (result ? "SAT" : " UNSAT") << std::endl;
   int solved = 0;
   int total = 0;
+  simple_sat_solver::DimacsFileParser parser = simple_sat_solver::DimacsFileParser();
   for (const auto & entry : std::filesystem::directory_iterator(path)) {
     ++total;
     //std::cout<<"Solving " << entry.path() << std::endl;
-    simple_sat_solver::Solver *s = simple_sat_solver::Parser::Dimacs(entry.path());
+    simple_sat_solver::Solver *s = parser.Parse(entry.path());
     if (s->Solve() == result) {
       //std::cout << "Solved" <<std::endl;
       ++solved;
@@ -24,7 +25,8 @@ int testDir(std::string path, bool result) {
   return 0;
 }
 int testFile(std::string file) {
-  simple_sat_solver::Solver *s = simple_sat_solver::Parser::Dimacs(file);
+  simple_sat_solver::Solver *s =
+      simple_sat_solver::DimacsFileParser().Parse(file);
 
   s->PrintProblem();
   std::cout<<std::endl << std::endl;

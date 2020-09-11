@@ -5,13 +5,35 @@
 #ifndef SIMPLESATSOLVER_SRC_PARSER_H_
 #define SIMPLESATSOLVER_SRC_PARSER_H_
 
-#include <string>
 #include "solver.h"
+
+#include <string>
+
+#include "solver.h"
+
 namespace simple_sat_solver {
-class Parser {
- public:
-  static Solver *ReadFile(const std::string path);
-  static Solver *Dimacs(const std::string path);
+class DimacsFileParser {
+public:
+  DimacsFileParser() = default;
+  /// Read a file in the DIMACS format and create a solver.
+  /// \param path location of the DIMACS file.
+  /// \return a solver for the given problem.
+  Solver *Parse(std::string path);
+
+private:
+  /// Read the header, set the number of clauses and vars.
+  /// Add the vars to the solver.
+  /// \param satFileStream
+  /// \return false when something went wrong.
+  bool ReadHeader(std::ifstream &satFileStream);
+
+  /// Read and add the clauses to the solver.
+  /// \param satFileStream
+  /// \return false when something went wrong.
+  bool ReadClauses(std::ifstream &satFileStream);
+  int nrVars_;
+  int nrClauses_;
+  Solver *s_; // the solver that is constructed.
 };
-}
-#endif //SIMPLESATSOLVER_SRC_PARSER_H_
+} // namespace simple_sat_solver
+#endif // SIMPLESATSOLVER_SRC_PARSER_H_

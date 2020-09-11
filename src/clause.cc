@@ -84,7 +84,7 @@ bool Clause::Propagate(Solver &s, Lit p) {
   s.AddWatch(p, this);
 
   // uupdate activity
-  activity_ += s.constrIncActivity;
+  activity_ += s.constrIncActivity_;
   if (activity_ > 1e100)
     s.RescaleClauseActivity();
 
@@ -119,7 +119,7 @@ Clause::Clause(Vec<Lit> lits, bool learnt, Solver &s) : Clause(learnt) {
   }
 
   // Set watchers
-  if (lits.size() == 0) {
+  if (lits.empty()) {
     watchA_ = -1;
     watchB_ = -1;
   } else if (lits.size() == 1) {
@@ -138,7 +138,7 @@ Clause::Clause(Vec<Lit> lits, bool learnt, Solver &s) : Clause(learnt) {
   }
 }
 
-Clause::~Clause() {}
+Clause::~Clause() = default;
 
 void Clause::PrintConstraint() const {
   std::cout << "Clause: ";
@@ -181,7 +181,7 @@ Vec<Lit> Clause::CalcReason(Lit p) const {
   return reason;
 }
 
-Clause::Clause(Vec<Lit> lits, bool learnt, Solver &s, Lit unitLit,
+Clause::Clause(const Vec<Lit> &lits, bool learnt, Solver &s, Lit unitLit,
                Lit mostRecentLearnt)
     : Clause(learnt) {
   lits_ = lits;
@@ -221,9 +221,10 @@ bool Clause::Locked() const { return lock_; }
 void Clause::RescaleActivity() { activity_ *= 1e-100; }
 
 bool Clause::Value(const Solver &s) const {
-  for (Lit l : lits_)
+  for (Lit l : lits_) {
     if (s.GetLitValue(l) == LBool::kTrue)
       return true;
+  }
   return false;
 }
 
@@ -251,7 +252,7 @@ void Clause::CheckWatchers(const Solver *s) const {
   }
 
   if (!(wba && wbb)) {
-    throw "NOOOO";
+    throw "ERROR";
   }
   if (s->GetLitValue(a) == LBool::kTrue || s->GetLitValue(b) == LBool::kTrue)
     return;
