@@ -43,6 +43,7 @@ int main() {
   //testFile("../data/example2_dimacs.txt");
 
   testDir("/home/jens/Downloads/sat_problems/uf20-91", true);
+
   testDir("/home/jens/Downloads/sat_problems/uf50-218", true);
   testDir("/home/jens/Downloads/sat_problems/uuf50-218", false);
   testDir("/home/jens/Downloads/sat_problems/uf75-325", true);

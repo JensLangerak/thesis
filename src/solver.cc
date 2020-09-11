@@ -16,8 +16,8 @@ Var Solver::NewVar() {
   varAssignments_.push_back(LBool::kUnknown);
   reason_.push_back(nullptr);
   level_.push_back(-1);
-  watches_.push_back(Vec<Constr*>());
-  watches_.push_back(Vec<Constr*>());
+  watches_.push_back(Vec<Clause*>());
+  watches_.push_back(Vec<Clause*>());
   varOrder.NewVar();
   return varAssignments_.size() - 1;
 }
@@ -71,11 +71,11 @@ bool Solver::Solve() {
 }
 LBool Solver::Solve(int maxLearnt) {
   for (auto c: constraints_) {
-    if (!c->Simplify(this))
+    if (!c->Simplify(*this))
       return LBool::kFalse;
   }
   for (auto c: learntClauses_) {
-    if (!c->Simplify(this))
+    if (!c->Simplify(*this))
       return LBool::kFalse;
   }
   bool stop = false;
@@ -112,7 +112,7 @@ LBool Solver::Solve(int maxLearnt) {
   }
   return AllAssigned() ? CheckConstraints() : LBool::kUnknown;
 }
-bool Solver::SetLitTrue(Lit lit, Constr * constr) {
+bool Solver::SetLitTrue(Lit lit, Clause * constr) {
   LBool value = lit.complement ? LBool::kFalse : LBool::kTrue;
   Var x = lit.x;
   if (varAssignments_[x] == LBool::kUnknown) {
@@ -137,14 +137,14 @@ bool Solver::Propagate() {
     //std::cout << "Propagat: " << lit.x << " " << (lit.complement ? "F" : "T") << std::endl;
     int index = LitIndex(lit);
     // clear original watch list, clauses should re add themselves to the list.
-    Vec<Constr *> watchList = watches_[index];
+    Vec<Clause *> watchList = watches_[index];
     watches_[index].clear();
 
     for (int i = 0; i < watchList.size(); i++) {
       auto c = watchList[i];
       if (GetLitValue(lit) == LBool::kUnknown)
         throw "Should not propagate unknown literals";
-      if (!c->Propagate(this, lit)){
+      if (!c->Propagate(*this, lit)){
         // conflict found
         this->conflictReason_ = c;
         // re-add the unhandled watches, excluding the current one.
@@ -158,7 +158,7 @@ bool Solver::Propagate() {
   //CheckWatchers();
   return true;
 }
-LBool Solver::GetLitValue(Lit l) {
+LBool Solver::GetLitValue(Lit l) const {
   LBool var = varAssignments_[l.x];
   return l.complement ? ~var : var;
 }
@@ -178,13 +178,6 @@ bool Solver::UndoOne() {
 
   // Update the unit watches that might be no longer unit
   Lit complL = ~l;
-  for (Constr * c : watches_[LitIndex(l)]) {
-    ((Clause *) c)->UndoUnitWatch(this);
-  }
-  // TODO check if it correct that this is triggered
-  for (Constr * c : watches_[LitIndex(complL)]) {
-    ((Clause *) c)->UndoUnitWatch(this);
-  }
   return true;
 }
 
@@ -215,7 +208,7 @@ bool Solver::AllAssigned() {
   }
   return true;
 }
-Vec<Lit> Solver::Analyze(Constr *constr) {
+Vec<Lit> Solver::Analyze(Clause *constr) {
   Vec<Lit> learnt;
   Vec<bool> seen(varAssignments_.size());
   Vec<Lit> conflictReason = conflictReason_->CalcReason();
@@ -236,7 +229,7 @@ Vec<Lit> Solver::Analyze(Constr *constr) {
 
     // go back in time, doing so will reveal an uip
     Lit p;
-    Constr* r;
+    Clause* r;
     do {
       p = learnt_.top();
       r = reason_[p.x];
@@ -259,17 +252,18 @@ void Solver::AddWatch(Lit &lit, Clause *p_clause) {
 int Solver::LitIndex(Lit &lit) {
   return lit.x * 2 + (lit.complement ? 1 : 0);
 }
-int Solver::GetMostRecentLitIndex(Vec<Lit> lits) {
+Lit Solver::GetMostRecentLit(Vec<Lit> lits) {
   std::stack<Lit> hist;
-  int indexLast = -1;
+  Lit last;
+  last.x = -1;
   while(!learnt_.empty()) {
     for (int i = 0; i < lits.size(); i++) {
       if (lits[i].x == learnt_.top().x) {
-        indexLast = i;
+        last = lits[i];
         break;
       }
     }
-    if (indexLast != -1)
+    if (last.x != -1)
       break;
 
     hist.push(learnt_.top());
@@ -279,19 +273,15 @@ int Solver::GetMostRecentLitIndex(Vec<Lit> lits) {
     learnt_.push(hist.top());
     hist.pop();
   };
-  return indexLast;
+  return last;
 }
 bool Solver::HandleConflict() {
   if (decisionLevels_.empty()) // cannot backtrack, so un sat
     return false;
 
   std::stack<Lit> hist = learnt_;
-  Vec<Lit> c = ((Clause *) conflictReason_)->lits_;
-  if (c.size() == 3&& c[0].x == 2 && c[1].x == 42 && c[2].x == 43) {
-    int test= 2;
-  }
   std::stack<int> highestLevel = decisionLevels_;
-  c = Analyze(conflictReason_);
+  Vec<Lit> c = Analyze(conflictReason_);
   varOrder.UpdateAll();
 
   // Find the clause that will be unit and find the lowest backtrackLevel
@@ -310,8 +300,8 @@ bool Solver::HandleConflict() {
     return false;
 
   //CheckWatchers();
-  int mostRecentLitIndex = GetMostRecentLitIndex(c); // needed for the watchers
-  Clause *clause = new Clause(c, true, *this, unit, mostRecentLitIndex);
+  Lit mostRecentLit = GetMostRecentLit(c); // needed for the watchers
+  Clause *clause = new Clause(c, true, *this, unit, mostRecentLit);
 
   // Added clause is unit, so set lit
   learntClauses_.push_back(clause);
@@ -364,7 +354,7 @@ void Solver::ReduceDB(int learnt) {
     if (c->Locked()) {
       learntClauses_.push_back(c);
     } else {
-      c->Remove(this);
+      c->Remove(*this);
       delete c;
     }
   }
@@ -381,7 +371,7 @@ void Solver::RemoveFromWatchList(Lit &lit, Clause *clause) {
 }
 LBool Solver::CheckConstraints() {
   for (auto c : constraints_) {
-    if (!c->Value(this)) {
+    if (!c->Value(*this)) {
       throw "should not happen";
     }
   }
