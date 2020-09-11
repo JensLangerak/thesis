@@ -10,21 +10,19 @@ void VarOrder::NewVar() {
   activities_.push_back(1.0);
   queue_.push(VarActivity(v, 1.0));
   inQueue_.push_back(true);
-  varIncValue = 1.0;
-  varDecayFactor = 1.0 / 0.95;
-
 }
 void VarOrder::Update(Var x) {
   activities_[x] += varIncValue;
+  // since we fake decreasing all the scores, the value can become very large,
+  // only then update everything.
   if (activities_[x] > 1e100) {
     RescaleVars();
   }
   queue_.push(VarActivity(x, activities_[x]));
   inQueue_[x] = true;
-
 }
 void VarOrder::RescaleVars() {
-  while(!queue_.empty())
+  while (!queue_.empty())
     queue_.pop();
   for (int i = 0; i < activities_.size(); i++) {
     activities_[i] *= 1e-100;
@@ -33,7 +31,9 @@ void VarOrder::RescaleVars() {
   }
   varIncValue *= 1e-100;
 }
+
 void VarOrder::UpdateAll() {
+  // has the same effect as actually decreasing all the values.
   varIncValue *= varDecayFactor;
 }
 Var VarOrder::Select(const Vec<LBool> &values) {
@@ -56,9 +56,5 @@ void VarOrder::Undo(Var x) {
     inQueue_[x] = true;
   }
 }
-VarOrder::VarOrder() {
-
-}
-VarOrder::VarActivity::VarActivity(Var i, double activity):var(i), activity(activity) {
-}
-}
+VarOrder::VarOrder() : varDecayFactor(1.0), varIncValue(1.0 / 0.95) {}
+} // namespace simple_sat_solver
