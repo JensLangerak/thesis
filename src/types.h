@@ -8,14 +8,8 @@
 #include <queue>
 #include <vector>
 namespace simple_sat_solver {
-class Clause;
 typedef int Var;
-//struct VarE {
-//  int id;
-//  int decisionLevel;
-//  Clause * reason;
-//  LBool value;
-//};
+
 template <typename T> using Vec = std::vector<T>;
 template <typename T> using Queue = std::queue<T>;
 

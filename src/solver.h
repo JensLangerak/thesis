@@ -90,11 +90,14 @@ private:
   /// Propagates the information on the queue to the clauses that watch the
   /// literals on the queue.
   /// If one of these literals makes a clause false, a conflict is found. The
-  /// conflicting clause is put in conflictReason_ and false is returned.
-  /// When it returns true, the propagation queue is empty, with false this is
-  /// not the case.
+  /// conflicting clause is returned via the conflict parameter and false is
+  /// returned.
+  /// When it returns true, the propagation queue is empty, with false
+  /// this is not the case.
+  /// \param conflict output parameter that holds a pointer to the clause that
+  /// causes the conflict (if any).
   /// \return false if a conflict is found.
-  bool Propagate();
+  bool Propagate(Clause *&conflict);
 
   /// Creates a new decision level and starts the new decision level by setting
   /// lit to true.
@@ -116,7 +119,7 @@ private:
   /// \param clause that is false.
   /// \return the literals that cause the clause to become false. These literals
   /// are false as well.
-  Vec<Lit> Analyze(Clause *constr);
+  Vec<Lit> Analyze(const Clause *constr);
 
   /// Backtrack to the given decision level. Undoes all the moves up to and
   /// including the last decision with a level higher than the desired level.
@@ -137,8 +140,10 @@ private:
   /// to the oldest decision where the new clause is unit.
   /// If it is not possible to backtrack far enough the problem is
   /// unsatisfiable.
+  /// \param conflict clause that causes the conflict, thus all its lits are
+  /// false.
   /// \return false if it could not backtrack far enough.
-  bool HandleConflict();
+  bool HandleConflict(const Clause * conflict);
 
   /// Make a new decision. Var is selected by VarOrder. If there are no var
   /// without value unknown return false.
@@ -190,8 +195,6 @@ private:
                    // of learnt_. -1 if the values is still unknown.
   Vec<Clause *> reason_; // Keeps track of the clause that causes the value for
                          // var. Null if unknown of decision var.
-  Clause *conflictReason_; // Clause that caused the latest conflict. TODO don't
-                           // like this
 
   std::stack<Lit> learnt_; // Order in which that var got assigned a value.
                            // Oldest on the bottom, newest on the top.

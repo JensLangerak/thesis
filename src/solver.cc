@@ -83,10 +83,11 @@ LBool Solver::Solve(int maxLearnt) {
   }
   bool stop = false;
   while (!stop) {
-    if (!Propagate()) { // conflict found
+    Clause * conflict;
+    if (!Propagate(conflict)) { // conflict found
       while (!propagationQueue_.empty())
         propagationQueue_.pop();
-      if (!HandleConflict())
+      if (!HandleConflict(conflict))
         return LBool::kFalse;
     } else {
       if (learntClauses_.size() > maxLearnt) {
@@ -121,7 +122,7 @@ bool Solver::SetLitTrue(Lit lit, Clause *constr) {
   return true;
 }
 
-bool Solver::Propagate() {
+bool Solver::Propagate(Clause *&conflict) {
   while (!propagationQueue_.empty()) {
     Lit lit = propagationQueue_.front();
     propagationQueue_.pop();
@@ -136,7 +137,7 @@ bool Solver::Propagate() {
         throw "Should not propagate unknown literals";
       if (!c->Propagate(*this, lit)) {
         // conflict found
-        this->conflictReason_ = c;
+        conflict = c;
         // re-add the unhandled watches, excluding the current one.
         for (i = i + 1; i < watchList.size(); i++)
           watches_[index].push_back(watchList[i]);
@@ -196,10 +197,10 @@ bool Solver::AllAssigned() const {
   return true;
 }
 
-Vec<Lit> Solver::Analyze(Clause *constr) {
+Vec<Lit> Solver::Analyze(const Clause *constr) {
   Vec<Lit> learnt;
   Vec<bool> seen(varAssignments_.size());
-  Vec<Lit> conflictReason = conflictReason_->CalcReason();
+  Vec<Lit> conflictReason = constr->CalcReason();
   int levelCount = 0; // Keeps track of vars in the current decision level.
   do {
     // handle current conflict reasons
@@ -266,13 +267,13 @@ Lit Solver::GetMostRecentLit(Vec<Lit> lits) {
   return last;
 }
 
-bool Solver::HandleConflict() {
+bool Solver::HandleConflict(const Clause * conflict) {
   if (decisionLevels_.empty()) // cannot backtrack, so un sat
     return false;
 
   std::stack<Lit> hist = learnt_;
   std::stack<int> highestLevel = decisionLevels_;
-  Vec<Lit> c = Analyze(conflictReason_);
+  Vec<Lit> c = Analyze(conflict);
   varOrder.UpdateAll();
 
   // Find the clause that will be unit and find the lowest backtrackLevel
