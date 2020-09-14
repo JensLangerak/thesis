@@ -63,16 +63,18 @@ void Solver::PrintFilledProblem() {
 }
 
 bool Solver::Solve() {
-  int maxLearnt = 20;
+  int maxLearnt = constraints_.size() / 3;
+  int maxConflicts = 100;
   LBool res = LBool::kUnknown;
   while (res == LBool::kUnknown) {
+    res = Solve(maxLearnt, maxConflicts);
     maxLearnt *= 1.1;
-    res = Solve(maxLearnt);
+    maxConflicts *= 1.5;
   }
   return res == LBool::kTrue;
 }
 
-LBool Solver::Solve(int maxLearnt) {
+LBool Solver::Solve(int maxLearnt, int maxConflicts) {
   for (auto c : constraints_) {
     if (!c->Simplify(*this))
       return LBool::kFalse;
@@ -85,8 +87,13 @@ LBool Solver::Solve(int maxLearnt) {
   while (!stop) {
     Clause * conflict;
     if (!Propagate(conflict)) { // conflict found
+      maxConflicts--;
       while (!propagationQueue_.empty())
         propagationQueue_.pop();
+      if (maxConflicts < 0) {
+        Backtrack(0);
+        return LBool::kUnknown;
+      }
       if (!HandleConflict(conflict))
         return LBool::kFalse;
     } else {

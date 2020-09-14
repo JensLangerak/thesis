@@ -42,6 +42,11 @@ int testFile(std::string file) {
   return 0;
 }
 int main() {
+#if defined(_WIN32) || defined(_WIN64) || defined(__WINDOWS__)
+  std::string baseDir = "C:/Users/jens/Downloads/sat_problems";
+#else
+  std::string baseDir = "/home/jens/Downloads/sat_problems";
+#endif
   //testFile("../data/example2_dimacs.txt");
 
   testDir("/home/jens/Downloads/sat_problems/uf20-91", true);
@@ -55,6 +60,16 @@ int main() {
   testDir("/home/jens/Downloads/sat_problems/uf125-538", true);
   testDir("/home/jens/Downloads/sat_problems/uuf125-538", false);
 
+  testDir("/home/jens/Downloads/sat_problems/uf150-645", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf150-645", false);
+  testDir("/home/jens/Downloads/sat_problems/uf175-753", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf175-753", false);
+  testDir("/home/jens/Downloads/sat_problems/uf200-860", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf200-860", false);
+  testDir("/home/jens/Downloads/sat_problems/uf225-960", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf225-960", false);
+  testDir("/home/jens/Downloads/sat_problems/uf250-1065", true);
+  testDir("/home/jens/Downloads/sat_problems/uuf250-1065", false);
   //testFile("/home/jens/Downloads/sat_problems/uuf50-218/uuf50-0154.cnf");
   return 0;
 }

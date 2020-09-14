@@ -163,9 +163,11 @@ private:
   /// \param maxLearnt max number of clauses that can be learned. If it exceeds
   ///        this number, it will forget half of the leaned clauses and returns
   ///        unknown.
+  /// \param maxConflicts max number of conflicts. If to many conflicts occur
+  ///        unknown is returned.
   /// \return True if it has found a solution, False if it has found a clause
   ///         that will always be false, otherwise unknown.
-  LBool Solve(int maxLearnt);
+  LBool Solve(int maxLearnt, int maxConflicts);
 
   /// Delete roughly half of the learnt clauses. Keep the clauses that are used
   /// to assign values to the current set vars.
