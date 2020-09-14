@@ -42,34 +42,34 @@ int testFile(std::string file) {
   return 0;
 }
 int main() {
-#if defined(_WIN32) || defined(_WIN64) || defined(__WINDOWS__)
+#if defined(__CYGWIN__)
   std::string baseDir = "C:/Users/jens/Downloads/sat_problems";
 #else
-  std::string baseDir = "/home/jens/Downloads/sat_problems";
+  std::string baseDir = "/home/jens/Downloads/sat_problems/";
 #endif
   //testFile("../data/example2_dimacs.txt");
 
-  testDir("/home/jens/Downloads/sat_problems/uf20-91", true);
+  testDir(baseDir + "uf20-91", true);
 
-  testDir("/home/jens/Downloads/sat_problems/uf50-218", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf50-218", false);
-  testDir("/home/jens/Downloads/sat_problems/uf75-325", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf75-325", false);
-  testDir("/home/jens/Downloads/sat_problems/uf100-430", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf100-430", false);
-  testDir("/home/jens/Downloads/sat_problems/uf125-538", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf125-538", false);
+  testDir(baseDir + "uf50-218", true);
+  testDir(baseDir + "uuf50-218", false);
+  testDir(baseDir + "uf75-325", true);
+  testDir(baseDir + "uuf75-325", false);
+  testDir(baseDir + "uf100-430", true);
+  testDir(baseDir + "uuf100-430", false);
+  testDir(baseDir + "uf125-538", true);
+  testDir(baseDir + "uuf125-538", false);
 
-  testDir("/home/jens/Downloads/sat_problems/uf150-645", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf150-645", false);
-  testDir("/home/jens/Downloads/sat_problems/uf175-753", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf175-753", false);
-  testDir("/home/jens/Downloads/sat_problems/uf200-860", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf200-860", false);
-  testDir("/home/jens/Downloads/sat_problems/uf225-960", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf225-960", false);
-  testDir("/home/jens/Downloads/sat_problems/uf250-1065", true);
-  testDir("/home/jens/Downloads/sat_problems/uuf250-1065", false);
-  //testFile("/home/jens/Downloads/sat_problems/uuf50-218/uuf50-0154.cnf");
+  testDir(baseDir + "uf150-645", true);
+  testDir(baseDir + "uuf150-645", false);
+  testDir(baseDir + "uf175-753", true);
+  testDir(baseDir + "uuf175-753", false);
+  testDir(baseDir + "uf200-860", true);
+  testDir(baseDir + "uuf200-860", false);
+  testDir(baseDir + "uf225-960", true);
+  testDir(baseDir + "uuf225-960", false);
+  testDir(baseDir + "uf250-1065", true);
+  testDir(baseDir + "uuf250-1065", false);
+  //testFile(baseDir + "uuf50-218/uuf50-0154.cnf");
   return 0;
 }
