@@ -47,6 +47,7 @@ int main() {
 #else
   std::string baseDir = "/home/jens/Downloads/sat_problems/";
 #endif
+  // datasets are retrieved from https://www.cs.ubc.ca/~hoos/SATLIB/benchm.html
   //testFile("../data/example2_dimacs.txt");
 
   testDir(baseDir + "uf20-91", true);
