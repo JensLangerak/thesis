@@ -2,6 +2,8 @@ Encode each cell in the sudoku with 9 booleans.
 For each cell there is exactly 1 of those 9 true.
 For each number in a row/column/3by3 there is exactly 1 var true.
 
+Given cells as unit constraint, (and perhaps remove the constraints that are not needed)
+
 exactly 1 out of n can be encoded as follows (not sure if it is the best way)
 x_1 V x_2 V ... V x_n
 for i in 1..n-1:
