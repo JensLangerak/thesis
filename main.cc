@@ -43,7 +43,7 @@ int testFile(std::string file) {
 }
 int main() {
 #if defined(__CYGWIN__)
-  std::string baseDir = "C:/Users/jens/Downloads/sat_problems";
+  std::string baseDir = "C:/Users/jens/Downloads/sat_problems/";
 #else
   std::string baseDir = "/home/jens/Downloads/sat_problems/";
 #endif

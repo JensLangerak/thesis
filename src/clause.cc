@@ -283,4 +283,8 @@ void Clause::CheckWatchers(const Solver *s) const {
     }
   }
 }
+
+    double Clause::GetActivity() const {
+        return activity_;
+    }
 } // namespace simple_sat_solver

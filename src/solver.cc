@@ -102,7 +102,7 @@ LBool Solver::Solve(int maxLearnt, int maxConflicts) {
         Backtrack(0);
         while (!propagationQueue_.empty())
           propagationQueue_.pop();
-        return LBool::kUnknown; // TODO not return
+        return LBool::kUnknown;
       }
       stop = !AddAssumption();
       constrIncActivity_ *= constrDecayFactor_;
@@ -322,7 +322,9 @@ void Solver::RescaleClauseActivity() {
 }
 
 void Solver::ReduceDB(int learnt) {
-  std::priority_queue<Clause *> queue;
+  auto comp = []( Clause *a, Clause *b) { return a->GetActivity() > b->GetActivity();};
+
+  std::priority_queue<Clause *, Vec<Clause *>, decltype(comp)> queue(comp);
   for (Clause *c : learntClauses_) {
     queue.push(c);
   }

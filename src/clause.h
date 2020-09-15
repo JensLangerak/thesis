@@ -115,6 +115,9 @@ public:
   /// \param s
   void CheckWatchers(const Solver *s) const;
 
+  /// \return the activity score of the clause.
+  double GetActivity() const;
+
 private:
   /// Constructor that sets learnt_, lock_ and activity_.
   /// \param learnt
