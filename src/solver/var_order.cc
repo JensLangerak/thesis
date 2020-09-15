@@ -3,7 +3,7 @@
 //
 
 #include "var_order.h"
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 // TODO create needed datastructure
 void VarOrder::NewVar() {
   Var v = queue_.size();
@@ -57,4 +57,4 @@ void VarOrder::Undo(Var x) {
   }
 }
 VarOrder::VarOrder() : varDecayFactor(1.0), varIncValue(1.0 / 0.95) {}
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver

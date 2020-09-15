@@ -9,7 +9,7 @@
 
 #include "var_order.h"
 
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 Solver::Solver() : constrIncActivity_(1.0), constrDecayFactor_(1.0 / 0.95) {}
 
 Var Solver::NewVar() {
@@ -388,6 +388,6 @@ Vec<bool> Solver::GetModel() const {
       break;
     }
   }
-  return simple_sat_solver::Vec<bool>();
+  return simple_sat_solver::solver::Vec<bool>();
 }
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver

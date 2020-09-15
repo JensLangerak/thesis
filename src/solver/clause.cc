@@ -9,7 +9,7 @@
 
 #include "solver.h"
 
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 void Clause::Remove(Solver &s) {
   s.RemoveFromWatchList(lits_[watchA_], this);
   if (watchA_ != watchB_) {
@@ -287,4 +287,4 @@ void Clause::CheckWatchers(const Solver *s) const {
     double Clause::GetActivity() const {
         return activity_;
     }
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver

@@ -6,7 +6,7 @@
 #define SIMPLESATSOLVER_SRC_CLAUSE_H_
 
 #include "types.h"
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 class Solver;
 class Clause {
 public:
@@ -130,6 +130,6 @@ private:
   bool lock_;
   double activity_;
 };
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver
 
 #endif // SIMPLESATSOLVER_SRC_CLAUSE_H_

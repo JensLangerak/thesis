@@ -11,7 +11,7 @@
 
 #include "solver.h"
 
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 class DimacsFileParser {
 public:
   DimacsFileParser() = default;
@@ -35,5 +35,5 @@ private:
   int nrClauses_;
   Solver *s_; // the solver that is constructed.
 };
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver
 #endif // SIMPLESATSOLVER_SRC_PARSER_H_

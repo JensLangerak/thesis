@@ -6,7 +6,7 @@
 #define SIMPLESATSOLVER_SRC_VAR_ORDER_H_
 
 #include "types.h"
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 /// Class keeps a relative order of all the vars based on their recent activity.
 class VarOrder {
  public:

@@ -8,7 +8,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 Solver *DimacsFileParser::Parse(std::string path) {
   std::ifstream satFileStream(path);
   if (!satFileStream.is_open()) {
@@ -82,4 +82,4 @@ bool DimacsFileParser::ReadClauses(std::ifstream &satFileStream) {
   }
   return true;
 }
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver

@@ -7,7 +7,7 @@
 
 #include <queue>
 #include <vector>
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 typedef int Var;
 
 template <typename T> using Vec = std::vector<T>;
@@ -42,5 +42,5 @@ inline bool operator==(Lit p, Lit q) {
 inline bool operator!=(Lit p, Lit q) {
   return p.x != q.x || p.complement != q.complement;
 }
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver
 #endif // SIMPLESATSOLVER_SRC_TYPES_H_

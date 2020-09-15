@@ -11,7 +11,7 @@
 #include "types.h"
 #include "var_order.h"
 
-namespace simple_sat_solver {
+namespace simple_sat_solver::solver {
 class Solver {
 public:
   Solver();
@@ -205,6 +205,6 @@ private:
                        // decision is added to learnt_, learnt_.size() is stored
                        // on decisionLevels.
 };
-} // namespace simple_sat_solver
+} // namespace simple_sat_solver::solver
 
 #endif // SIMPLESATSOLVER_SRC_SOLVER_H_
