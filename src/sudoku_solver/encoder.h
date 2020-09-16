@@ -5,17 +5,19 @@
 #ifndef SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_ENCODER_H_
 #define SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_ENCODER_H_
 
-#include "../solver/solver.h"
+#include "../solver/types.h"
+#include "sat_problem.h"
+
 namespace simple_sat_solver::sudoku {
 class Encoder {
 public:
-  solver::Solver *Encode(int subSize, std::vector<int> numbers);
+  static SatProblem *Encode(int subSize, std::vector<int> numbers);
 
 private:
   explicit inline Encoder(int subSize)
-      : subSize_(subSize), size_(subSize * subSize), solver_(new solver::Solver()){};
+      : subSize_(subSize), size_(subSize * subSize),
+        problem_(new SatProblem(size_)){};
 
-  void CreateVars();
   void CreateCellConstraints();
   void CreateRowConstraints();
   void CreateColumnConstraints();
@@ -29,7 +31,7 @@ private:
 
   int subSize_;
   int size_;
-  solver::Solver *solver_;
+  SatProblem *problem_;
 };
 } // namespace simple_sat_solver::sudoku
 

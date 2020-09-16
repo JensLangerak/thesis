@@ -6,21 +6,14 @@
 
 namespace simple_sat_solver::sudoku {
 
-solver::Solver *Encoder::Encode(int subSize, std::vector<int> numbers) {
+SatProblem *Encoder::Encode(int subSize, std::vector<int> numbers) {
   Encoder e(subSize);
-  e.CreateVars();
   e.CreateCellConstraints();
   e.CreateRowConstraints();
   e.CreateColumnConstraints();
   e.CreateSubGridConstraints();
   e.AddGivenConstraints(numbers);
-  return e.solver_;
-}
-void Encoder::CreateVars() {
-  // get largest index
-  for (int i = 0; i <= VarIndex(size_ - 1, size_ - 1, size_); i++) {
-    solver_->NewVar();
-  }
+  return e.problem_;
 }
 void Encoder::CreateCellConstraints() {
   for (int x = 0; x < size_; x++) {
@@ -80,13 +73,13 @@ void Encoder::CreateUniqueConstraints(const std::vector<int> &vars) {
   for (int var : vars) {
     atLeastOne.emplace_back(var, false);
   }
-  solver_->AddClause(atLeastOne);
+  problem_->clauses.push_back(atLeastOne);
   for (int i = 0; i < vars.size() - 1; i++) {
     for (int j = i + 1; j < vars.size(); j++) {
       std::vector<solver::Lit> atMostOne;
       atMostOne.emplace_back(vars[i], true);
       atMostOne.emplace_back(vars[j], true);
-      solver_->AddClause(atMostOne);
+      problem_->clauses.push_back(atMostOne);
     }
   }
 }
@@ -98,7 +91,7 @@ void Encoder::AddGivenConstraints(const std::vector<int> vars) {
     int y = i / size_;
     std::vector<solver::Lit> unit;
     unit.emplace_back(VarIndex(x, y, vars[i]), false);
-    solver_->AddClause(unit);
+    problem_->clauses.push_back(unit);
   }
 }
 } // namespace simple_sat_solver::sudoku
