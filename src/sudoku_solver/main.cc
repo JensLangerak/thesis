@@ -63,10 +63,19 @@ void SingleFile(std::string path) {
   };
 }
 
+void AllBenchmarksInFolder(std::string path) {
+  for (const auto &sudoku_entry : std::filesystem::directory_iterator(path)) {
+    std::cout<<sudoku_entry.path() <<std::endl;
+    if (TestSudoku(sudoku_entry.path())) {
+      std::cout << sudoku_entry.path() << "   SOLVED " << std::endl;
+    } else {
+      std::cout << sudoku_entry.path() << "   NOT SOLVED " << std::endl;
+    }
+  }
+}
 void AllBenchmarks() {
   std::cout << "Start benchmark" << std::endl;
-  std::string base_dir =
-      "../../../data/sudoku/"; // TODO use base dir
+  std::string base_dir = "../../../data/sudoku/"; // TODO use base dir
   int no_solution = 0;
   int solved;
   for (const auto &set_entry : std::filesystem::directory_iterator(base_dir)) {
@@ -96,6 +105,7 @@ int main() {
   // SingleFile("../../../data/sudoku/benchmarks3x3/10/puzzle5.txt");
   // SingleFile("../../../data/sudoku/benchmarks3x3/20/puzzle5.txt");
 
+  //AllBenchmarksInFolder("../../../data/sudoku/benchmarks5x5/55/");
   AllBenchmarks();
   return 0;
 }
