@@ -4,7 +4,7 @@
 
 #include "solver.h"
 
-#include <bits/stdc++.h>
+#include <algorithm>
 #include <iostream>
 
 #include "var_order.h"
@@ -85,7 +85,7 @@ LBool Solver::Solve(int maxLearnt, int maxConflicts) {
   }
   bool stop = false;
   while (!stop) {
-    Clause * conflict;
+    Clause *conflict;
     if (!Propagate(conflict)) { // conflict found
       maxConflicts--;
       while (!propagationQueue_.empty())
@@ -253,7 +253,7 @@ Lit Solver::GetMostRecentLit(Vec<Lit> lits) {
   Lit last;
   last.x = -1;
   while (!learnt_.empty()) {
-    for (auto & lit : lits) {
+    for (auto &lit : lits) {
       if (lit.x == learnt_.top().x) {
         last = lit;
         break;
@@ -274,7 +274,7 @@ Lit Solver::GetMostRecentLit(Vec<Lit> lits) {
   return last;
 }
 
-bool Solver::HandleConflict(const Clause * conflict) {
+bool Solver::HandleConflict(const Clause *conflict) {
   if (decisionLevels_.empty()) // cannot backtrack, so un sat
     return false;
 
@@ -322,7 +322,9 @@ void Solver::RescaleClauseActivity() {
 }
 
 void Solver::ReduceDB(int learnt) {
-  auto comp = []( Clause *a, Clause *b) { return a->GetActivity() > b->GetActivity();};
+  auto comp = [](Clause *a, Clause *b) {
+    return a->GetActivity() > b->GetActivity();
+  };
 
   std::priority_queue<Clause *, Vec<Clause *>, decltype(comp)> queue(comp);
   for (Clause *c : learntClauses_) {
@@ -388,6 +390,6 @@ Vec<bool> Solver::GetModel() const {
       break;
     }
   }
-  return simple_sat_solver::solver::Vec<bool>();
+  return res;
 }
 } // namespace simple_sat_solver::solver

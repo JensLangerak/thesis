@@ -51,25 +51,25 @@ int main() {
 
   testDir(baseDir + "uf20-91", true);
 
-  testDir(baseDir + "uf50-218", true);
-  testDir(baseDir + "uuf50-218", false);
-  testDir(baseDir + "uf75-325", true);
-  testDir(baseDir + "uuf75-325", false);
-  testDir(baseDir + "uf100-430", true);
-  testDir(baseDir + "uuf100-430", false);
-  testDir(baseDir + "uf125-538", true);
-  testDir(baseDir + "uuf125-538", false);
-
-  testDir(baseDir + "uf150-645", true);
-  testDir(baseDir + "uuf150-645", false);
-  testDir(baseDir + "uf175-753", true);
-  testDir(baseDir + "uuf175-753", false);
-  testDir(baseDir + "uf200-860", true);
-  testDir(baseDir + "uuf200-860", false);
-  testDir(baseDir + "uf225-960", true);
-  testDir(baseDir + "uuf225-960", false);
-  testDir(baseDir + "uf250-1065", true);
-  testDir(baseDir + "uuf250-1065", false);
+//  testDir(baseDir + "uf50-218", true);
+//  testDir(baseDir + "uuf50-218", false);
+//  testDir(baseDir + "uf75-325", true);
+//  testDir(baseDir + "uuf75-325", false);
+//  testDir(baseDir + "uf100-430", true);
+//  testDir(baseDir + "uuf100-430", false);
+//  testDir(baseDir + "uf125-538", true);
+//  testDir(baseDir + "uuf125-538", false);
+//
+//  testDir(baseDir + "uf150-645", true);
+//  testDir(baseDir + "uuf150-645", false);
+//  testDir(baseDir + "uf175-753", true);
+//  testDir(baseDir + "uuf175-753", false);
+//  testDir(baseDir + "uf200-860", true);
+//  testDir(baseDir + "uuf200-860", false);
+//  testDir(baseDir + "uf225-960", true);
+//  testDir(baseDir + "uuf225-960", false);
+//  testDir(baseDir + "uf250-1065", true);
+//  testDir(baseDir + "uuf250-1065", false);
   //testFile(baseDir + "uuf50-218/uuf50-0154.cnf");
   return 0;
 }

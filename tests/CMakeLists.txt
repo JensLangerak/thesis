@@ -1,5 +1,10 @@
 enable_testing()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR} )
+#add_subdirectory(lib/catch2)
 add_subdirectory(sudoku_solver)
 add_executable(Catch_tests_run main_test.cc)
-target_link_libraries(Catch_tests_run sudoku_solver_test)
+target_link_libraries (Catch_tests_run
+        -Wl,--whole-archive
+        sudoku_solver_test
+        -Wl,--no-whole-archive
+        )
