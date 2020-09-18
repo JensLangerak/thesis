@@ -5,12 +5,13 @@
 #include <filesystem>
 #include <iostream>
 
+#include "../sat/sat_problem.h"
+#include "../solver_wrappers/i_solver.h"
+#include "../solver_wrappers/simple_solver.h"
 #include "benchmark_parser.h"
 #include "encoder.h"
-#include "sudoku_solver.h"
 
-using namespace simple_sat_solver::sudoku;
-
+namespace simple_sat_solver::sudoku {
 void PrintSudoku(Sudoku &s) {
   for (int i = 0; i < s.cells.size(); i++) {
     std::cout << s.cells[i] << " ";
@@ -34,10 +35,13 @@ bool SolutionValidForInput(const Sudoku &solution, const Sudoku &input) {
 
 bool TestSudoku(std::string path) {
   Sudoku sudoku = BenchmarkParser::Parse(path);
-  SatProblem p = Encoder::Encode(sudoku);
-  SudokuSolver s;
-  bool res = s.Solve(p);
-  std::vector<bool> sat_solution = s.GetSolution();
+  sat::SatProblem *p = Encoder::Encode(sudoku);
+  solver_wrappers::ISolver *s = new solver_wrappers::SimpleSolver();
+  bool res = s->Solve(*p);
+  std::vector<bool> sat_solution = s->GetSolution();
+  delete s;
+  delete p;
+
   Sudoku solution = Encoder::Decode(sudoku.sub_size, sat_solution);
 
   if (!SolutionValidForInput(solution, sudoku))
@@ -46,11 +50,11 @@ bool TestSudoku(std::string path) {
 }
 void SingleFile(const std::string &path) {
   Sudoku sudoku = BenchmarkParser::Parse(path);
-  SatProblem p = Encoder::Encode(sudoku);
-  SudokuSolver s;
-  if (s.Solve(p)) {
+  sat::SatProblem *p = Encoder::Encode(sudoku);
+  solver_wrappers::ISolver *s = new solver_wrappers::SimpleSolver();
+  if (s->Solve(*p)) {
     std::cout << "Solved!" << std::endl;
-    std::vector<bool> sat_solution = s.GetSolution();
+    std::vector<bool> sat_solution = s->GetSolution();
     Sudoku solution = Encoder::Decode(sudoku.sub_size, sat_solution);
     if (!SolutionValidForInput(solution, sudoku)) {
       std::cout << "Error" << std::endl;
@@ -60,6 +64,8 @@ void SingleFile(const std::string &path) {
   } else {
     std::cout << "Not solvable" << std::endl;
   }
+  delete s;
+  delete p;
 }
 
 void AllBenchmarksInFolder(const std::string &path) {
@@ -99,12 +105,13 @@ void AllBenchmarks() {
   std::cout << std::endl;
   std::cout << "Solved: " << solved << " / " << total << std::endl;
 }
+}
 
 int main() {
   // SingleFile("../../../data/sudoku/benchmarks3x3/10/puzzle5.txt");
   // SingleFile("../../../data/sudoku/benchmarks3x3/20/puzzle5.txt");
 
   // AllBenchmarksInFolder("../../../data/sudoku/benchmarks5x5/55/");
-  AllBenchmarks();
+  simple_sat_solver::sudoku::AllBenchmarks();
   return 0;
 }

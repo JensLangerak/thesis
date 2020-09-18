@@ -7,11 +7,15 @@
 
 #include <queue>
 #include <vector>
+
+#include "../sat/types.h"
 namespace simple_sat_solver::solver {
-typedef int Var;
 
 template <typename T> using Vec = std::vector<T>;
 template <typename T> using Queue = std::queue<T>;
+
+using simple_sat_solver::sat::Var;
+using simple_sat_solver::sat::Lit;
 
 enum class LBool { kUnknown, kTrue, kFalse };
 
@@ -26,19 +30,6 @@ inline LBool operator~(LBool x) {
   }
   return LBool::kUnknown;
 }
-struct Lit {
-  Var x;
-  bool complement;
-  Lit(Var x, bool complement) : x(x), complement(complement){};
-  Lit() : x(0), complement(false){};
-};
 
-inline Lit operator~(Lit p) { return Lit(p.x, !p.complement); }
-inline bool operator==(Lit p, Lit q) {
-  return p.x == q.x && p.complement == q.complement;
-}
-inline bool operator!=(Lit p, Lit q) {
-  return p.x != q.x || p.complement != q.complement;
-}
 } // namespace simple_sat_solver::solver
 #endif // SIMPLESATSOLVER_SRC_SOLVER_TYPES_H_

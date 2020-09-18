@@ -7,8 +7,8 @@
 #include "src/sudoku_solver/encoder.h"
 
 namespace simple_sat_solver::sudoku {
-bool IsFalse(std::vector<solver::Lit> &clause,
-             std::vector<solver::LBool> &values) {
+bool IsFalse(const std::vector<solver::Lit> &clause,
+             const std::vector<solver::LBool> &values) {
   for (auto l : clause) {
     solver::LBool value = values[l.x];
     if (value == solver::LBool::kUnknown ||
@@ -19,8 +19,8 @@ bool IsFalse(std::vector<solver::Lit> &clause,
   return true;
 }
 
-bool IsTrue(std::vector<solver::Lit> &clause,
-            std::vector<solver::LBool> &values) {
+bool IsTrue(const std::vector<solver::Lit> &clause,
+            const std::vector<solver::LBool> &values) {
   for (auto l : clause) {
     solver::LBool value = values[l.x];
     if (value == solver::LBool::kTrue && (!l.complement) ||
@@ -30,24 +30,24 @@ bool IsTrue(std::vector<solver::Lit> &clause,
   return false;
 }
 
-bool AnyTrue(std::vector<std::vector<solver::Lit>> &clauses,
-             std::vector<solver::LBool> &values) {
+bool AnyTrue(const std::vector<std::vector<solver::Lit>> &clauses,
+             const std::vector<solver::LBool> &values) {
   for (auto c : clauses) {
     if (IsTrue(c, values))
       return true;
   }
   return false;
 }
-bool AnyFalse(std::vector<std::vector<solver::Lit>> &clauses,
-              std::vector<solver::LBool> &values) {
+bool AnyFalse(const std::vector<std::vector<solver::Lit>> &clauses,
+              const std::vector<solver::LBool> &values) {
   for (auto c : clauses) {
     if (IsFalse(c, values))
       return true;
   }
   return false;
 }
-bool AllTrue(std::vector<std::vector<solver::Lit>> &clauses,
-             std::vector<solver::LBool> &values) {
+bool AllTrue(const std::vector<std::vector<solver::Lit>> &clauses,
+             const std::vector<solver::LBool> &values) {
   for (auto c : clauses) {
     if (!IsTrue(c, values))
       return false;
@@ -307,12 +307,12 @@ TEST_CASE("Test 2x2 structure", "[sudoku]") {
       0, 0, 0, 0,
       0, 0, 0, 0});
   // @formatter:on
-  SatProblem p = Encoder::Encode(sudoku);
+  sat::SatProblem *p = Encoder::Encode(sudoku);
   auto assignments = GetAssignments(sudoku);
-  SECTION("Size") { REQUIRE(p.nr_vars == 4 * 4 * 4); }
+  SECTION("Size") { REQUIRE(p->GetNrVars() == 4 * 4 * 4); }
 
   SECTION("All lits uses existing vars") {
-    for (const auto &c : p.clauses) {
+    for (const auto &c : p->GetClauses()) {
       for (auto l : c) {
         REQUIRE(l.x >= 0);
         REQUIRE(l.x < 4 * 4 * 4);
@@ -321,8 +321,10 @@ TEST_CASE("Test 2x2 structure", "[sudoku]") {
   }
 
   SECTION("Currently solvable") {
-    REQUIRE(AnyFalse(p.clauses, assignments) == false);
+    REQUIRE(AnyFalse(p->GetClauses(), assignments) == false);
   }
+
+  delete p;
 }
 TEST_CASE("Test 2x2 illegal states", "[sudoku]") {
   SECTION("Duplicated filled in cell") {
@@ -332,10 +334,10 @@ TEST_CASE("Test 2x2 illegal states", "[sudoku]") {
         0, 0, 0, 0,
         0, 0, 0, 0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
     assignments[0] = solver::LBool::kTrue;
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
   SECTION("Duplicated in column") {
     Sudoku sudoku(2,{// @formatter:off
@@ -344,9 +346,9 @@ TEST_CASE("Test 2x2 illegal states", "[sudoku]") {
         0, 0, 0, 0,
         2, 0, 0, 0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
   SECTION("Duplicated in row") {
     Sudoku sudoku(2,{// @formatter:off
@@ -355,9 +357,9 @@ TEST_CASE("Test 2x2 illegal states", "[sudoku]") {
         0, 3, 0, 3,
         0, 0, 0, 0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
   SECTION("Duplicated in subgrid") {
     Sudoku sudoku(2, {// @formatter:off
@@ -366,9 +368,9 @@ TEST_CASE("Test 2x2 illegal states", "[sudoku]") {
         0, 0, 4, 0,
         0, 0, 0, 4});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
 }
 
@@ -380,10 +382,10 @@ TEST_CASE("Test 2x2 Legal sudoku state", "[sudoku]") {
         0, 3, 0, 1,
         1, 0, 4, 0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(!AnyFalse(p.clauses, assignments));
-    REQUIRE(!AllTrue(p.clauses, assignments));
+    REQUIRE(!AnyFalse(p->GetClauses(), assignments));
+    REQUIRE(!AllTrue(p->GetClauses(), assignments));
   }
   SECTION("Almost solved") {
     Sudoku sudoku(2, {// @formatter:off
@@ -392,10 +394,10 @@ TEST_CASE("Test 2x2 Legal sudoku state", "[sudoku]") {
         3, 1, -1, 4,
         4, 2, 3, 1});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(!AnyFalse(p.clauses, assignments));
-    REQUIRE(!AllTrue(p.clauses, assignments));
+    REQUIRE(!AnyFalse(p->GetClauses(), assignments));
+    REQUIRE(!AllTrue(p->GetClauses(), assignments));
   }
   SECTION("Completely solved") {
     Sudoku sudoku(2, {// @formatter:off
@@ -404,10 +406,10 @@ TEST_CASE("Test 2x2 Legal sudoku state", "[sudoku]") {
         3, 1, 2, 4,
         4, 2, 3, 1});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(AnyFalse(p.clauses, assignments) == false);
-    REQUIRE(AllTrue(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments) == false);
+    REQUIRE(AllTrue(p->GetClauses(), assignments));
   }
 }
 
@@ -423,12 +425,12 @@ TEST_CASE("Test 3x3 structure", "[sudoku]") {
       0,0,0,0,0,0,0,0,0,
       0,0,0,0,0,0,0,0,0});
   // @formatter:on
-  SatProblem p = Encoder::Encode(sudoku);
+  sat::SatProblem *p = Encoder::Encode(sudoku);
   auto assignments = GetAssignments(sudoku);
-  SECTION("Size") { REQUIRE(p.nr_vars == 9 * 9 * 9); }
+  SECTION("Size") { REQUIRE(p->GetNrVars() == 9 * 9 * 9); }
 
   SECTION("All lits uses existing vars") {
-    for (const auto &c : p.clauses) {
+    for (const auto &c : p->GetClauses()) {
       for (auto l : c) {
         REQUIRE(l.x >= 0);
         REQUIRE(l.x < 9 * 9 * 9);
@@ -437,7 +439,7 @@ TEST_CASE("Test 3x3 structure", "[sudoku]") {
   }
 
   SECTION("Currently solvable") {
-    REQUIRE(AnyFalse(p.clauses, assignments) == false);
+    REQUIRE(AnyFalse(p->GetClauses(), assignments) == false);
   }
 }
 TEST_CASE("Test 3x3 illegal states", "[sudoku]") {
@@ -454,10 +456,10 @@ TEST_CASE("Test 3x3 illegal states", "[sudoku]") {
         0,0,0,0,0,0,0,0,0,
         0,0,0,0,0,0,0,0,0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
     assignments[0] = solver::LBool::kTrue;
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
   SECTION("Duplicated in column") {
 
@@ -472,9 +474,9 @@ TEST_CASE("Test 3x3 illegal states", "[sudoku]") {
         0,0,0,0,0,0,0,0,0,
         0,0,0,1,0,0,0,0,0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
   SECTION("Duplicated in row") {
 
@@ -489,9 +491,9 @@ TEST_CASE("Test 3x3 illegal states", "[sudoku]") {
         0,0,0,0,0,0,0,0,0,
         0,0,0,0,0,0,0,0,0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
   SECTION("Duplicated in subgrid") {
 
@@ -506,9 +508,9 @@ TEST_CASE("Test 3x3 illegal states", "[sudoku]") {
         0,0,0,0,0,0,0,0,0,
         0,0,0,0,0,0,0,0,0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(AnyFalse(p.clauses, assignments));
+    REQUIRE(AnyFalse(p->GetClauses(), assignments));
   }
 }
 
@@ -526,10 +528,10 @@ TEST_CASE("Test 3x3 Legal sudoku state", "[sudoku]") {
         0,0,0,0,0,0,0,0,0,
         0,0,1,0,0,0,0,0,0});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(!AnyFalse(p.clauses, assignments));
-    REQUIRE(!AllTrue(p.clauses, assignments));
+    REQUIRE(!AnyFalse(p->GetClauses(), assignments));
+    REQUIRE(!AllTrue(p->GetClauses(), assignments));
   }
   SECTION("Almost solved") {
 
@@ -544,10 +546,10 @@ TEST_CASE("Test 3x3 Legal sudoku state", "[sudoku]") {
         8,5,2,7,4,1,6,3,9,
         9,6,3,8,5,2,7,4,1});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(!AnyFalse(p.clauses, assignments));
-    REQUIRE(!AllTrue(p.clauses, assignments));
+    REQUIRE(!AnyFalse(p->GetClauses(), assignments));
+    REQUIRE(!AllTrue(p->GetClauses(), assignments));
   }
   SECTION("Completely solved") {
     Sudoku sudoku(3, {// @formatter:off
@@ -561,10 +563,10 @@ TEST_CASE("Test 3x3 Legal sudoku state", "[sudoku]") {
         8,5,2,7,4,1,6,3,9,
         9,6,3,8,5,2,7,4,1});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
-    REQUIRE(!AnyFalse(p.clauses, assignments));
-    REQUIRE(AllTrue(p.clauses, assignments));
+    REQUIRE(!AnyFalse(p->GetClauses(), assignments));
+    REQUIRE(AllTrue(p->GetClauses(), assignments));
   }
 }
 TEST_CASE("Test decoder", "[sudoku]") {
@@ -580,7 +582,7 @@ TEST_CASE("Test decoder", "[sudoku]") {
         8,5,2,7,4,1,6,3,9,
         9,6,3,8,5,2,7,4,1});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
     Sudoku decoded = Encoder::Decode(3, assignments);
     REQUIRE(sudoku == decoded);
@@ -593,7 +595,7 @@ TEST_CASE("Test decoder", "[sudoku]") {
         3, 1, -1, 4,
         4, 2, 3, 1});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
     Sudoku decoded = Encoder::Decode(2, assignments);
     REQUIRE(sudoku.sub_size == decoded.sub_size);
@@ -611,7 +613,7 @@ TEST_CASE("Test decoder", "[sudoku]") {
       3, 1, 2, 4, 
       4, 2, 3, 1});
     // @formatter:on
-    SatProblem p = Encoder::Encode(sudoku);
+    sat::SatProblem *p = Encoder::Encode(sudoku);
     auto assignments = GetAssignments(sudoku);
     REQUIRE(assignments[2] == solver::LBool::kFalse);
     assignments[2] = solver::LBool::kTrue;

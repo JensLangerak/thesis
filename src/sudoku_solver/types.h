@@ -20,14 +20,6 @@ struct Sudoku {
       : sub_size(sub_size), cells(std::move(cells)){};
 };
 
-struct SatProblem {
-  int nr_vars;
-  std::vector<std::vector<solver::Lit>> clauses;
-
-  SatProblem() : nr_vars(0), clauses(){};
-  explicit SatProblem(int nr_vars) : nr_vars(nr_vars){};
-};
-
 inline bool operator==(const Sudoku &lhs, const Sudoku &rhs) {
   return lhs.sub_size == rhs.sub_size && lhs.cells == rhs.cells;
 }

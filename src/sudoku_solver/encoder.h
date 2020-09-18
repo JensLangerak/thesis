@@ -5,6 +5,7 @@
 #ifndef SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_ENCODER_H_
 #define SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_ENCODER_H_
 
+#include "../sat/sat_problem.h"
 #include "../solver/types.h"
 #include "types.h"
 
@@ -23,7 +24,7 @@ public:
   /// Encode the sudoku as a SAT problem.
   /// \param sudoku the sudoku that must be encoded.
   /// \return a SAT problem that is satisfiable iff the sudoku is solvable.
-  static SatProblem Encode(const Sudoku &sudoku);
+  static sat::SatProblem* Encode(const Sudoku &sudoku);
 
   // TODO methods are currently duplicated
   /// Convert the SAT solution back to the sudoku.
@@ -38,7 +39,7 @@ private:
   /// \param sub_size size of the sub grid in the sudoku.
   explicit inline Encoder(int sub_size)
       : sub_size_(sub_size), size_(sub_size * sub_size),
-        problem_(SatProblem(size_ * size_ * size_)){};
+        problem_(new sat::SatProblem(size_ * size_ * size_)){};
 
   /// Add the constraints that each cell must have 1 filled in number.
   void CreateCellConstraints();
@@ -49,9 +50,6 @@ private:
   /// Add the constraints that each number is a subgrid must be unique.
   void CreateSubGridConstraints();
 
-  /// Add constraints that specifies that exactly one var of vars must be true.
-  /// \param vars a group of vars where exactly one var must be true.
-  void CreateUniqueConstraints(const std::vector<int> &vars);
   /// Add the constraints that force the given numbers.
   /// \param vars the cells of a unsolved sudoku. Unrevealed cells have a value
   /// < 1.
@@ -68,7 +66,7 @@ private:
 
   int sub_size_;
   int size_;
-  SatProblem problem_;
+  sat::SatProblem *problem_;
 };
 } // namespace simple_sat_solver::sudoku
 
