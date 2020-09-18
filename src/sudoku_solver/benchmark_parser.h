@@ -10,6 +10,9 @@
 namespace simple_sat_solver::sudoku {
 class BenchmarkParser {
 public:
+  /// Read a sudoku file and construct a sudoku.
+  /// \param file the file that contains the sudoku.
+  /// \return a sudoku.
   static Sudoku Parse(const std::string &file);
 };
 } // namespace simple_sat_solver::sudoku

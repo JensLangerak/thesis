@@ -69,6 +69,12 @@ void Encoder::CreateSubGridConstraints() {
   }
 }
 void Encoder::CreateUniqueConstraints(const std::vector<int> &vars) {
+  // Creates a constraints that forces that one of the vars must be true
+  // x_0 V x_1 V .. V x_n
+  //
+  // Next it creates a number of constraints that forces that no more than one
+  // can be true.
+  // ~x_i V ~x_j  for all i != j i,j in 0..n
   std::vector<solver::Lit> at_least_one;
   at_least_one.reserve(vars.size());
   for (int var : vars) {
