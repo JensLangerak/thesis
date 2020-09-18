@@ -1,0 +1,25 @@
+nEmpreses = 5;
+nReunions = 6;
+nTaules = 3;
+nFrangesTotal = 4;
+nFrangesMati = 2;
+
+demanades = [|1, 2, 3,
+|1, 3, 3,
+|1, 4, 3,
+|4, 2, 3,
+|4, 3, 3,
+|5, 3, 2,
+|];
+
+nReunionsEmpresa = [3, 2, 3, 3, 1];
+empresesZero = 0;
+
+fixat = [0,0,0,0,0,0];
+
+prohibides = [{0,},
+{0,},
+{0,},
+{0,},
+{0,},
+];

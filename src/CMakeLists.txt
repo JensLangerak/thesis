@@ -1,4 +1,5 @@
 add_subdirectory(solver)
 add_subdirectory(sudoku)
 add_subdirectory(sat)
+add_subdirectory(b2b)
 add_subdirectory(solver_wrappers)

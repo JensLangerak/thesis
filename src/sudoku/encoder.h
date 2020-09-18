@@ -7,7 +7,7 @@
 
 #include "../sat/sat_problem.h"
 #include "../solver/types.h"
-#include "types.h"
+#include "sudoku.h"
 
 namespace simple_sat_solver::sudoku {
 // TODO decide how to split encoding/decoding, maybe call it convert and remove
