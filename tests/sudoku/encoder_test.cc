@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "lib/catch2/catch.hpp"
-#include "src/sudoku_solver/encoder.h"
+#include "src/sudoku/encoder.h"
 
 namespace simple_sat_solver::sudoku {
 bool IsFalse(const std::vector<solver::Lit> &clause,

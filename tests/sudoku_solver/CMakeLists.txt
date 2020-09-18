@@ -1,3 +1,0 @@
-add_library(sudoku_solver_test STATIC encoder_test.cc)
-target_link_libraries(sudoku_solver_test sudoku_solver)
-target_include_directories(sudoku_solver_test PRIVATE ${PROJECT_SOURCE_DIR}/src/sudoku_solver)

@@ -1,8 +1,0 @@
-add_library(sudoku_solver encoder.cc encoder.h benchmark_parser.cc benchmark_parser.h)
-
-target_link_libraries(sudoku_solver solver)
-target_link_libraries(sudoku_solver sat)
-
-add_executable(sudoku_solver_benchmark main.cc)
-target_link_libraries(sudoku_solver_benchmark sudoku_solver)
-target_link_libraries(sudoku_solver_benchmark solvers)
