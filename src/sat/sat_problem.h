@@ -19,7 +19,9 @@ public:
   void AddClause(const std::vector<Lit> &lits);
   inline void AtLeastOne(const std::vector<Lit> &lits) { AddClause(lits); };
   void AtMostOne(const std::vector<Lit> &lits);
+  void AtMostK(int k, const std::vector<Lit> &lits);
   void ExactlyOne(const std::vector<Lit> &lits);
+  void Implies(const Lit &antecedent, const Lit &consequent );
   inline int GetNrVars() const { return nr_vars_; }
   inline std::vector<std::vector<Lit>> GetClauses() const { return clauses_; };
 
