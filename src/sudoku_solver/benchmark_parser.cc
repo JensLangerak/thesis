@@ -9,7 +9,7 @@
 
 #include "encoder.h"
 namespace simple_sat_solver::sudoku {
-Sudoku BenchmarkParser::Parse(std::string path) {
+Sudoku BenchmarkParser::Parse(const std::string &path) {
   std::ifstream file_stream(path);
   if (!file_stream.is_open()) {
     std::cout << "Cannot open file: " << path << std::endl;
@@ -22,11 +22,11 @@ Sudoku BenchmarkParser::Parse(std::string path) {
   file_stream >> value;
 
   std::vector<int> numbers = std::vector<int>();
-  while(file_stream >> value) {
+  while (file_stream >> value) {
     numbers.push_back(value);
   }
 
   file_stream.close();
   return Sudoku(sub_size, numbers);
 }
-}
+} // namespace simple_sat_solver::sudoku

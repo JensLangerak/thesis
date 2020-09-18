@@ -11,9 +11,9 @@
 
 namespace simple_sat_solver::solver {
 void Clause::Remove(Solver &s) {
-  s.RemoveFromWatchList(lits_[watchA_], this);
-  if (watchA_ != watchB_) {
-    s.RemoveFromWatchList(lits_[watchB_], this);
+  s.RemoveFromWatchList(lits_[watch_a_], this);
+  if (watch_a_ != watch_b_) {
+    s.RemoveFromWatchList(lits_[watch_b_], this);
   }
 }
 
@@ -52,30 +52,30 @@ bool Clause::Simplify(Solver &s) {
 // If literal is true, we watch it in case its value gets changed (after undo)
 // If literal is unknown, if gets a value then either the clause becomes true
 // or the clause might become unit. Or the clause becomes false.
-// We will allways watch two different literals, unless there is only one
+// We will always watch two different literals, unless there is only one
 // literal not false.
 bool Clause::Propagate(Solver &s, Lit p) {
-  if (!(lits_[watchA_] == p || lits_[watchB_] == p))
+  if (!(lits_[watch_a_] == p || lits_[watch_b_] == p))
     throw "Illegal state: notified by unregistered watch";
   // One of the watchers is true, keep watching current literal.
-  if (s.GetLitValue(lits_[watchA_]) == LBool::kTrue ||
-      s.GetLitValue(lits_[watchB_]) == LBool::kTrue) {
+  if (s.GetLitValue(lits_[watch_a_]) == LBool::kTrue ||
+      s.GetLitValue(lits_[watch_b_]) == LBool::kTrue) {
     s.AddWatch(p, this);
     return true;
   }
   // Lit is made false, search for a lit that is true or unknown.
   // Make sure that the lit is not watched by the other watcher.
   for (int i = 0; i < lits_.size(); i++) {
-    if (i == watchA_ || i == watchB_)
+    if (i == watch_a_ || i == watch_b_)
       continue;
     if (s.GetLitValue(lits_[i]) != LBool::kFalse) {
-      Lit lNew = lits_[i];
-      if (p == lits_[watchA_])
-        watchA_ = i;
+      Lit l_new = lits_[i];
+      if (p == lits_[watch_a_])
+        watch_a_ = i;
       else
-        watchB_ = i;
+        watch_b_ = i;
 
-      s.AddWatch(lNew, this);
+      s.AddWatch(l_new, this);
       return true;
     }
   }
@@ -83,31 +83,33 @@ bool Clause::Propagate(Solver &s, Lit p) {
   // Clause has become either false or unit
   s.AddWatch(p, this);
 
-  // uupdate activity
-  activity_ += s.constrIncActivity_;
+  // update activity
+  activity_ += s.constr_inc_activity_;
   if (activity_ > 1e100)
     s.RescaleClauseActivity();
 
   // make sure that watchA is the lit that decides false or unit
-  if (p == lits_[watchA_]) {
-    Var temp = watchA_;
-    watchA_ = watchB_;
-    watchB_ = temp;
+  if (p == lits_[watch_a_]) {
+    Var temp = watch_a_;
+    watch_a_ = watch_b_;
+    watch_b_ = temp;
   }
 
   // For debug purposes, check if it is indeed unit or false.
   for (Lit l : lits_) {
-    if (l == lits_[watchA_])
+    if (l == lits_[watch_a_])
       continue;
     if (s.GetLitValue(l) != LBool::kFalse)
       throw "Clause is not unit";
   }
 
   // Clause is unit or false, SetLit will fail when false
-  return s.SetLitTrue(lits_[watchA_], this);
+  return s.SetLitTrue(lits_[watch_a_], this);
 }
 
-Clause::Clause(bool learnt) : learnt_(learnt), activity_(1.0), lock_(false) {}
+Clause::Clause(bool learnt)
+    : learnt_(learnt), activity_(1.0), lock_(false), watch_a_(-1),
+      watch_b_(-1) {}
 
 Clause::Clause(Vec<Lit> lits, bool learnt, Solver &s) : Clause(learnt) {
   // Remove duplicates
@@ -120,21 +122,21 @@ Clause::Clause(Vec<Lit> lits, bool learnt, Solver &s) : Clause(learnt) {
 
   // Set watchers
   if (lits.empty()) {
-    watchA_ = -1;
-    watchB_ = -1;
+    watch_a_ = -1;
+    watch_b_ = -1;
   } else if (lits.size() == 1) {
-    watchA_ = 0;
-    watchB_ = 0;
+    watch_a_ = 0;
+    watch_b_ = 0;
     Lit l = lits_[0];
     s.AddWatch(l, this);
   } else {
-    watchA_ = 0;
-    watchB_ = 1;
-    Lit lA = lits_[watchA_];
-    Lit lB = lits_[watchB_];
+    watch_a_ = 0;
+    watch_b_ = 1;
+    Lit l_a = lits_[watch_a_];
+    Lit l_b = lits_[watch_b_];
 
-    s.AddWatch(lA, this);
-    s.AddWatch(lB, this);
+    s.AddWatch(l_a, this);
+    s.AddWatch(l_b, this);
   }
 }
 
@@ -181,35 +183,35 @@ Vec<Lit> Clause::CalcReason(Lit p) const {
   return reason;
 }
 
-Clause::Clause(const Vec<Lit> &lits, bool learnt, Solver &s, Lit unitLit,
-               Lit mostRecentLearnt)
+Clause::Clause(const Vec<Lit> &lits, bool learnt, Solver &s, Lit unit_lit,
+               Lit most_recent_learnt)
     : Clause(learnt) {
   lits_ = lits;
 
   // Get indices for the unit and watch Literal
-  int indexUnit = -1;
-  int mostRecentLearntIndex = -1;
+  int index_unit = -1;
+  int most_recent_learnt_index = -1;
   for (int i = 0; i < lits_.size(); i++) {
-    if (lits_[i] == unitLit)
-      indexUnit = i;
-    if (lits_[i] == mostRecentLearnt)
-      mostRecentLearntIndex = i;
-    if (indexUnit != -1 && mostRecentLearntIndex != -1)
+    if (lits_[i] == unit_lit)
+      index_unit = i;
+    if (lits_[i] == most_recent_learnt)
+      most_recent_learnt_index = i;
+    if (index_unit != -1 && most_recent_learnt_index != -1)
       break;
   }
 
-  watchA_ = indexUnit;
-  watchB_ = mostRecentLearntIndex;
-  // No watchB_ if there is only one literal
-  if (watchB_ == -1) {
+  watch_a_ = index_unit;
+  watch_b_ = most_recent_learnt_index;
+  // No watch_b_ if there is only one literal
+  if (watch_b_ == -1) {
     if (lits.size() == 1)
-      watchB_ = 0;
+      watch_b_ = 0;
     else
       throw "Clause is not unit";
   }
 
-  s.AddWatch(lits_[watchA_], this);
-  s.AddWatch(lits_[watchB_], this);
+  s.AddWatch(lits_[watch_a_], this);
+  s.AddWatch(lits_[watch_b_], this);
 }
 
 void Clause::Lock() { lock_ = true; }
@@ -229,8 +231,8 @@ bool Clause::Value(const Solver &s) const {
 }
 
 void Clause::CheckWatchers(const Solver *s) const {
-  Lit a = lits_[watchA_];
-  Lit b = lits_[watchB_];
+  Lit a = lits_[watch_a_];
+  Lit b = lits_[watch_b_];
 
   int ia = s->LitIndex(a);
   int ib = s->LitIndex(b);
@@ -258,7 +260,7 @@ void Clause::CheckWatchers(const Solver *s) const {
     return;
   if (s->GetLitValue(a) == LBool::kFalse ||
       s->GetLitValue(b) == LBool::kFalse) {
-    std::queue<Lit> q = s->propagationQueue_;
+    std::queue<Lit> q = s->propagation_queue_;
     bool ba = s->GetLitValue(a) != LBool::kFalse;
     bool bb = s->GetLitValue(b) != LBool::kFalse;
 
@@ -272,11 +274,11 @@ void Clause::CheckWatchers(const Solver *s) const {
     if (!(ba && bb))
       throw "Error";
   }
-  if (watchA_ == watchB_) {
+  if (watch_a_ == watch_b_) {
     if (s->GetLitValue(a) == LBool::kTrue)
       return;
     for (int i = 0; i < lits_.size(); i++) {
-      if (i == watchA_ || i == watchB_)
+      if (i == watch_a_ || i == watch_b_)
         continue;
 
       throw "Error";
@@ -284,7 +286,5 @@ void Clause::CheckWatchers(const Solver *s) const {
   }
 }
 
-    double Clause::GetActivity() const {
-        return activity_;
-    }
+double Clause::GetActivity() const { return activity_; }
 } // namespace simple_sat_solver::solver

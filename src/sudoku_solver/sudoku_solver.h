@@ -12,7 +12,7 @@
 namespace simple_sat_solver::sudoku {
 class SudokuSolver {
 public:
-  inline SudokuSolver() : solved_(false) {};
+  inline SudokuSolver() : solved_(false){};
   bool Solve(const SatProblem &p);
   std::vector<bool> GetSolution();
 
@@ -20,6 +20,6 @@ private:
   std::vector<bool> solution_;
   bool solved_;
 };
-}
+} // namespace simple_sat_solver::sudoku
 
 #endif // SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_SUDOKU_SOLVER_H_

@@ -14,14 +14,12 @@ public:
   static SatProblem Encode(const Sudoku &sudoku);
 
   // TODO methods are currently duplicated
-  static Sudoku Decode(int subSize,
-                                 std::vector<solver::LBool> &solution);
-  static Sudoku Decode(int subSize,
-                                 std::vector<bool> &solution);
+  static Sudoku Decode(int sub_size, std::vector<solver::LBool> &solution);
+  static Sudoku Decode(int sub_size, std::vector<bool> &solution);
 
 private:
-  explicit inline Encoder(int subSize)
-      : subSize_(subSize), size_(subSize * subSize),
+  explicit inline Encoder(int sub_size)
+      : sub_size_(sub_size), size_(sub_size * sub_size),
         problem_(SatProblem(size_ * size_ * size_)){};
 
   void CreateCellConstraints();
@@ -35,7 +33,7 @@ private:
     return (x + y * size_) * size_ + value - 1;
   }
 
-  int subSize_;
+  int sub_size_;
   int size_;
   SatProblem problem_;
 };

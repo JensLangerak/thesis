@@ -5,6 +5,7 @@
 #ifndef SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_TYPES_H_
 #define SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_TYPES_H_
 
+#include <utility>
 #include <vector>
 
 #include "../solver/types.h"
@@ -14,20 +15,21 @@ struct Sudoku {
   int sub_size;
   std::vector<int> cells;
 
-  Sudoku() : sub_size(0), cells() {};
-  Sudoku(int sub_size, std::vector<int> cells) : sub_size(sub_size), cells(cells) {};
+  inline Sudoku() : sub_size(0), cells(){};
+  inline Sudoku(int sub_size, std::vector<int> cells)
+      : sub_size(sub_size), cells(std::move(cells)){};
 };
 
 struct SatProblem {
   int nr_vars;
   std::vector<std::vector<solver::Lit>> clauses;
 
-  SatProblem() : nr_vars(0) , clauses() {};
-  explicit SatProblem(int nr_vars) : nr_vars(nr_vars) {};
+  SatProblem() : nr_vars(0), clauses(){};
+  explicit SatProblem(int nr_vars) : nr_vars(nr_vars){};
 };
 
-inline bool operator==(Sudoku lhs, Sudoku rhs) {
+inline bool operator==(const Sudoku &lhs, const Sudoku &rhs) {
   return lhs.sub_size == rhs.sub_size && lhs.cells == rhs.cells;
 }
-}
+} // namespace simple_sat_solver::sudoku
 #endif // SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_TYPES_H_

@@ -2,14 +2,14 @@
 // Created by jens on 03-09-20.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_VAR_ORDER_H_
-#define SIMPLESATSOLVER_SRC_VAR_ORDER_H_
+#ifndef SIMPLESATSOLVER_SRC_SOLVER_VAR_ORDER_H_
+#define SIMPLESATSOLVER_SRC_SOLVER_VAR_ORDER_H_
 
 #include "types.h"
 namespace simple_sat_solver::solver {
 /// Class keeps a relative order of all the vars based on their recent activity.
 class VarOrder {
- public:
+public:
   VarOrder();
 
   /// Create the activity values for the new var.
@@ -24,19 +24,20 @@ class VarOrder {
 
   /// Return the most active unknown value.
   /// \param values values of the vars.
-  /// \return the most active unknown value, -1 if there are no unkown values.
+  /// \return the most active unknown value, -1 if there are no unknown values.
   Var Select(const Vec<LBool> &values);
 
   /// Handle i getting unknown again. Make sure it is in the queue.
   /// \param i a var that has become unknown.
   void Undo(Var i);
- private:
+
+private:
   struct VarActivity {
     Var var;
     double activity;
-    VarActivity(Var i, double activity) : var(i), activity(activity) {};
+    VarActivity(Var i, double activity) : var(i), activity(activity){};
 
-    inline bool operator<(const VarActivity & rhs) const {
+    inline bool operator<(const VarActivity &rhs) const {
       return this->activity < rhs.activity;
     }
   };
@@ -45,11 +46,10 @@ class VarOrder {
   void RescaleVars();
 
   Vec<double> activities_;
-  Vec<bool> inQueue_; // Keeps track which var are up to date in the queue.
+  Vec<bool> in_queue_; // Keeps track which var are up to date in the queue.
   std::priority_queue<VarActivity, Vec<VarActivity>> queue_;
-  double varDecayFactor;
-  double varIncValue;
-
+  double var_decay_factor_;
+  double var_inc_value_;
 };
-}
-#endif //SIMPLESATSOLVER_SRC_VAR_ORDER_H_
+} // namespace simple_sat_solver::solver
+#endif // SIMPLESATSOLVER_SRC_SOLVER_VAR_ORDER_H_

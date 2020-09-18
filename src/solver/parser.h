@@ -2,8 +2,8 @@
 // Created by jens on 04-09-20.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_PARSER_H_
-#define SIMPLESATSOLVER_SRC_PARSER_H_
+#ifndef SIMPLESATSOLVER_SRC_SOLVER_PARSER_H_
+#define SIMPLESATSOLVER_SRC_SOLVER_PARSER_H_
 
 #include "solver.h"
 
@@ -23,17 +23,17 @@ public:
 private:
   /// Read the header, set the number of clauses and vars.
   /// Add the vars to the solver.
-  /// \param satFileStream
+  /// \param sat_file_stream
   /// \return false when something went wrong.
-  bool ReadHeader(std::ifstream &satFileStream);
+  bool ReadHeader(std::ifstream &sat_file_stream);
 
   /// Read and add the clauses to the solver.
-  /// \param satFileStream
+  /// \param sat_file_stream
   /// \return false when something went wrong.
-  bool ReadClauses(std::ifstream &satFileStream);
-  int nrVars_;
-  int nrClauses_;
+  bool ReadClauses(std::ifstream &sat_file_stream);
+  int nr_vars_;
+  int nr_clauses_;
   Solver *s_; // the solver that is constructed.
 };
 } // namespace simple_sat_solver::solver
-#endif // SIMPLESATSOLVER_SRC_PARSER_H_
+#endif // SIMPLESATSOLVER_SRC_SOLVER_PARSER_H_

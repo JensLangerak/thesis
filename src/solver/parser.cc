@@ -10,34 +10,34 @@
 
 namespace simple_sat_solver::solver {
 Solver *DimacsFileParser::Parse(std::string path) {
-  std::ifstream satFileStream(path);
-  if (!satFileStream.is_open()) {
+  std::ifstream sat_file_stream(path);
+  if (!sat_file_stream.is_open()) {
     std::cout << "Cannot open file: " << path << std::endl;
-    satFileStream.close();
+    sat_file_stream.close();
     return nullptr;
   }
 
   s_ = new Solver();
-  if (!ReadHeader(satFileStream)) {
+  if (!ReadHeader(sat_file_stream)) {
     std::cout << "Wrong type or format" << std::endl;
-    satFileStream.close();
+    sat_file_stream.close();
     delete s_;
     s_ = nullptr;
     return nullptr;
   }
 
-  if (!ReadClauses(satFileStream)) {
+  if (!ReadClauses(sat_file_stream)) {
     delete s_;
     s_ = nullptr;
   }
 
-  satFileStream.close();
+  sat_file_stream.close();
   return s_;
 }
-bool DimacsFileParser::ReadHeader(std::ifstream &satFileStream) {
+bool DimacsFileParser::ReadHeader(std::ifstream &sat_file_stream) {
   std::string line;
 
-  while (getline(satFileStream, line)) {
+  while (getline(sat_file_stream, line)) {
     if (line[0] != 'c')
       break;
   }
@@ -50,16 +50,16 @@ bool DimacsFileParser::ReadHeader(std::ifstream &satFileStream) {
   line.erase(0, type.length());
   std::stringstream sstream;
   sstream << line;
-  sstream >> nrVars_;
-  sstream >> nrClauses_;
-  for (int i = 0; i < nrVars_; i++)
+  sstream >> nr_vars_;
+  sstream >> nr_clauses_;
+  for (int i = 0; i < nr_vars_; i++)
     s_->NewVar();
   return true;
 }
-bool DimacsFileParser::ReadClauses(std::ifstream &satFileStream) {
+bool DimacsFileParser::ReadClauses(std::ifstream &sat_file_stream) {
   std::string line;
-  while (getline(satFileStream, line)) {
-    --nrClauses_;
+  while (getline(sat_file_stream, line)) {
+    --nr_clauses_;
     Vec<Lit> clause;
     std::stringstream ss;
     ss << line;
@@ -68,7 +68,7 @@ bool DimacsFileParser::ReadClauses(std::ifstream &satFileStream) {
     ss >> lit;
     while (lit != 0) {
       Lit l(abs(lit) - 1, lit < 0);
-      if (l.x >= nrVars_) {
+      if (l.x >= nr_vars_) {
         std::cout << std::endl << "ID is higher than expected " << std::endl;
         return false;
       }
@@ -77,7 +77,7 @@ bool DimacsFileParser::ReadClauses(std::ifstream &satFileStream) {
     }
 
     s_->AddClause(clause);
-    if (nrClauses_ == 0)
+    if (nr_clauses_ == 0)
       break;
   }
   return true;

@@ -35,7 +35,6 @@ bool SolutionValidForInput(const Sudoku &solution, const Sudoku &input) {
 bool TestSudoku(std::string path) {
   Sudoku sudoku = BenchmarkParser::Parse(path);
   SatProblem p = Encoder::Encode(sudoku);
-  int test = p.clauses.size();
   SudokuSolver s;
   bool res = s.Solve(p);
   std::vector<bool> sat_solution = s.GetSolution();
@@ -45,7 +44,7 @@ bool TestSudoku(std::string path) {
     throw "Wrong result";
   return res;
 }
-void SingleFile(std::string path) {
+void SingleFile(const std::string &path) {
   Sudoku sudoku = BenchmarkParser::Parse(path);
   SatProblem p = Encoder::Encode(sudoku);
   SudokuSolver s;
@@ -60,12 +59,12 @@ void SingleFile(std::string path) {
 
   } else {
     std::cout << "Not solvable" << std::endl;
-  };
+  }
 }
 
-void AllBenchmarksInFolder(std::string path) {
+void AllBenchmarksInFolder(const std::string &path) {
   for (const auto &sudoku_entry : std::filesystem::directory_iterator(path)) {
-    std::cout<<sudoku_entry.path() <<std::endl;
+    std::cout << sudoku_entry.path() << std::endl;
     if (TestSudoku(sudoku_entry.path())) {
       std::cout << sudoku_entry.path() << "   SOLVED " << std::endl;
     } else {
@@ -77,7 +76,7 @@ void AllBenchmarks() {
   std::cout << "Start benchmark" << std::endl;
   std::string base_dir = "../../../data/sudoku/"; // TODO use base dir
   int no_solution = 0;
-  int solved;
+  int solved = 0;
   for (const auto &set_entry : std::filesystem::directory_iterator(base_dir)) {
     std::cout << set_entry.path() << std::endl;
     for (const auto &subset_entry :
@@ -99,13 +98,13 @@ void AllBenchmarks() {
   int total = no_solution + solved;
   std::cout << std::endl;
   std::cout << "Solved: " << solved << " / " << total << std::endl;
-};
+}
 
 int main() {
   // SingleFile("../../../data/sudoku/benchmarks3x3/10/puzzle5.txt");
   // SingleFile("../../../data/sudoku/benchmarks3x3/20/puzzle5.txt");
 
-  //AllBenchmarksInFolder("../../../data/sudoku/benchmarks5x5/55/");
+  // AllBenchmarksInFolder("../../../data/sudoku/benchmarks5x5/55/");
   AllBenchmarks();
   return 0;
 }

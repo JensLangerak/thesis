@@ -2,8 +2,8 @@
 // Created by jens on 03-09-20.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_TYPES_H_
-#define SIMPLESATSOLVER_SRC_TYPES_H_
+#ifndef SIMPLESATSOLVER_SRC_SOLVER_TYPES_H_
+#define SIMPLESATSOLVER_SRC_SOLVER_TYPES_H_
 
 #include <queue>
 #include <vector>
@@ -33,9 +33,7 @@ struct Lit {
   Lit() : x(0), complement(false){};
 };
 
-inline Lit operator~(Lit p) {
-  return Lit(p.x, !p.complement);
-}
+inline Lit operator~(Lit p) { return Lit(p.x, !p.complement); }
 inline bool operator==(Lit p, Lit q) {
   return p.x == q.x && p.complement == q.complement;
 }
@@ -43,4 +41,4 @@ inline bool operator!=(Lit p, Lit q) {
   return p.x != q.x || p.complement != q.complement;
 }
 } // namespace simple_sat_solver::solver
-#endif // SIMPLESATSOLVER_SRC_TYPES_H_
+#endif // SIMPLESATSOLVER_SRC_SOLVER_TYPES_H_

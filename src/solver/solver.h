@@ -2,8 +2,8 @@
 // Created by jens on 03-09-20.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_SOLVER_H_
-#define SIMPLESATSOLVER_SRC_SOLVER_H_
+#ifndef SIMPLESATSOLVER_SRC_SOLVER_SOLVER_H_
+#define SIMPLESATSOLVER_SRC_SOLVER_SOLVER_H_
 
 #include <stack>
 
@@ -81,9 +81,9 @@ public:
   void RescaleClauseActivity();
 
   // TODO move
-  double constrIncActivity_;
-  double constrDecayFactor_;
-  Queue<Lit> propagationQueue_;
+  double constr_inc_activity_;
+  double constr_decay_factor_;
+  Queue<Lit> propagation_queue_;
   Vec<Vec<Clause *>> watches_;
 
 private:
@@ -143,7 +143,7 @@ private:
   /// \param conflict clause that causes the conflict, thus all its lits are
   /// false.
   /// \return false if it could not backtrack far enough.
-  bool HandleConflict(const Clause * conflict);
+  bool HandleConflict(const Clause *conflict);
 
   /// Make a new decision. Var is selected by VarOrder. If there are no var
   /// without value unknown return false.
@@ -160,14 +160,14 @@ private:
   /// It this case it keeps a part of its learned clauses and backtracks to the
   /// base level. This method can be called again (with different parameters),
   /// which may lead to a solution.
-  /// \param maxLearnt max number of clauses that can be learned. If it exceeds
+  /// \param max_learnt max number of clauses that can be learned. If it exceeds
   ///        this number, it will forget half of the leaned clauses and returns
   ///        unknown.
-  /// \param maxConflicts max number of conflicts. If to many conflicts occur
+  /// \param max_conflicts max number of conflicts. If to many conflicts occur
   ///        unknown is returned.
   /// \return True if it has found a solution, False if it has found a clause
   ///         that will always be false, otherwise unknown.
-  LBool Solve(int maxLearnt, int maxConflicts);
+  LBool Solve(int max_learnt, int max_conflicts);
 
   /// Delete roughly half of the learnt clauses. Keep the clauses that are used
   /// to assign values to the current set vars.
@@ -182,16 +182,17 @@ private:
   /// Select the lit from the lits that is most recently updated.
   /// \param lits a list of lits which currently have an assigned value.
   /// \return the lit that got its values assigned the latest.
-  Lit GetMostRecentLit(Vec<Lit> lits);
+  Lit GetMostRecentLit(const Vec<Lit> &lits);
 
   /// Debug function that checks if watchers are in a correct state.
   /// Throws an exception if it is not the case.
   void CheckWatchers();
 
-  VarOrder varOrder; // Used to decide what the most promising decision var is.
-  Vec<Clause *> constraints_;   // Original constraints of the problem.
-  Vec<Clause *> learntClauses_; // Learnt constraints, can be deleted.
-  Vec<LBool> varAssignments_;   // Current assignment of the vars.
+  VarOrder
+      var_order_; // Used to decide what the most promising decision var is.
+  Vec<Clause *> constraints_;    // Original constraints of the problem.
+  Vec<Clause *> learnt_clauses_; // Learnt constraints, can be deleted.
+  Vec<LBool> var_assignments_;   // Current assignment of the vars.
   Vec<int> level_; // Stores for each var the decision level that causes its
                    // value. This are the levels in decisionLevel_, not the size
                    // of learnt_. -1 if the values is still unknown.
@@ -201,10 +202,10 @@ private:
   std::stack<Lit> learnt_; // Order in which that var got assigned a value.
                            // Oldest on the bottom, newest on the top.
   std::stack<int>
-      decisionLevels_; // Stores when the decision vars are added. After a
-                       // decision is added to learnt_, learnt_.size() is stored
-                       // on decisionLevels.
+      decision_levels_; // Stores when the decision vars are added. After a
+                        // decision is added to learnt_, learnt_.size() is
+                        // stored on decisionLevels.
 };
 } // namespace simple_sat_solver::solver
 
-#endif // SIMPLESATSOLVER_SRC_SOLVER_H_
+#endif // SIMPLESATSOLVER_SRC_SOLVER_SOLVER_H_

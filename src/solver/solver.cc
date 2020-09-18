@@ -10,18 +10,19 @@
 #include "var_order.h"
 
 namespace simple_sat_solver::solver {
-Solver::Solver() : constrIncActivity_(1.0), constrDecayFactor_(1.0 / 0.95) {}
+Solver::Solver()
+    : constr_inc_activity_(1.0), constr_decay_factor_(1.0 / 0.95) {}
 
 Var Solver::NewVar() {
-  varAssignments_.push_back(LBool::kUnknown);
+  var_assignments_.push_back(LBool::kUnknown);
   reason_.push_back(nullptr);
   level_.push_back(-1);
   // watch list for true and false lit.
   watches_.push_back(Vec<Clause *>());
   watches_.push_back(Vec<Clause *>());
 
-  varOrder.NewVar();
-  return varAssignments_.size() - 1;
+  var_order_.NewVar();
+  return var_assignments_.size() - 1;
 }
 
 bool Solver::AddClause(const Vec<Lit> &literals) {
@@ -34,20 +35,20 @@ bool Solver::AddClause(const Vec<Lit> &literals) {
 Solver::~Solver() {
   for (auto c : constraints_)
     delete c;
-  for (auto c : learntClauses_)
+  for (auto c : learnt_clauses_)
     delete c;
   constraints_.clear();
 }
 
 void Solver::PrintProblem() {
-  std::cout << "Nr vars: " << varAssignments_.size() << std::endl;
+  std::cout << "Nr vars: " << var_assignments_.size() << std::endl;
   for (auto c : constraints_)
     c->PrintConstraint();
 }
 
 void Solver::PrintAssignments() {
-  for (int i = 0; i < varAssignments_.size(); i++) {
-    LBool v = varAssignments_[i];
+  for (int i = 0; i < var_assignments_.size(); i++) {
+    LBool v = var_assignments_[i];
     std::cout << i << ": "
               << (v == LBool::kTrue    ? "T"
                   : v == LBool::kFalse ? "F"
@@ -57,29 +58,29 @@ void Solver::PrintAssignments() {
 }
 
 void Solver::PrintFilledProblem() {
-  std::cout << "Nr vars: " << varAssignments_.size() << std::endl;
+  std::cout << "Nr vars: " << var_assignments_.size() << std::endl;
   for (auto c : constraints_)
-    c->PrintFilledConstraint(varAssignments_);
+    c->PrintFilledConstraint(var_assignments_);
 }
 
 bool Solver::Solve() {
-  int maxLearnt = constraints_.size() / 3;
-  int maxConflicts = 100;
+  int max_learnt = constraints_.size() / 3;
+  int max_conflicts = 100;
   LBool res = LBool::kUnknown;
   while (res == LBool::kUnknown) {
-    res = Solve(maxLearnt, maxConflicts);
-    maxLearnt *= 1.1;
-    maxConflicts *= 1.5;
+    res = Solve(max_learnt, max_conflicts);
+    max_learnt *= 1.1;
+    max_conflicts *= 1.5;
   }
   return res == LBool::kTrue;
 }
 
-LBool Solver::Solve(int maxLearnt, int maxConflicts) {
+LBool Solver::Solve(int max_learnt, int max_conflicts) {
   for (auto c : constraints_) {
     if (!c->Simplify(*this))
       return LBool::kFalse;
   }
-  for (auto c : learntClauses_) {
+  for (auto c : learnt_clauses_) {
     if (!c->Simplify(*this))
       return LBool::kFalse;
   }
@@ -87,25 +88,25 @@ LBool Solver::Solve(int maxLearnt, int maxConflicts) {
   while (!stop) {
     Clause *conflict;
     if (!Propagate(conflict)) { // conflict found
-      maxConflicts--;
-      while (!propagationQueue_.empty())
-        propagationQueue_.pop();
-      if (maxConflicts < 0) {
+      max_conflicts--;
+      while (!propagation_queue_.empty())
+        propagation_queue_.pop();
+      if (max_conflicts < 0) {
         Backtrack(0);
         return LBool::kUnknown;
       }
       if (!HandleConflict(conflict))
         return LBool::kFalse;
     } else {
-      if (learntClauses_.size() > maxLearnt) {
-        ReduceDB(maxLearnt);
+      if (learnt_clauses_.size() > max_learnt) {
+        ReduceDB(max_learnt);
         Backtrack(0);
-        while (!propagationQueue_.empty())
-          propagationQueue_.pop();
+        while (!propagation_queue_.empty())
+          propagation_queue_.pop();
         return LBool::kUnknown;
       }
       stop = !AddAssumption();
-      constrIncActivity_ *= constrDecayFactor_;
+      constr_inc_activity_ *= constr_decay_factor_;
     }
   }
 
@@ -115,39 +116,39 @@ LBool Solver::Solve(int maxLearnt, int maxConflicts) {
 bool Solver::SetLitTrue(Lit lit, Clause *constr) {
   LBool value = lit.complement ? LBool::kFalse : LBool::kTrue;
   Var x = lit.x;
-  if (varAssignments_[x] == LBool::kUnknown) {
-    varAssignments_[x] = value;
-    propagationQueue_.push(~lit);
+  if (var_assignments_[x] == LBool::kUnknown) {
+    var_assignments_[x] = value;
+    propagation_queue_.push(~lit);
     learnt_.push(lit);
-    level_[x] = (decisionLevels_.empty() ? 0 : decisionLevels_.top());
+    level_[x] = (decision_levels_.empty() ? 0 : decision_levels_.top());
     reason_[x] = constr;
     if (constr != nullptr)
       constr->Lock();
-  } else if (varAssignments_[x] != value) {
+  } else if (var_assignments_[x] != value) {
     return false;
   }
   return true;
 }
 
 bool Solver::Propagate(Clause *&conflict) {
-  while (!propagationQueue_.empty()) {
-    Lit lit = propagationQueue_.front();
-    propagationQueue_.pop();
+  while (!propagation_queue_.empty()) {
+    Lit lit = propagation_queue_.front();
+    propagation_queue_.pop();
     int index = LitIndex(lit);
     // clear original watch list, clauses should re-add themselves to the list.
-    Vec<Clause *> watchList = watches_[index];
+    Vec<Clause *> watch_list = watches_[index];
     watches_[index].clear();
 
-    for (int i = 0; i < watchList.size(); i++) {
-      auto c = watchList[i];
+    for (int i = 0; i < watch_list.size(); i++) {
+      auto c = watch_list[i];
       if (GetLitValue(lit) == LBool::kUnknown)
         throw "Should not propagate unknown literals";
       if (!c->Propagate(*this, lit)) {
         // conflict found
         conflict = c;
         // re-add the unhandled watches, excluding the current one.
-        for (i = i + 1; i < watchList.size(); i++)
-          watches_[index].push_back(watchList[i]);
+        for (i = i + 1; i < watch_list.size(); i++)
+          watches_[index].push_back(watch_list[i]);
         return false;
       }
     }
@@ -156,7 +157,7 @@ bool Solver::Propagate(Clause *&conflict) {
 }
 
 LBool Solver::GetLitValue(Lit l) const {
-  LBool var = varAssignments_[l.x];
+  LBool var = var_assignments_[l.x];
   return l.complement ? ~var : var;
 }
 
@@ -166,8 +167,8 @@ bool Solver::UndoOne() {
 
   Lit l = learnt_.top();
   learnt_.pop();
-  varAssignments_[l.x] = LBool::kUnknown;
-  varOrder.Undo(l.x);
+  var_assignments_[l.x] = LBool::kUnknown;
+  var_order_.Undo(l.x);
 
   level_[l.x] = -1;
   if (reason_[l.x] != nullptr)
@@ -184,20 +185,20 @@ void Solver::UndoDecisions(int level) {
 }
 
 bool Solver::Backtrack(int level) {
-  while (!decisionLevels_.empty() && decisionLevels_.top() > level) {
-    UndoDecisions(decisionLevels_.top());
-    decisionLevels_.pop();
+  while (!decision_levels_.empty() && decision_levels_.top() > level) {
+    UndoDecisions(decision_levels_.top());
+    decision_levels_.pop();
   }
   return true;
 }
 
 void Solver::Assume(Lit lit) {
-  decisionLevels_.push(learnt_.size() + 1);
+  decision_levels_.push(learnt_.size() + 1);
   SetLitTrue(lit, nullptr);
 }
 
 bool Solver::AllAssigned() const {
-  for (LBool b : varAssignments_) {
+  for (LBool b : var_assignments_) {
     if (b == LBool::kUnknown)
       return false;
   }
@@ -206,18 +207,18 @@ bool Solver::AllAssigned() const {
 
 Vec<Lit> Solver::Analyze(const Clause *constr) {
   Vec<Lit> learnt;
-  Vec<bool> seen(varAssignments_.size());
-  Vec<Lit> conflictReason = constr->CalcReason();
-  int levelCount = 0; // Keeps track of vars in the current decision level.
+  Vec<bool> seen(var_assignments_.size());
+  Vec<Lit> conflict_reason = constr->CalcReason();
+  int level_count = 0; // Keeps track of vars in the current decision level.
   do {
     // handle current conflict reasons
-    for (Lit l : conflictReason) {
+    for (Lit l : conflict_reason) {
       if (seen[l.x])
         continue;
       seen[l.x] = true;
-      varOrder.Update(l.x);
-      if (level_[l.x] == decisionLevels_.top()) {
-        ++levelCount;
+      var_order_.Update(l.x);
+      if (level_[l.x] == decision_levels_.top()) {
+        ++level_count;
       } else {
         learnt.push_back(l);
       }
@@ -231,13 +232,13 @@ Vec<Lit> Solver::Analyze(const Clause *constr) {
       r = reason_[p.x];
       UndoOne();
     } while (!seen[p.x]);
-    if (levelCount <= 1) { // UIP found
+    if (level_count <= 1) { // UIP found
       learnt.push_back(~p);
       return learnt;
     }
-    conflictReason = r->CalcReason(p);
-    --levelCount;
-  } while (levelCount > 0); // UIP found
+    conflict_reason = r->CalcReason(p);
+    --level_count;
+  } while (level_count > 0); // UIP found
 
   return learnt;
 }
@@ -247,7 +248,7 @@ void Solver::AddWatch(Lit &lit, Clause *clause) {
 }
 
 int Solver::LitIndex(Lit &lit) { return lit.x * 2 + (lit.complement ? 1 : 0); }
-Lit Solver::GetMostRecentLit(Vec<Lit> lits) {
+Lit Solver::GetMostRecentLit(const Vec<Lit> &lits) {
   // values that are popped from learnt are temporarily stored in hist.
   std::stack<Lit> hist;
   Lit last;
@@ -270,45 +271,43 @@ Lit Solver::GetMostRecentLit(Vec<Lit> lits) {
   while (!hist.empty()) {
     learnt_.push(hist.top());
     hist.pop();
-  };
+  }
   return last;
 }
 
 bool Solver::HandleConflict(const Clause *conflict) {
-  if (decisionLevels_.empty()) // cannot backtrack, so un sat
+  if (decision_levels_.empty()) // cannot backtrack, so un sat
     return false;
 
-  std::stack<Lit> hist = learnt_;
-  std::stack<int> highestLevel = decisionLevels_;
   Vec<Lit> c = Analyze(conflict);
-  varOrder.UpdateAll();
+  var_order_.UpdateAll();
 
-  // Find the clause that will be unit and find the lowest backtrackLevel
-  int backtrackLevel = -1;
+  // Find the clause that will be unit and find the lowest backtrack_level
+  int backtrack_level = -1;
   Lit unit;
   for (Lit l : c) {
     int level = level_[l.x];
     if (level != -1) {
-      backtrackLevel = std::max(backtrackLevel, level);
+      backtrack_level = std::max(backtrack_level, level);
     } else {
       unit = l;
     }
   }
 
-  if (!Backtrack(backtrackLevel)) // cannot backtrack, so it is unsatisfiable
+  if (!Backtrack(backtrack_level)) // cannot backtrack, so it is unsatisfiable
     return false;
 
-  Lit mostRecentLit = GetMostRecentLit(c); // needed for the watchers
-  Clause *clause = new Clause(c, true, *this, unit, mostRecentLit);
+  Lit most_recent_lit = GetMostRecentLit(c); // needed for the watchers
+  Clause *clause = new Clause(c, true, *this, unit, most_recent_lit);
 
   // Added clause is unit, so set lit
-  learntClauses_.push_back(clause);
+  learnt_clauses_.push_back(clause);
   SetLitTrue(unit, clause);
   return true;
 }
 
 bool Solver::AddAssumption() {
-  Var v = varOrder.Select(varAssignments_);
+  Var v = var_order_.Select(var_assignments_);
   if (v < 0)
     return false;
   Assume(Lit(v, false));
@@ -316,9 +315,9 @@ bool Solver::AddAssumption() {
 }
 
 void Solver::RescaleClauseActivity() {
-  for (Clause *c : learntClauses_)
+  for (Clause *c : learnt_clauses_)
     c->RescaleActivity();
-  constrIncActivity_ *= 1e-100;
+  constr_inc_activity_ *= 1e-100;
 }
 
 void Solver::ReduceDB(int learnt) {
@@ -327,20 +326,20 @@ void Solver::ReduceDB(int learnt) {
   };
 
   std::priority_queue<Clause *, Vec<Clause *>, decltype(comp)> queue(comp);
-  for (Clause *c : learntClauses_) {
+  for (Clause *c : learnt_clauses_) {
     queue.push(c);
   }
-  while (!learntClauses_.empty())
-    learntClauses_.pop_back();
-  for (int i = 0; i < learntClauses_.size(); i++) {
-    learntClauses_.push_back(queue.top());
+  while (!learnt_clauses_.empty())
+    learnt_clauses_.pop_back();
+  for (int i = 0; i < learnt_clauses_.size(); i++) {
+    learnt_clauses_.push_back(queue.top());
     queue.pop();
   }
   while (!queue.empty()) {
     Clause *c = queue.top();
     queue.pop();
     if (c->Locked()) {
-      learntClauses_.push_back(c);
+      learnt_clauses_.push_back(c);
     } else {
       c->Remove(*this);
       delete c;
@@ -372,14 +371,14 @@ void Solver::CheckWatchers() {
   for (auto c : constraints_) {
     c->CheckWatchers(this);
   }
-  for (auto c : learntClauses_) {
+  for (auto c : learnt_clauses_) {
     c->CheckWatchers(this);
   }
 }
 Vec<bool> Solver::GetModel() const {
-  Vec<bool> res(varAssignments_.size());
-  for (int i = 0; i < varAssignments_.size(); i++) {
-    switch (varAssignments_[i]) {
+  Vec<bool> res(var_assignments_.size());
+  for (int i = 0; i < var_assignments_.size(); i++) {
+    switch (var_assignments_[i]) {
     case LBool::kUnknown:
       throw "Problem is not solved";
     case LBool::kTrue:

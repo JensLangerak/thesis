@@ -10,8 +10,8 @@
 namespace simple_sat_solver::sudoku {
 class BenchmarkParser {
 public:
-  static Sudoku Parse(std::string file);
+  static Sudoku Parse(const std::string &file);
 };
-}
+} // namespace simple_sat_solver::sudoku
 
 #endif // SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_BENCHMARK_PARSER_H_
