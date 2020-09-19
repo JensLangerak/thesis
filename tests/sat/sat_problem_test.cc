@@ -257,11 +257,22 @@ TEST_CASE("Implies", "[sat]") {
 
 TEST_CASE("At most k", "[sat]") {
   SatProblem s(5);
+  SECTION("k=-1") {
+    REQUIRE_THROWS(s.AtMostK(-1, {Lit(0)}));
+  }
   SECTION("k=0") {
     int k = 0;
     SECTION("empty") {
       s.AtMostK(k, {});
       REQUIRE(s.TestAssignment({true, true, true, true, true}));
+    }
+    SECTION("Not empty") {
+      s.AtMostK(k, {Lit(0), Lit(1), Lit(2)});
+      REQUIRE(TestPartialAssignment(s,{false, false, false}));
+      REQUIRE_FALSE(TestPartialAssignment(s,{true, false, false}));
+      REQUIRE_FALSE(TestPartialAssignment(s,{false, true, false}));
+      REQUIRE_FALSE(TestPartialAssignment(s,{true, false, true}));
+      REQUIRE_FALSE(TestPartialAssignment(s,{true, true, true}));
     }
   }
   SECTION("K=1") {
@@ -307,10 +318,10 @@ TEST_CASE("At most k", "[sat]") {
     }
     SECTION("Double") {
       s.AtMostK(k, {Lit(0), Lit(1)});
-      REQUIRE(TestPartialAssignment(s, {false,false}));
-      REQUIRE(TestPartialAssignment(s, {false,true}));
-      REQUIRE(TestPartialAssignment(s, {true,false}));
-      REQUIRE(TestPartialAssignment(s, {true,true}));
+      REQUIRE(TestPartialAssignment(s, {false, false}));
+      REQUIRE(TestPartialAssignment(s, {false, true}));
+      REQUIRE(TestPartialAssignment(s, {true, false}));
+      REQUIRE(TestPartialAssignment(s, {true, true}));
     }
     SECTION("Triple") {
       s.AtMostK(k, {Lit(0), Lit(1), ~Lit(2)});
@@ -319,23 +330,29 @@ TEST_CASE("At most k", "[sat]") {
     SECTION("5 lits") {
       s.AtMostK(k, {Lit(0), Lit(1), Lit(2), ~Lit(3), ~Lit(4)});
       SECTION("less than k") {
-        REQUIRE(TestPartialAssignment(s,{false, false, false, true, true}));
-        REQUIRE(TestPartialAssignment(s,{false, true, false, true, true}));
-        REQUIRE(TestPartialAssignment(s,{false, true, false, false, true}));
+        REQUIRE(TestPartialAssignment(s, {false, false, false, true, true}));
+        REQUIRE(TestPartialAssignment(s, {false, true, false, true, true}));
+        REQUIRE(TestPartialAssignment(s, {false, true, false, false, true}));
       }
       SECTION("Exactly k") {
-        REQUIRE(TestPartialAssignment(s,{true, true, true, true, true}));
-        REQUIRE(TestPartialAssignment(s,{false, false, true, false, false}));
-        REQUIRE(TestPartialAssignment(s,{false, true, false, false, false}));
-        REQUIRE(TestPartialAssignment(s,{true, true, false, false, true}));
+        REQUIRE(TestPartialAssignment(s, {true, true, true, true, true}));
+        REQUIRE(TestPartialAssignment(s, {false, false, true, false, false}));
+        REQUIRE(TestPartialAssignment(s, {false, true, false, false, false}));
+        REQUIRE(TestPartialAssignment(s, {true, true, false, false, true}));
       }
       SECTION("More than k") {
-        REQUIRE_FALSE(TestPartialAssignment(s,{false, true, true, false, false}));
-        REQUIRE_FALSE(TestPartialAssignment(s,{true, false, true, false, false}));
-        REQUIRE_FALSE(TestPartialAssignment(s,{true, true, false, false, false}));
-        REQUIRE_FALSE(TestPartialAssignment(s,{true, true, true, true, false}));
-        REQUIRE_FALSE(TestPartialAssignment(s,{true, true, true, false, true}));
-        REQUIRE_FALSE(TestPartialAssignment(s,{true, true, true, false, false}));
+        REQUIRE_FALSE(
+            TestPartialAssignment(s, {false, true, true, false, false}));
+        REQUIRE_FALSE(
+            TestPartialAssignment(s, {true, false, true, false, false}));
+        REQUIRE_FALSE(
+            TestPartialAssignment(s, {true, true, false, false, false}));
+        REQUIRE_FALSE(
+            TestPartialAssignment(s, {true, true, true, true, false}));
+        REQUIRE_FALSE(
+            TestPartialAssignment(s, {true, true, true, false, true}));
+        REQUIRE_FALSE(
+            TestPartialAssignment(s, {true, true, true, false, false}));
       }
     }
   }

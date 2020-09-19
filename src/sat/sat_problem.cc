@@ -42,8 +42,14 @@ void SatProblem::Implies(const Lit &antecedent, const Lit &consequent) {
   clauses_.push_back({~antecedent, consequent});
 }
 void SatProblem::AtMostK(const int k, const std::vector<Lit> &lits) {
+  if (k < 0)
+    throw "k should be non negative";
   if (lits.size() <= k)//always true, so nothing to encode
     return;
+  if (k == 0) {
+    None(lits);
+    return;
+  }
   // encodes using sequential encoding
   // introduces the vars s_i_j. s_i_j is true if sum(x_[0..i]) > j
   // This leads to the following rules (here i,j >0):
@@ -85,5 +91,9 @@ void SatProblem::AtMostK(const int k, const std::vector<Lit> &lits) {
     clauses_.push_back({Lit(s_index(i-1, k-1), true), ~lits[i]});
   }
 
+}
+void SatProblem::None(const std::vector<Lit> &lits){
+  for (Lit l : lits)
+    clauses_.push_back({~l});
 };
 } // namespace simple_sat_solver::sat

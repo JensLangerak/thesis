@@ -19,6 +19,7 @@ public:
   void AtMostK(int k, const std::vector<Lit> &lits);
   void ExactlyOne(const std::vector<Lit> &lits);
   void Implies(const Lit &antecedent, const Lit &consequent );
+  void None(const std::vector<Lit> &lits);
   inline int GetNrVars() const { return nr_vars_; }
   inline std::vector<std::vector<Lit>> GetClauses() const { return clauses_; };
 

@@ -13,6 +13,7 @@ public:
   explicit B2bConverter(B2B problem);
 
   sat::SatProblem ToSat();
+  std::vector<int> DecodeSolution(std::vector<bool> solution);
 
 private:
   const B2B problem_;
@@ -33,6 +34,8 @@ private:
 
   void AddOneMeetingPerPersonTime();
   void AddMaxMeetings();
+  void ValidateSchedule(std::vector<int> vector);
+  void AddMeetingOnce();
 };
 } // namespace simple_sat_solver::b2b
 
