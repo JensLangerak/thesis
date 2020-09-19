@@ -6,10 +6,14 @@
 #include <algorithm>
 namespace simple_sat_solver::sat {
 void SatProblem::AddClause(const std::vector<Lit> &lits) {
+  if (!std::all_of(lits.begin(), lits.end(), [this](Lit l) {
+        return l.x >= 0 && l.x < this->nr_vars_;
+      }))
+    throw "Illegal id";
   clauses_.push_back(lits);
 }
 void SatProblem::AtMostOne(const std::vector<Lit> &lits) {
-  for (int i = 0; i < lits.size() - 1; i++) {
+  for (int i = 0; i < ((int)lits.size()) - 1; i++) {
     for (int j = i + 1; j < lits.size(); j++)
       clauses_.push_back({~lits[i], ~lits[j]});
   }
@@ -38,15 +42,17 @@ void SatProblem::Implies(const Lit &antecedent, const Lit &consequent) {
   clauses_.push_back({~antecedent, consequent});
 }
 void SatProblem::AtMostK(const int k, const std::vector<Lit> &lits) {
+  if (lits.size() <= k)//always true, so nothing to encode
+    return;
   // encodes using sequential encoding
   // introduces the vars s_i_j. s_i_j is true if sum(x_[0..i]) > j
   // This leads to the following rules (here i,j >0):
   // s_0_0 = x_0 -> s_0_0 V ~x_0
   // s_0_j = F -> ~s_0_j
-  // s_i_0 = max(s_i-i_0, x_i)   -> ~s_i-1_j V s_i_0     s_i_0 V ~x_i
+  // s_i_0 = max(s_i-i_0, x_i)   -> ~s_i-1_0 V s_i_0     s_i_0 V ~x_i
   // s_i_j = max(s_i-1_j, s_i-1_j-1 + x_i)
   //       -> ~s_i-1_j V s_i_j      ~s_i-1_j-1 ~x_i s_i_j
-  // Force the at most: ~s_i_k V ~x_i
+  // Force the at most: ~s_i-1_k-1 V ~x_i
 
   const int base_s = nr_vars_;
   const int n = lits.size();
@@ -57,7 +63,7 @@ void SatProblem::AtMostK(const int k, const std::vector<Lit> &lits) {
   };
 
   // s_0_0
-  clauses_.push_back({lits[0], Lit(s_index(0, 0), false)});
+  clauses_.push_back({~lits[0], Lit(s_index(0, 0), false)});
   // s_0_j
   for (int j = 1; j < k; j++) {
     clauses_.push_back({Lit(s_index(0, j), true)});
@@ -75,8 +81,8 @@ void SatProblem::AtMostK(const int k, const std::vector<Lit> &lits) {
     }
   }
   // Force the constraint
-  for (int i = 0; i < n; i++) {
-    clauses_.push_back({Lit(s_index(i, k-1), true), ~lits[i]});
+  for (int i = 1; i < n; i++) {
+    clauses_.push_back({Lit(s_index(i-1, k-1), true), ~lits[i]});
   }
 
 };

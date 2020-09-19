@@ -9,13 +9,10 @@
 #include <vector>
 
 namespace simple_sat_solver::sat {
-// TODO perhaps let the problem be a struct and let this class be a builder
-// however this will mean that the sudoku builder uses a sat builder to create
-// sat, might not be ideal/overkill.
 // TODO allow perhaps arbitrary id types
 class SatProblem {
 public:
-  explicit SatProblem(int nr_vars) : nr_vars_(nr_vars){};
+  explicit SatProblem(int nr_vars) : nr_vars_(nr_vars < 0 ? 0 : nr_vars){};
   void AddClause(const std::vector<Lit> &lits);
   inline void AtLeastOne(const std::vector<Lit> &lits) { AddClause(lits); };
   void AtMostOne(const std::vector<Lit> &lits);
