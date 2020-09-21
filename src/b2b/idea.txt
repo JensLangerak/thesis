@@ -1,0 +1,22 @@
+We have a set of participants P
+A set of timeslots T
+Number of slots in the morning
+A set of locations L
+A set of meetings M = (p_i, p_j, tod) ; time of day (tod) 1 = morning, 2 afternoon, 3 don't care
+For each participant a set of forbidden time slots.
+
+Note that for the location the exact location does not matter, only the total scheduled at Time t should not exceed |L|
+Note on forbidden, I think that it start at 1 (found a forbidden = T) and 0 is some special value to avoid empty array?
+
+Idea
+For each (meeting, timeslot) mt create a var, set to false if not in the right time?
+For each (person, timeslot) pt create a var, set to false if in forbidden list
+Add implication constraint between mt -> pt is p is in m (~mt V pt)
+Add at most one mt for all (person, timeslot) combinations
+Add at most L mt for all timeslots.
+Exactly one for all mt for all m.
+
+Possible to also explicit encode morning afternoon:
+For each (m, tod) add a var indicating whether it is allowed
+For each mt add ~mt V allowed
+However I don't think that this makes it better.

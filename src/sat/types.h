@@ -12,6 +12,7 @@ struct Lit {
   bool complement;
   Lit(Var x, bool complement) : x(x), complement(complement){};
   Lit() : x(0), complement(false){};
+  Lit(Var x) : x(x), complement(false) {};
 };
 
 inline Lit operator~(Lit p) { return Lit(p.x, !p.complement); }

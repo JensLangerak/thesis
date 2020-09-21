@@ -5,7 +5,7 @@
 #ifndef SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_BENCHMARK_PARSER_H_
 #define SIMPLESATSOLVER_SRC_SUDOKU_SOLVER_BENCHMARK_PARSER_H_
 
-#include "types.h"
+#include "sudoku.h"
 #include <string>
 namespace simple_sat_solver::sudoku {
 class BenchmarkParser {
