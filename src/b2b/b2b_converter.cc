@@ -78,6 +78,7 @@ void B2bConverter::AddOneMeetingPerPersonTime() {
 void B2bConverter::AddMaxMeetings() {
   for (int t = 0; t < nr_timeslots_; t++) {
     std::vector<Lit> at_most_k;
+    at_most_k.reserve(nr_meetings_);
     for (int m = 0; m < nr_meetings_; m++) {
       at_most_k.emplace_back(GetMeetingTimeslotIndex(m, t));
     }
