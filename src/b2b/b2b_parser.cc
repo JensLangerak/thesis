@@ -66,7 +66,7 @@ void B2bParser::ReadRequested() {
   read_request_ = true;
   for (int i = 0; i < nr_meetings_; i++) {
     ReadUntil('|');
-    Meeting meeting{};
+    Meeting meeting;
     int value;
     *stream_ >> value;
     meeting.p1 = value-1;

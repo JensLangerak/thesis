@@ -11,6 +11,10 @@ struct Meeting {
   int p1;
   int p2;
   TimeOfDay time_of_day;
+
+  Meeting() {}
+  Meeting(int p1, int p2, TimeOfDay time_of_day)
+      : p1(p1), p2(p2), time_of_day(time_of_day) {}
 };
 struct B2B {
   int nr_participants;

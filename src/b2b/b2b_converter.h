@@ -12,30 +12,50 @@ class B2bConverter {
 public:
   explicit B2bConverter(B2B problem);
 
-  sat::SatProblem ToSat();
-  std::vector<int> DecodeSolution(std::vector<bool> solution);
-
-private:
-  const B2B problem_;
-  sat::SatProblem sat_problem_;
-
   inline int GetMeetingTimeslotIndex(int meeting, int timeslot) {
     return timeslot * nr_meetings_ + meeting;
   };
   inline int GetPersonTimeslotIndex(int person, int timeslot) {
     return timeslot * nr_persons_ + person + nr_meetings_ * nr_timeslots_;
   };
+  sat::SatProblem ToSat();
+  std::vector<int> DecodeSolution(std::vector<bool> solution);
+
+private:
+  /// For each meeting add a constraint to the sat problem that specifies if is
+  /// should be scheduled in the morning, afternoon, or any of the two.
+  void AddTimeOfDayConstraints();
+  /// Add constraints to the sat problem that disallow meetings to be scheduled
+  /// in the forbidden timeslots of any of its participants.
+  void AddForbiddenConstraints();
+  /// Add constraints to the sat problem that makes a connection to the
+  /// scheduled meeting time vars and the vars that specifies for each person
+  /// when he has a meeting.
+  void AddMeetingPersonImplications();
+
+  /// Add constraints to the sat problem that forces that each person can have
+  /// only one meeting at a specific time.
+  void AddOneMeetingPerPersonTime();
+
+  /// Add constraints to the sat problem that specifies the max number of
+  /// meetings at the same time.
+  void AddMaxMeetings();
+
+  /// Add constraints to the sat problem that specifies that each meeting must
+  /// be scheduled exactly once.
+  void AddMeetingOnce();
+
+  /// Check if the given solution fulfills all the requirements.
+  /// Throws an exception in case of a violation.
+  void ValidateSchedule(std::vector<int> vector);
+
+  const B2B problem_;
+  sat::SatProblem sat_problem_;
+
   int nr_meetings_;
   int nr_persons_;
   int nr_timeslots_;
-  void AddTimeOfDayConstraints();
-  void AddForbiddenConstraints();
-  void AddMeetingPersonImplications();
-
-  void AddOneMeetingPerPersonTime();
-  void AddMaxMeetings();
-  void ValidateSchedule(std::vector<int> vector);
-  void AddMeetingOnce();
+  int nr_locations_;
 };
 } // namespace simple_sat_solver::b2b
 

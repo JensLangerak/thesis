@@ -8,6 +8,7 @@ namespace simple_sat_solver::b2b {
 using sat::Lit;
 B2bConverter::B2bConverter(B2B problem) : problem_(problem), sat_problem_(0) {}
 sat::SatProblem B2bConverter::ToSat() {
+  nr_locations_ = problem_.nr_locations;
   nr_meetings_ = problem_.meetings.size();
   nr_persons_ = problem_.nr_participants;
   nr_timeslots_ = problem_.nr_timeslots;
@@ -78,9 +79,9 @@ void B2bConverter::AddMaxMeetings() {
   for (int t = 0; t < nr_timeslots_; t++) {
     std::vector<Lit> at_most_k;
     for (int m = 0; m < nr_meetings_; m++) {
-      at_most_k.push_back(Lit(GetMeetingTimeslotIndex(m, t)));
+      at_most_k.emplace_back(GetMeetingTimeslotIndex(m, t));
     }
-    sat_problem_.AtMostK(nr_timeslots_, at_most_k);
+    sat_problem_.AtMostK(nr_locations_, at_most_k);
   }
 }
 std::vector<int> B2bConverter::DecodeSolution(std::vector<bool> solution) {
