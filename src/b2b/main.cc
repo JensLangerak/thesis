@@ -16,7 +16,12 @@ bool TestFile(std::string path) {
   B2bConverter converter(problem);
   sat::SatProblem sat = converter.ToSat();
   solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
-  return solver->Solve(sat);
+  bool res = solver->Solve(sat);
+  if (res) {
+    auto sol = converter.DecodeSolution(solver->GetSolution());
+  }
+  return res;
+//  return solver->Solve(sat);
 }
 void TestDir(std::string path) {
   std::cout << "Test dir: " << path << std::endl;
