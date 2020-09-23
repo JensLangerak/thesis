@@ -21,26 +21,34 @@ class Encoder {
   /// For each cell we have 9 vars. Suppose cell (2,4) has value 8.
   /// Then var_2_4_8 = True and var_2_4_i for i 1..7,9 is False.
 public:
+  /// Create a new encoder.
+  /// \param sub_size size of the sub grid in the sudoku.
+  explicit inline Encoder(int sub_size)
+      : sub_size_(sub_size), size_(sub_size * sub_size), problem_(0){};
+
   /// Encode the sudoku as a SAT problem.
   /// \param sudoku the sudoku that must be encoded.
   /// \return a SAT problem that is satisfiable iff the sudoku is solvable.
-  static sat::SatProblem* Encode(const Sudoku &sudoku);
+  sat::SatProblem Encode(const Sudoku &sudoku);
 
   // TODO methods are currently duplicated
   /// Convert the SAT solution back to the sudoku.
   /// \param sub_size size of the subgrid in the sudoku (for a 9x9 sudoku this
   /// is 3) \param solution the solution for a sudoku found by a SAT solver.
   /// \return a filled in sudoku based on the found solution.
-  static Sudoku Decode(int sub_size, std::vector<solver::LBool> &solution);
-  static Sudoku Decode(int sub_size, std::vector<bool> &solution);
+  Sudoku Decode(std::vector<solver::LBool> &solution);
+  Sudoku Decode(std::vector<bool> &solution);
+
+  /// Compute the index of the var that corresponds to the given parameters.
+  /// \param x x-coord of the cell.
+  /// \param y y-coord of the cell.
+  /// \param value potential value of the cell.
+  /// \return the index of the var that correspoinds to the given paramets.
+  inline int VarIndex(int x, int y, int value) const {
+    return (x + y * size_) * size_ + value - 1;
+  }
 
 private:
-  /// Create a new encoder.
-  /// \param sub_size size of the sub grid in the sudoku.
-  explicit inline Encoder(int sub_size)
-      : sub_size_(sub_size), size_(sub_size * sub_size),
-        problem_(new sat::SatProblem(size_ * size_ * size_)){};
-
   /// Add the constraints that each cell must have 1 filled in number.
   void CreateCellConstraints();
   /// Add the constraints that each number in a row must be unique.
@@ -55,18 +63,9 @@ private:
   /// < 1.
   void AddGivenConstraints(const std::vector<int> &vars);
 
-  /// Compute the index of the var that corresponds to the given parameters.
-  /// \param x x-coord of the cell.
-  /// \param y y-coord of the cell.
-  /// \param value potential value of the cell.
-  /// \return the index of the var that correspoinds to the given paramets.
-  inline int VarIndex(int x, int y, int value) const {
-    return (x + y * size_) * size_ + value - 1;
-  }
-
   int sub_size_;
   int size_;
-  sat::SatProblem *problem_;
+  sat::SatProblem problem_; // TODO pointer no longer needed?
 };
 } // namespace simple_sat_solver::sudoku
 

@@ -35,14 +35,13 @@ bool SolutionValidForInput(const Sudoku &solution, const Sudoku &input) {
 
 bool TestSudoku(std::string path) {
   Sudoku sudoku = BenchmarkParser::Parse(path);
-  sat::SatProblem *p = Encoder::Encode(sudoku);
+  sat::SatProblem p = Encoder(sudoku.sub_size).Encode(sudoku);
   solver_wrappers::ISolver *s = new solver_wrappers::SimpleSolver();
-  bool res = s->Solve(*p);
+  bool res = s->Solve(p);
   std::vector<bool> sat_solution = s->GetSolution();
   delete s;
-  delete p;
 
-  Sudoku solution = Encoder::Decode(sudoku.sub_size, sat_solution);
+  Sudoku solution = Encoder(sudoku.sub_size).Decode(sat_solution);
 
   if (!SolutionValidForInput(solution, sudoku))
     throw "Wrong result";
@@ -50,12 +49,12 @@ bool TestSudoku(std::string path) {
 }
 void SingleFile(const std::string &path) {
   Sudoku sudoku = BenchmarkParser::Parse(path);
-  sat::SatProblem *p = Encoder::Encode(sudoku);
+  sat::SatProblem p = Encoder(sudoku.sub_size).Encode(sudoku);
   solver_wrappers::ISolver *s = new solver_wrappers::SimpleSolver();
-  if (s->Solve(*p)) {
+  if (s->Solve(p)) {
     std::cout << "Solved!" << std::endl;
     std::vector<bool> sat_solution = s->GetSolution();
-    Sudoku solution = Encoder::Decode(sudoku.sub_size, sat_solution);
+    Sudoku solution = Encoder(sudoku.sub_size).Decode(sat_solution);
     if (!SolutionValidForInput(solution, sudoku)) {
       std::cout << "Error" << std::endl;
     }
@@ -65,7 +64,6 @@ void SingleFile(const std::string &path) {
     std::cout << "Not solvable" << std::endl;
   }
   delete s;
-  delete p;
 }
 
 void AllBenchmarksInFolder(const std::string &path) {
