@@ -20,6 +20,7 @@ public:
   sudoku::Sudoku Generate();
   sat::SatProblem SudokuDomainToSat(SudokuDomain domain);
   SudokuDomain SatToSudokuDomain(std::vector<bool> sat_solution,int board_index);
+  sudoku::Sudoku SatToStartSudoku(std::vector<bool> sat_solution, int board_index);
 
   inline int VarIndex(int offset, int x, int y, int value) const {
     return VarIndex(offset, CellIndex(x,y), value);
@@ -37,6 +38,7 @@ private:
   const int size_;
   ISolver * solver_;
   std::vector<int> sudoku_start_indices_;
+  void CreateStartBoard(sat::SatProblem &problem, int revealed_cells);
   void CreateStartBoard(sat::SatProblem &problem, const SudokuDomain &domain);
   void CreateNextBoard(sat::SatProblem &problem);
   void AddExcludedConstraints(sat::SatProblem &problem, int prev_start_index,
@@ -57,6 +59,11 @@ private:
   void AddUniqueRowConstraint(sat::SatProblem &problem,
                              std::vector<std::vector<sat::Lit>> &reasons,
                              int start_r_index);
+  void AddSolvedConstraints(sat::SatProblem &problem, int start_index);
+  void CreateSubGridConstraints(sat::SatProblem &problem, int start_index);
+  void CreateColumnConstraints(sat::SatProblem &problem, int start_index);
+  void CreateRowConstraints(sat::SatProblem &problem, int start_index);
+  void CreateCellConstraints(sat::SatProblem &problem, int start_index);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_SUDOKU_GENERATOR_GENERATOR_V_2_H_

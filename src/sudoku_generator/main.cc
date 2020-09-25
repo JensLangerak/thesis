@@ -28,6 +28,7 @@ void TestGeneratorV2() {
   solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
   GeneratorV2 g(solver, 3);
   auto res = g.Generate();
+  PrintSudoku(res);
 }
 
 

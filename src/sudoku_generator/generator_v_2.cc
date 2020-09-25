@@ -15,25 +15,38 @@ sudoku::Sudoku GeneratorV2::Generate() {
     s.domains[0][i] = false;
   }
   sat::SatProblem sat = SudokuDomainToSat(s);
+  if (solver_->Solve(sat)) {
+    auto result = solver_->GetSolution();
+    sudoku::Sudoku sudoku = SatToStartSudoku(result, 0);
+    return sudoku;
+  }
   return sudoku::Sudoku();
 }
 sat::SatProblem GeneratorV2::SudokuDomainToSat(SudokuDomain domain) {
 
   sat::SatProblem problem = sat::SatProblem(0);
-  CreateStartBoard(problem, domain);
-  CreateNextBoard(problem);
+  // CreateStartBoard(problem, domain);
+  int hidden_cells = 50;
+  CreateStartBoard(problem, 28);//size_ * size_ - hidden_cells);
+  for (int i = 0; i < hidden_cells / 4; ++i) {
+    CreateNextBoard(problem);
+  }
+  // sat::SatProblem problem = sat::SatProblem(size_ * size_ * size_);
+  // sudoku_start_indices_.push_back(0);
+  AddSolvedConstraints(problem,
+   sudoku_start_indices_[sudoku_start_indices_.size() -1]);
   if (solver_->Solve(problem)) {
     std::vector<bool> solution = solver_->GetSolution();
 
     SudokuDomain s = SatToSudokuDomain(solution, 0);
-    SudokuDomain s1 = SatToSudokuDomain(solution, 1);
-    int index = sudoku_start_indices_[1] + size_ * size_ * size_;
-    int index_5 = index + 5;
-    bool res1 = solution[index_5];
+     SudokuDomain s1 = SatToSudokuDomain(solution, 1);
+     int index = sudoku_start_indices_[1] + size_ * size_ * size_;
+     int index_5 = index + 5;
+     bool res1 = solution[index_5];
     int test = 0;
   }
 
-  return sat::SatProblem(0);
+  return problem;
 }
 GeneratorV2::~GeneratorV2() { delete solver_; }
 SudokuDomain GeneratorV2::SatToSudokuDomain(std::vector<bool> sat_solution,
@@ -66,7 +79,7 @@ void GeneratorV2::CreateNextBoard(sat::SatProblem &problem) {
   std::vector<std::vector<Lit>> reason_lits =
       IntitReasonVector(start_prev, start_index);
   AddUniqueConstraints(start_prev, start_index, reason_lits, problem);
-  problem.AddClause({~Lit(VarIndex(start_index,1,1,5))});
+  problem.AddClause({~Lit(VarIndex(start_index, 1, 1, 5))});
   AddIncludedDomainConstraints(problem, reason_lits);
 }
 void GeneratorV2::AddExcludedConstraints(sat::SatProblem &problem,
@@ -182,5 +195,127 @@ void GeneratorV2::AddUniqueRowConstraint(sat::SatProblem &problem,
       }
     }
   }
+}
+void GeneratorV2::AddSolvedConstraints(sat::SatProblem &problem,
+                                       int start_index) {
+
+  CreateCellConstraints(problem, start_index);
+  CreateRowConstraints(problem, start_index);
+  CreateColumnConstraints(problem, start_index);
+  CreateSubGridConstraints(problem, start_index);
+}
+
+void GeneratorV2::CreateCellConstraints(sat::SatProblem &problem,
+                                        int start_index) {
+  for (int x = 0; x < size_; x++) {
+    for (int y = 0; y < size_; y++) {
+      std::vector<sat::Lit> exactly_one;
+      exactly_one.reserve(size_);
+      for (int v = 0; v < size_; v++) {
+        exactly_one.emplace_back(VarIndex(start_index, x, y, v), false);
+      }
+      problem.ExactlyOne(exactly_one);
+    }
+  }
+}
+void GeneratorV2::CreateRowConstraints(sat::SatProblem &problem,
+                                       int start_index) {
+  for (int x = 0; x < size_; x++) {
+    for (int v = 0; v < size_; v++) {
+      std::vector<sat::Lit> exactly_one;
+      exactly_one.reserve(size_);
+      for (int y = 0; y < size_; y++) {
+        exactly_one.emplace_back(VarIndex(start_index, x, y, v), false);
+      }
+      problem.ExactlyOne(exactly_one);
+    }
+  }
+}
+void GeneratorV2::CreateColumnConstraints(sat::SatProblem &problem,
+                                          int start_index) {
+  for (int y = 0; y < size_; y++) {
+    for (int v = 0; v < size_; v++) {
+      std::vector<sat::Lit> exactly_one;
+      exactly_one.reserve(size_);
+      for (int x = 0; x < size_; x++) {
+        exactly_one.emplace_back(VarIndex(start_index, x, y, v), false);
+      }
+      problem.ExactlyOne(exactly_one);
+    }
+  }
+}
+void GeneratorV2::CreateSubGridConstraints(sat::SatProblem &problem,
+                                           int start_index) {
+  for (int v = 0; v < size_; v++) {
+    for (int sub_x = 0; sub_x < sub_size_; sub_x++) {
+      for (int sub_y = 0; sub_y < sub_size_; sub_y++) {
+        std::vector<sat::Lit> exactly_one;
+        exactly_one.reserve(size_);
+        for (int x = 0; x < sub_size_; x++) {
+          for (int y = 0; y < sub_size_; y++) {
+            exactly_one.emplace_back(VarIndex(start_index,
+                                              x + sub_x * sub_size_,
+                                              y + sub_y * sub_size_, v),
+                                     false);
+          }
+        }
+        problem.ExactlyOne(exactly_one);
+      }
+    }
+  }
+}
+void GeneratorV2::CreateStartBoard(sat::SatProblem &problem,
+                                   int revealed_cells) {
+
+  if (revealed_cells < 0 || revealed_cells > size_ * size_)
+    throw "Not possible";
+  int start_index = problem.AddNewVars(size_ * size_ * size_);
+  sudoku_start_indices_.push_back(start_index);
+  int unique_start_index = problem.AddNewVars(size_ * size_);
+  for (int c = 0; c < size_ * size_; c++) {
+    std::vector<Lit> at_least_one;
+    for (int v = 0; v < size_; v++) {
+      at_least_one.push_back(Lit(VarIndex(0,c,v)));
+      problem.AddClause({Lit(VarIndex(0, c, v)), Lit(unique_start_index + c)});
+      for (int v2 = 0; v2 < size_; v2++) {
+        if (v2 == v)
+          continue;
+        problem.AddClause({~Lit(VarIndex(0, c, v)), ~Lit(VarIndex(0, c, v2)),
+                           ~Lit(unique_start_index + c)});
+      }
+    }
+    problem.AtLeastOne(at_least_one);
+  }
+
+  std::vector<Lit> unique_flags;
+  std::vector<Lit> not_unique_flags;
+  for (int c = 0; c< size_ * size_; c++) {
+    unique_flags.push_back(Lit(unique_start_index + c));
+    not_unique_flags.push_back(~Lit(unique_start_index + c));
+  }
+
+  problem.AtMostK(revealed_cells, unique_flags);
+  problem.AtMostK(size_ * size_ - revealed_cells, not_unique_flags);
+
+}
+sudoku::Sudoku GeneratorV2::SatToStartSudoku(std::vector<bool> sat_solution,
+                                             int board_index) {
+  std::vector<int> cells(size_ * size_, -1);
+  int start_index = sudoku_start_indices_[board_index];
+  for (int c = 0; c < size_ * size_; ++c) {
+    bool set = false;
+    for (int v = 0; v<size_; ++v) {
+      int index = VarIndex(start_index,c ,v);
+      if (sat_solution[index]) {
+        if (set) {
+          cells[c] = -1;
+        } else {
+          cells[c] = v + 1;
+          set = true;
+        }
+      }
+    }
+  }
+  return sudoku::Sudoku(sub_size_, cells);
 }
 } // namespace simple_sat_solver::sudoku_generator
