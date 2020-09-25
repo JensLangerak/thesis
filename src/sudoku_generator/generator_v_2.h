@@ -40,7 +40,7 @@ private:
   std::vector<int> sudoku_start_indices_;
   void CreateStartBoard(sat::SatProblem &problem, int revealed_cells);
   void CreateStartBoard(sat::SatProblem &problem, const SudokuDomain &domain);
-  void CreateNextBoard(sat::SatProblem &problem);
+  void CreateNextBoard(sat::SatProblem &problem, bool advanced_reasons);
   void AddExcludedConstraints(sat::SatProblem &problem, int prev_start_index,
                               int start_index);
   void AddIncludedDomainConstraints(sat::SatProblem &problem,
@@ -64,6 +64,9 @@ private:
   void CreateColumnConstraints(sat::SatProblem &problem, int start_index);
   void CreateRowConstraints(sat::SatProblem &problem, int start_index);
   void CreateCellConstraints(sat::SatProblem &problem, int start_index);
+  void AddHiddenSingles(int prev_start_index, int start_index,
+                        std::vector<std::vector<sat::Lit>> &reasons,
+                        sat::SatProblem &problem);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_SUDOKU_GENERATOR_GENERATOR_V_2_H_

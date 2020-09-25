@@ -27,24 +27,26 @@ sat::SatProblem GeneratorV2::SudokuDomainToSat(SudokuDomain domain) {
   sat::SatProblem problem = sat::SatProblem(0);
   // CreateStartBoard(problem, domain);
   int hidden_cells = 50;
-  CreateStartBoard(problem, 28);//size_ * size_ - hidden_cells);
-  for (int i = 0; i < hidden_cells / 4; ++i) {
-    CreateNextBoard(problem);
+  CreateStartBoard(problem, 22); // size_ * size_ - hidden_cells);
+  //CreateNextBoard(problem);
+  for (int i = 0; i < 25; ++i) {
+    CreateNextBoard(problem, i  %2 );//i == 5 || i == 8 || i == 2 || i == 12 || i ==18);//i %2);
   }
   // sat::SatProblem problem = sat::SatProblem(size_ * size_ * size_);
   // sudoku_start_indices_.push_back(0);
   AddSolvedConstraints(problem,
-   sudoku_start_indices_[sudoku_start_indices_.size() -1]);
-  if (solver_->Solve(problem)) {
-    std::vector<bool> solution = solver_->GetSolution();
-
-    SudokuDomain s = SatToSudokuDomain(solution, 0);
-     SudokuDomain s1 = SatToSudokuDomain(solution, 1);
-     int index = sudoku_start_indices_[1] + size_ * size_ * size_;
-     int index_5 = index + 5;
-     bool res1 = solution[index_5];
-    int test = 0;
-  }
+                       sudoku_start_indices_[sudoku_start_indices_.size() - 1]);
+//  if (solver_->Solve(problem)) {
+//    std::vector<bool> solution = solver_->GetSolution();
+//
+//    SudokuDomain s = SatToSudokuDomain(solution, 0);
+//    SudokuDomain s1 = SatToSudokuDomain(solution, 1);
+//    int index = sudoku_start_indices_[1] + size_ * size_ * size_;
+//    int index_5 = index + 5;
+//    bool res1 = solution[index_5];
+//    int test = 0;
+//  }
+  std::cout << problem.GetNrVars() << "  --  " << problem.GetClauses().size() << std::endl;
 
   return problem;
 }
@@ -71,15 +73,21 @@ void GeneratorV2::CreateStartBoard(sat::SatProblem &problem,
     }
   }
 }
-void GeneratorV2::CreateNextBoard(sat::SatProblem &problem) {
+void GeneratorV2::CreateNextBoard(sat::SatProblem &problem, bool advanced_reasons) {
   int start_index = problem.AddNewVars(size_ * size_ * size_);
   int start_prev = sudoku_start_indices_[sudoku_start_indices_.size() - 1];
   sudoku_start_indices_.push_back(start_index);
   AddExcludedConstraints(problem, start_prev, start_index);
   std::vector<std::vector<Lit>> reason_lits =
       IntitReasonVector(start_prev, start_index);
-  AddUniqueConstraints(start_prev, start_index, reason_lits, problem);
-  problem.AddClause({~Lit(VarIndex(start_index, 1, 1, 5))});
+  if (!advanced_reasons)
+   AddUniqueConstraints(start_prev, start_index, reason_lits, problem);
+ else
+  AddHiddenSingles(start_prev, start_index, reason_lits, problem);
+//  int r= problem.AddNewVar();
+//  for (int i = 0; i < size_; ++i) {
+//    reason_lits[i].push_back(Lit(r));
+//  }
   AddIncludedDomainConstraints(problem, reason_lits);
 }
 void GeneratorV2::AddExcludedConstraints(sat::SatProblem &problem,
@@ -275,7 +283,7 @@ void GeneratorV2::CreateStartBoard(sat::SatProblem &problem,
   for (int c = 0; c < size_ * size_; c++) {
     std::vector<Lit> at_least_one;
     for (int v = 0; v < size_; v++) {
-      at_least_one.push_back(Lit(VarIndex(0,c,v)));
+      at_least_one.push_back(Lit(VarIndex(0, c, v)));
       problem.AddClause({Lit(VarIndex(0, c, v)), Lit(unique_start_index + c)});
       for (int v2 = 0; v2 < size_; v2++) {
         if (v2 == v)
@@ -289,14 +297,13 @@ void GeneratorV2::CreateStartBoard(sat::SatProblem &problem,
 
   std::vector<Lit> unique_flags;
   std::vector<Lit> not_unique_flags;
-  for (int c = 0; c< size_ * size_; c++) {
+  for (int c = 0; c < size_ * size_; c++) {
     unique_flags.push_back(Lit(unique_start_index + c));
     not_unique_flags.push_back(~Lit(unique_start_index + c));
   }
 
   problem.AtMostK(revealed_cells, unique_flags);
   problem.AtMostK(size_ * size_ - revealed_cells, not_unique_flags);
-
 }
 sudoku::Sudoku GeneratorV2::SatToStartSudoku(std::vector<bool> sat_solution,
                                              int board_index) {
@@ -304,8 +311,8 @@ sudoku::Sudoku GeneratorV2::SatToStartSudoku(std::vector<bool> sat_solution,
   int start_index = sudoku_start_indices_[board_index];
   for (int c = 0; c < size_ * size_; ++c) {
     bool set = false;
-    for (int v = 0; v<size_; ++v) {
-      int index = VarIndex(start_index,c ,v);
+    for (int v = 0; v < size_; ++v) {
+      int index = VarIndex(start_index, c, v);
       if (sat_solution[index]) {
         if (set) {
           cells[c] = -1;
@@ -317,5 +324,88 @@ sudoku::Sudoku GeneratorV2::SatToStartSudoku(std::vector<bool> sat_solution,
     }
   }
   return sudoku::Sudoku(sub_size_, cells);
+}
+void GeneratorV2::AddHiddenSingles(int prev_start_index, int start_index,
+                                   std::vector<std::vector<Lit>> &reasons,
+                                   sat::SatProblem &problem) {
+  // ROWS
+  for (int y = 0; y < size_; ++y) {
+    for (int v = 0; v < size_; ++v) {
+      int hidden_single_in_row = problem.AddNewVar();
+      for (int x = 0; x < size_ ; ++x) {
+        for (int x2 = x + 1; x2 < size_; ++x2) {
+          problem.AddClause({~Lit(hidden_single_in_row),
+                             ~Lit(VarIndex(prev_start_index, x, y, v)),
+                             ~Lit(VarIndex(prev_start_index, x2, y, v))});
+        }
+
+        int reason = problem.AddNewVar();
+        problem.AddClause({~Lit(reason), Lit(hidden_single_in_row)});
+        problem.AddClause(
+            {~Lit(reason), Lit(VarIndex(prev_start_index, x, y, v))});
+
+        for (int v2 = 0; v2 < size_; ++v2) {
+          reasons[VarIndex(0, x, y, v2)].push_back(Lit(reason));
+        }
+      }
+    }
+  }
+
+  // COLLS
+  for (int x = 0; x < size_; ++x) {
+    for (int v = 0; v < size_; ++v) {
+      int hidden_single_in_row = problem.AddNewVar();
+      for (int y = 0; y < size_ ; ++y) {
+        for (int y2 = y + 1; y2 < size_; ++y2) {
+          problem.AddClause({~Lit(hidden_single_in_row),
+                             ~Lit(VarIndex(prev_start_index, x, y, v)),
+                             ~Lit(VarIndex(prev_start_index, x, y2, v))});
+        }
+
+        int reason = problem.AddNewVar();
+        problem.AddClause({~Lit(reason), Lit(hidden_single_in_row)});
+        problem.AddClause(
+            {~Lit(reason), Lit(VarIndex(prev_start_index, x, y, v))});
+
+        for (int v2 = 0; v2 < size_; ++v2) {
+          reasons[VarIndex(0, x, y, v2)].push_back(Lit(reason));
+        }
+      }
+    }
+  }
+
+
+  // subgrid
+  for (int sub_x =0; sub_x < sub_size_; ++sub_x) {
+    for (int sub_y = 0; sub_y < sub_size_; ++sub_y) {
+    for (int v = 0; v < size_; ++v) {
+      int hidden_single_in_subgrid = problem.AddNewVar();
+      for (int offset_x = 0; offset_x < sub_size_; ++offset_x) {
+        for (int offset_y = 0; offset_y < sub_size_; ++offset_y) {
+          int x = sub_x * sub_size_ + offset_x;
+          int y = sub_y * sub_size_ + offset_y;
+        for (int offset_x2 = 0; offset_x2 < sub_size_; ++offset_x2) {
+            for (int offset_y2 = 0; offset_y2 < sub_size_; ++offset_y2) {
+              int x2 = sub_x * sub_size_ + offset_x2;
+              int y2 = sub_y * sub_size_ + offset_y2;
+              if (y2 < y || y2 == y && x2 < x)
+                continue;
+              problem.AddClause({~Lit(hidden_single_in_subgrid),
+                                 ~Lit(VarIndex(prev_start_index, x, y, v)),
+                                 ~Lit(VarIndex(prev_start_index, x2, y2, v))});
+            }
+          }
+
+        int reason = problem.AddNewVar();
+        problem.AddClause({~Lit(reason), Lit(hidden_single_in_subgrid)});
+        problem.AddClause(
+            {~Lit(reason), Lit(VarIndex(prev_start_index, x, y, v))});
+
+        for (int v2 = 0; v2 < size_; ++v2) {
+          reasons[VarIndex(0, x, y, v2)].push_back(Lit(reason));
+        }
+      }
+    }}}
+  }
 }
 } // namespace simple_sat_solver::sudoku_generator
