@@ -65,6 +65,10 @@ public:
   /// \return true if the assignment satisfies the problem.
   bool TestAssignment(const std::vector<bool> &vars) const;
 
+  int AddNewVar();
+
+  int AddNewVars(int nr_vars);
+
 private:
   // TODO move to types
   static bool TestLit(const Lit &l, const std::vector<bool> &vars);

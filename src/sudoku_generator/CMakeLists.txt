@@ -1,4 +1,4 @@
-add_library(sudoku_generator generator.cc generator.h)
+add_library(sudoku_generator generator.cc generator.h generator_v_2.cc generator_v_2.h sudoku_domain.h)
 
 target_link_libraries(sudoku_generator sat sudoku solvers)
 
