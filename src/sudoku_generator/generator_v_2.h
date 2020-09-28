@@ -67,6 +67,31 @@ private:
   void AddHiddenSingles(int prev_start_index, int start_index,
                         std::vector<std::vector<sat::Lit>> &reasons,
                         sat::SatProblem &problem);
+  void AddGridRowConstraint(int prev_start_index, int start_index,
+                            std::vector<std::vector<sat::Lit>> &reasons,
+                            sat::SatProblem &problem);
+  void AddGridColumnConstraint(int prev_start_index, int start_index,
+                               std::vector<std::vector<sat::Lit>> &reasons,
+                               sat::SatProblem &problem);
+  void AddRowGridConstraint(int prev_start_index, int start_index,
+                            std::vector<std::vector<sat::Lit>> &reasons,
+                            sat::SatProblem &problem);
+  void AddColumnGridConstraint(int prev_start_index, int start_index,
+                        std::vector<std::vector<sat::Lit>> &reasons,
+                        sat::SatProblem &problem);
+  void AddPairGrid(int prev_start_index, std::vector<std::vector<sat::Lit>> &reasons,
+                     sat::SatProblem &problem);
+  void AddPairColumn(int prev_start_index, std::vector<std::vector<sat::Lit>> &reasons,
+                  sat::SatProblem &problem);
+  void AddPairRow(int prev_start_index, std::vector<std::vector<sat::Lit>> &reasons,
+                  sat::SatProblem &problem);
+
+  std::vector<int> GetRowCells(int row_index);
+  std::vector<int> GetColumnCells(int column_index);
+  std::vector<int> GetSubgridCells(int subgrid_index);
+  void AddUniqueInGroupConstraint(sat::SatProblem &problem,
+                                  std::vector<std::vector<sat::Lit>> &reasons,
+                                  int start_r_index);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_SUDOKU_GENERATOR_GENERATOR_V_2_H_
