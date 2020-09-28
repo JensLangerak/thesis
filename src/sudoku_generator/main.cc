@@ -30,7 +30,7 @@ void TestGeneratorV2() {
 
   solver_wrappers::ISolver *solver = new solver_wrappers::CryptoMiniSat();
   GeneratorV2 g(solver, 3);
-  auto res = g.Generate();
+  auto res = g.Generate(35);
   PrintSudoku(res);
 }
 
@@ -38,7 +38,7 @@ void TestGeneratorV2() {
 void TestGenerator() {
     solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
     Generator g(solver);
-    Sudoku s = g.Generate(3, 22);
+    Sudoku s = g.Generate(3, 25);
     PrintSudoku(s);
     sudoku::Encoder encoder(3);
     sat::SatProblem sat = encoder.Encode(s);

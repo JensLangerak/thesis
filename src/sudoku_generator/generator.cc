@@ -19,6 +19,7 @@ Generator::Generator(solver_wrappers::ISolver *solver)
 Generator::~Generator() { delete solver_; }
 Sudoku Generator::Generate(int sub_size, int given) {
   encoder = sudoku::Encoder(sub_size);
+  // max numbers of new sudoku generation rounds
   for (int i = 0; i < 10; i++) {
     std::cout<<"Generate sudoku" << std::endl;
     Sudoku p = GenerateUnique(sub_size);
