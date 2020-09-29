@@ -6,9 +6,8 @@
 #include <algorithm>
 namespace simple_sat_solver::sat {
 void SatProblem::AddClause(const std::vector<Lit> &lits) {
-  if (!std::all_of(lits.begin(), lits.end(), [this](Lit l) {
-        return l.x >= 0 && l.x < this->nr_vars_;
-      }))
+  if (!std::all_of(lits.begin(), lits.end(),
+                   [this](Lit l) { return l.x >= 0 && l.x < this->nr_vars_; }))
     throw "Illegal id";
   clauses_.push_back(lits);
 }
@@ -44,7 +43,7 @@ void SatProblem::Implies(const Lit &antecedent, const Lit &consequent) {
 void SatProblem::AtMostK(const int k, const std::vector<Lit> &lits) {
   if (k < 0)
     throw "k should be non negative";
-  if (lits.size() <= k)//always true, so nothing to encode
+  if (lits.size() <= k) // always true, so nothing to encode
     return;
   if (k == 0) {
     None(lits);
@@ -76,24 +75,37 @@ void SatProblem::AtMostK(const int k, const std::vector<Lit> &lits) {
   }
   // s_i_0
   for (int i = 1; i < n; i++) {
-    clauses_.push_back({Lit(s_index(i-1, 0), true), Lit(s_index(i,0), false)});
-    clauses_.push_back({Lit(s_index(i,0), false), ~lits[i]});
+    clauses_.push_back(
+        {Lit(s_index(i - 1, 0), true), Lit(s_index(i, 0), false)});
+    clauses_.push_back({Lit(s_index(i, 0), false), ~lits[i]});
   }
   // s_i_j
   for (int i = 1; i < n; i++) {
     for (int j = 1; j < k; j++) {
-      clauses_.push_back({Lit(s_index(i-1, j), true), Lit(s_index(i,j), false)});
-      clauses_.push_back({Lit(s_index(i-1, j-1), true), ~lits[i], Lit(s_index(i,j), false)});
+      clauses_.push_back(
+          {Lit(s_index(i - 1, j), true), Lit(s_index(i, j), false)});
+      clauses_.push_back({Lit(s_index(i - 1, j - 1), true), ~lits[i],
+                          Lit(s_index(i, j), false)});
     }
   }
   // Force the constraint
   for (int i = 1; i < n; i++) {
-    clauses_.push_back({Lit(s_index(i-1, k-1), true), ~lits[i]});
+    clauses_.push_back({Lit(s_index(i - 1, k - 1), true), ~lits[i]});
   }
-
 }
-void SatProblem::None(const std::vector<Lit> &lits){
+void SatProblem::None(const std::vector<Lit> &lits) {
   for (Lit l : lits)
     clauses_.push_back({~l});
+}
+int SatProblem::AddNewVar() {
+  ++nr_vars_;
+  return nr_vars_ - 1;
+}
+int SatProblem::AddNewVars(int nr_vars){
+  if (nr_vars <= 0)
+    throw "nr_vars should be larger than 0";
+  int res = nr_vars_;
+  nr_vars_ += nr_vars;
+  return res;
 };
 } // namespace simple_sat_solver::sat

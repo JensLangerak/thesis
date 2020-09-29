@@ -5,9 +5,11 @@
 #include "generator.h"
 #include <iostream>
 
+#include "../solver_wrappers/crypto_mini_sat.h"
 #include "../solver_wrappers/i_solver.h"
 #include "../solver_wrappers/simple_solver.h"
 #include "../sudoku/encoder.h"
+#include "generator_v_2.h"
 
 void TestGenerator();
 namespace simple_sat_solver::sudoku_generator {
@@ -22,10 +24,21 @@ void PrintSudoku(Sudoku &s) {
   }
   std::cout << std::endl;
 }
-  void TestGenerator() {
+void TestGeneratorV2() {
+
+ // solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
+
+  solver_wrappers::ISolver *solver = new solver_wrappers::CryptoMiniSat();
+  GeneratorV2 g(solver, 3);
+  auto res = g.Generate(25);
+  PrintSudoku(res);
+}
+
+
+void TestGenerator() {
     solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
     Generator g(solver);
-    Sudoku s = g.Generate(3, 20);
+    Sudoku s = g.Generate(3, 25);
     PrintSudoku(s);
     sudoku::Encoder encoder(3);
     sat::SatProblem sat = encoder.Encode(s);
@@ -42,6 +55,8 @@ void PrintSudoku(Sudoku &s) {
 }
 
 int main() {
-  simple_sat_solver::sudoku_generator::TestGenerator();
+
+  simple_sat_solver::sudoku_generator::TestGeneratorV2();
+  //simple_sat_solver::sudoku_generator::TestGenerator();
   return 0;
 }
