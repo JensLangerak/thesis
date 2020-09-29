@@ -11,14 +11,17 @@ using sat::Lit;
 sudoku::Sudoku GeneratorV2::Generate(int revealed) {
   sat::SatProblem problem = sat::SatProblem(0);
   int hidden_cells = size_ * size_ - revealed;
-  CreateStartBoard(problem, revealed); // size_ * size_ - hidden_cells);
+
+  CreateStartState(problem, revealed); // size_ * size_ - hidden_cells);
   for (int i = 0; i < hidden_cells / 3; ++i) {
-    CreateNextBoard(problem, i % 2);
+    CreateNextState(problem, i % 2);
   }
   AddSolvedConstraints(problem,
                        sudoku_start_indices_[sudoku_start_indices_.size() - 1]);
+
   std::cout << problem.GetNrVars() << "  --  " << problem.GetClauses().size()
             << std::endl;
+
   if (solver_->Solve(problem)) {
     auto result = solver_->GetSolution();
     sudoku::Sudoku sudoku = SatToStartSudoku(result, 0);
@@ -28,23 +31,33 @@ sudoku::Sudoku GeneratorV2::Generate(int revealed) {
 }
 GeneratorV2::~GeneratorV2() { delete solver_; }
 
-void GeneratorV2::CreateNextBoard(sat::SatProblem &problem,
+void GeneratorV2::CreateNextState(sat::SatProblem &problem,
                                   bool advanced_reasons) {
   int start_index = problem.AddNewVars(size_ * size_ * size_);
   int start_prev = sudoku_start_indices_[sudoku_start_indices_.size() - 1];
   sudoku_start_indices_.push_back(start_index);
+
   AddExcludedConstraints(problem, start_prev, start_index);
+
+  // reason_lits keeps for all c,v pairs track of the reason that can set it to
+  // false. if all the reasons are added the following clause is added:
+  // ~prev(c,v) V current(c,v) V R1 V R2 V R3 ...
+  // where Ri is stored in the reason_lits.
   std::vector<std::vector<Lit>> reason_lits =
       IntitReasonVector(start_prev, start_index);
+  // do not allways add all possible reasoning steps, problem becomes to big.
   if (!advanced_reasons) {
-    AddUniqueConstraints(start_prev, start_index, reason_lits, problem);
+    AddUniqueConstraints(start_prev, reason_lits, problem);
   } else {
-    AddHiddenSingles(start_prev, start_index, reason_lits, problem);
-    AddRowGridConstraint(start_prev, start_index, reason_lits, problem);
-    AddColumnGridConstraint(start_prev, start_index, reason_lits, problem);
+    AddHiddenSingles(start_prev, reason_lits, problem);
+    AddRowGridConstraint(start_prev, reason_lits, problem);
+    AddColumnGridConstraint(start_prev, reason_lits, problem);
     // TODO fix bug in pairs functions
     //        AddPairs(start_index, reason_lits, problem);
   }
+
+  // add the clauses that allow a c,v to become false based on the constructed
+  // reasons.
   AddIncludedDomainConstraints(problem, reason_lits);
 }
 void GeneratorV2::AddExcludedConstraints(sat::SatProblem &problem,
@@ -78,10 +91,11 @@ GeneratorV2::IntitReasonVector(int prev_start_index, int start_index) {
   }
   return reasons;
 }
-void GeneratorV2::AddUniqueConstraints(int prev_start_index, int start_index,
+void GeneratorV2::AddUniqueConstraints(int prev_start_index,
                                        std::vector<std::vector<Lit>> &reasons,
                                        sat::SatProblem &problem) {
   int start_r_index = problem.GetNrVars();
+  // check which (c,v) are the unique values in their c.
   for (int c = 0; c < size_ * size_; c++) {
     for (int v = 0; v < size_; v++) {
       int r = problem.AddNewVar();
@@ -122,7 +136,7 @@ void GeneratorV2::AddUniqueInGroupConstraint(
 void GeneratorV2::AddSolvedConstraints(sat::SatProblem &problem,
                                        int start_index) {
 
-  CreateCellConstraints(problem, start_index);
+  CreateSolvedCellConstraints(problem, start_index);
   for (int x = 0; x < size_; ++x)
     CreateSolvedGroupConstraint(problem, GetRowCells(x), start_index);
   for (int y = 0; y < size_; ++y)
@@ -131,8 +145,8 @@ void GeneratorV2::AddSolvedConstraints(sat::SatProblem &problem,
     CreateSolvedGroupConstraint(problem, GetSubgridCells(g), start_index);
 }
 
-void GeneratorV2::CreateCellConstraints(sat::SatProblem &problem,
-                                        int start_index) {
+void GeneratorV2::CreateSolvedCellConstraints(sat::SatProblem &problem,
+                                              int start_index) {
   for (int x = 0; x < size_; x++) {
     for (int y = 0; y < size_; y++) {
       std::vector<sat::Lit> exactly_one;
@@ -158,13 +172,15 @@ void GeneratorV2::CreateSolvedGroupConstraint(sat::SatProblem &problem,
   }
 }
 
-void GeneratorV2::CreateStartBoard(sat::SatProblem &problem,
+void GeneratorV2::CreateStartState(sat::SatProblem &problem,
                                    int revealed_cells) {
 
   if (revealed_cells < 0 || revealed_cells > size_ * size_)
     throw "Not possible";
   int start_index = problem.AddNewVars(size_ * size_ * size_);
   sudoku_start_indices_.push_back(start_index);
+  // cells should have either one possible value, or all values are possible.
+  // keep track of the cells that can have only one value
   int unique_start_index = problem.AddNewVars(size_ * size_);
   for (int c = 0; c < size_ * size_; c++) {
     std::vector<Lit> at_least_one;
@@ -181,20 +197,20 @@ void GeneratorV2::CreateStartBoard(sat::SatProblem &problem,
     problem.AtLeastOne(at_least_one);
   }
 
+  // specify that there must be exactly revealed_cells given cells.
   std::vector<Lit> unique_flags;
   std::vector<Lit> not_unique_flags;
   for (int c = 0; c < size_ * size_; c++) {
     unique_flags.push_back(Lit(unique_start_index + c));
     not_unique_flags.push_back(~Lit(unique_start_index + c));
   }
-
   problem.AtMostK(revealed_cells, unique_flags);
   problem.AtMostK(size_ * size_ - revealed_cells, not_unique_flags);
 }
 sudoku::Sudoku GeneratorV2::SatToStartSudoku(std::vector<bool> sat_solution,
-                                             int board_index) {
+                                             int state_index) {
   std::vector<int> cells(size_ * size_, -1);
-  int start_index = sudoku_start_indices_[board_index];
+  int start_index = sudoku_start_indices_[state_index];
   for (int c = 0; c < size_ * size_; ++c) {
     bool set = false;
     for (int v = 0; v < size_; ++v) {
@@ -220,20 +236,25 @@ void GeneratorV2::AddHiddenSingles(int prev_start_index,
     int hidden_single = problem.AddNewVar();
     for (int c1 = 0; c1 < cell_indices.size(); ++c1) {
       for (int c2 = c1 + 1; c2 < cell_indices.size(); ++c2) {
+        // test if there v is a hidden single in the group
         problem.AddClause({~Lit(hidden_single),
                            ~Lit(VarIndex(prev_start_index, c1, v)),
                            ~Lit(VarIndex(prev_start_index, c2, v))});
       }
+
+      // test if c if the hidden single
+      int reason = problem.AddNewVar();
+      problem.Implies(reason, hidden_single);
       problem.AddClause(
-          {~Lit(hidden_single), Lit(VarIndex(prev_start_index, c1, v))});
+          {~Lit(reason), Lit(VarIndex(prev_start_index, c1, v))});
 
       for (int v2 = 0; v2 < size_; ++v2) {
-        reasons[VarIndex(0, c1, v2)].push_back(Lit(hidden_single));
+        reasons[VarIndex(0, c1, v2)].push_back(Lit(reason));
       }
     }
   }
 }
-void GeneratorV2::AddHiddenSingles(int prev_start_index, int start_index,
+void GeneratorV2::AddHiddenSingles(int prev_start_index,
                                    std::vector<std::vector<Lit>> &reasons,
                                    sat::SatProblem &problem) {
   for (int y = 0; y < size_; ++y)
@@ -273,8 +294,9 @@ void GeneratorV2::AddGroupConstrainsGroup(
   }
 }
 void GeneratorV2::AddRowGridConstraint(
-    int prev_start_index, int start_index,
-    std::vector<std::vector<sat::Lit>> &reasons, sat::SatProblem &problem) {
+    int prev_start_index, std::vector<std::vector<sat::Lit>> &reasons,
+    sat::SatProblem &problem) {
+  // loop over the intersecting rows and subgrids.
   for (int y = 0; y < size_; ++y) {
     int group_start = (y / sub_size_) * sub_size_;
     int group_step = 1;
@@ -288,8 +310,9 @@ void GeneratorV2::AddRowGridConstraint(
   }
 }
 void GeneratorV2::AddColumnGridConstraint(
-    int prev_start_index, int start_index,
-    std::vector<std::vector<sat::Lit>> &reasons, sat::SatProblem &problem) {
+    int prev_start_index, std::vector<std::vector<sat::Lit>> &reasons,
+    sat::SatProblem &problem) {
+  // loop over the intersecting columns and subgrids.
   for (int x = 0; x < size_; ++x) {
     int group_start = (x / sub_size_);
     int group_step = sub_size_;
@@ -318,6 +341,7 @@ void GeneratorV2::AddPairGroup(int prev_start_index,
                                std::vector<int> cell_indices,
                                std::vector<std::vector<sat::Lit>> &reasons,
                                sat::SatProblem &problem) {
+  // todo fix bug
   std::vector<int> pair;
   for (int v = 0; v < size_; ++v)
     pair.push_back(problem.AddNewVar());
@@ -341,7 +365,7 @@ void GeneratorV2::AddPairGroup(int prev_start_index,
                          ~Lit(select_var)});
     }
   }
-  // check if there are two (or more) positions that match the patern
+  // check if there are two (or more) positions that match the pattern
   int reason = problem.AddNewVar();
   for (int c1 : cell_indices) {
     std::vector<Lit> at_least_one;

@@ -15,19 +15,21 @@
 namespace simple_sat_solver::sudoku_generator {
 
 Generator::Generator(solver_wrappers::ISolver *solver)
-    : solver_(solver), encoder(0) {}
+    : solver_(solver), encoder_(0) {}
+
 Generator::~Generator() { delete solver_; }
+
 Sudoku Generator::Generate(int sub_size, int given) {
-  encoder = sudoku::Encoder(sub_size);
+  encoder_ = sudoku::Encoder(sub_size);
   // max numbers of new sudoku generation rounds
   for (int i = 0; i < 10; i++) {
-    std::cout<<"Generate sudoku" << std::endl;
+    std::cout << "Generate sudoku" << std::endl;
     Sudoku p = GenerateUnique(sub_size);
-    sat::SatProblem sat = encoder.Encode(p);
+    sat::SatProblem sat = encoder_.Encode(p);
     if (!solver_->Solve(sat))
       throw "Error";
     std::vector<bool> sat_sol = solver_->GetSolution();
-    Sudoku solution = encoder.Decode(sat_sol);
+    Sudoku solution = encoder_.Decode(sat_sol);
 
     int filled_cells = GetFilledCells(p);
 
@@ -39,6 +41,8 @@ Sudoku Generator::Generate(int sub_size, int given) {
       else
         throw "Not possible";
     } else {
+      // to many revealed cells, try if it is possible to hide some cells of the
+      // current problem.
       if (ReduceSolution(p, solution, filled_cells - given)) {
         //   ExhaustiveSearch(p, solution, given);
         if (GetFilledCells(p) == given) {
@@ -50,10 +54,12 @@ Sudoku Generator::Generate(int sub_size, int given) {
         // search in related problems, might be smaller
         for (int i = 0; i < 10; i++) {
 
-          std::cout<<"Local search" << std::endl;
+          std::cout << "Local search" << std::endl;
           if (!SolutionIsUnique(p, solution))
             throw "Error";
           filled_cells = GetFilledCells(p);
+          // First reveal some extra cells and than try to reduce the solution
+          // again.
           ExpandSolution(p, solution, sat_sol, 2);
           filled_cells = GetFilledCells(p);
           if (ReduceSolution(p, solution, filled_cells - given))
@@ -96,42 +102,47 @@ Sudoku Generator::GenerateUnique(int sub_size) {
   int size = sub_size * sub_size;
   std::vector<int> cells(size * size, -1);
   std::srand(std::time(nullptr));
+
+  // fill first random cell
   int i = std::rand() % cells.size();
   int v = (std::rand() % size) + 1;
   cells[i] = v;
 
+  // get first solution
   Sudoku problem(sub_size, cells);
-  sat::SatProblem s = encoder.Encode(problem);
+  sat::SatProblem s = encoder_.Encode(problem);
   solver_->Solve(s);
   std::vector<bool> sat_solution = solver_->GetSolution();
-  Sudoku solution = encoder.Decode(sat_solution);
+  Sudoku solution = encoder_.Decode(sat_solution);
   bool unique = false;
-  while (!unique) {
 
-    s = encoder.Encode(problem);
+  while (!unique) {
+    // test if the solution is unique
+    s = encoder_.Encode(problem);
     unique = SolutionIsUnique(s, sat_solution);
     if (!unique) {
       std::vector<bool> second_sat_solution = solver_->GetSolution();
-      Sudoku second_solution = encoder.Decode(second_sat_solution);
+      Sudoku second_solution = encoder_.Decode(second_sat_solution);
       std::vector<int> differences = DifferenceIndex(solution, second_solution);
       if (differences.empty())
         throw "Solutions are the same?";
+      // decide which solution is the actual solution
       if (std::rand() % 2 == 0) {
         solution = second_solution;
         sat_solution = second_sat_solution;
       }
+      // reveal one of the cells that can have multiple values
       int diff_index = std::rand() % differences.size();
       problem.cells[differences[diff_index]] =
           solution.cells[differences[diff_index]];
     }
   }
 
-  sat::SatProblem sat_problem = encoder.Encode(problem);
+  sat::SatProblem sat_problem = encoder_.Encode(problem);
   if (!solver_->Solve(sat_problem))
     throw "Error";
   auto sat_sol = solver_->GetSolution();
   if (!SolutionIsUnique(sat_problem, sat_sol)) {
-    bool test = SolutionIsUnique(s, sat_solution);
     throw "Error";
   }
   return problem;
@@ -139,7 +150,8 @@ Sudoku Generator::GenerateUnique(int sub_size) {
 bool Generator::RevealExtraCells(Sudoku &problem, Sudoku solution,
                                  int reveal_cells) {
   int size = problem.sub_size * problem.sub_size;
-  int max_unrevealed_cells = size * size; // upperbound not accurate
+  int max_unrevealed_cells =
+      size * size; // max number of cells that can be revealed.
   while (reveal_cells > 0 && max_unrevealed_cells > 0) {
     int unrevealed_index = std::rand() % max_unrevealed_cells;
     max_unrevealed_cells = 0;
@@ -161,6 +173,7 @@ bool Generator::RevealExtraCells(Sudoku &problem, Sudoku solution,
 bool Generator::ExpandSolution(Sudoku &problem, Sudoku solution,
                                std::vector<bool> sat_solution, int max_nr) {
   std::vector<int> remove_candidates;
+  // remove some of the current revealed cells.
   for (int i = 0; i < problem.cells.size(); i++) {
     if (problem.cells[i] >= 1)
       remove_candidates.push_back(i);
@@ -172,14 +185,16 @@ bool Generator::ExpandSolution(Sudoku &problem, Sudoku solution,
 
   std::vector<int> add_cells;
 
-  sat::SatProblem sat_problem = encoder.Encode(problem);
+  // get the cells that can have multiple values, generate at most 10 different
+  // solutions.
+  sat::SatProblem sat_problem = encoder_.Encode(problem);
   sat::SatProblem next_solution_problem =
       CreateSecondSolutionProblem(sat_problem, sat_solution);
   for (int i = 0; i < 10; i++) {
     bool unique = !solver_->Solve(next_solution_problem);
     if (!unique) {
       auto next_sat_sol = solver_->GetSolution();
-      auto next_sol = encoder.Decode(next_sat_sol);
+      auto next_sol = encoder_.Decode(next_sat_sol);
       for (int i : DifferenceIndex(solution, next_sol))
         add_cells.push_back(i);
       next_solution_problem =
@@ -189,10 +204,13 @@ bool Generator::ExpandSolution(Sudoku &problem, Sudoku solution,
     }
   }
 
+  // add the cells that are not unique
   for (int i : add_cells) {
     problem.cells[i] = solution.cells[i];
   }
-  for (int i: remove_candidates) {
+  // add the original removed cell to guarantee that the sudoku has a unique
+  // solution.
+  for (int i : remove_candidates) {
     problem.cells[i] = solution.cells[i];
   }
   if (!SolutionIsUnique(problem, solution))
@@ -202,7 +220,8 @@ bool Generator::ExpandSolution(Sudoku &problem, Sudoku solution,
 
 bool Generator::ReduceSolution(Sudoku &problem, Sudoku solution,
                                int remove_givens) {
-  std::vector<int> check_index_list;
+  std::vector<int>
+      check_index_list; // keep track of the cells that might be removed.
   for (int i = 0; i < problem.cells.size(); i++) {
     if (problem.cells[i] >= 1)
       check_index_list.push_back(i);
@@ -212,15 +231,16 @@ bool Generator::ReduceSolution(Sudoku &problem, Sudoku solution,
     bool removed = false;
     if (check_index_list.empty())
       return false;
-    int start_index = rand() % check_index_list.size();
+    int start_index = rand() % check_index_list.size(); //randomize where to start.
+    // try to remove a value, while keeping the solution unique.
     for (int c_i = 0; c_i < check_index_list.size(); c_i++) {
-     int i = check_index_list[(c_i + start_index) % check_index_list.size()];
+      int i = check_index_list[(c_i + start_index) % check_index_list.size()];
       if (problem.cells[i] >= 1) {
         int value = problem.cells[i];
         problem.cells[i] = -1;
         remove_from_index_list.push_back(i);
         if (SolutionIsUnique(problem, solution)) {
-          removed =true;
+          removed = true;
           break;
         } else {
           problem.cells[i] = solution.cells[i];
@@ -229,9 +249,13 @@ bool Generator::ReduceSolution(Sudoku &problem, Sudoku solution,
     }
     if (!removed)
       return false;
+
+    // update the cells that might be removed.
     std::vector<int> new_index_list;
     for (int i : check_index_list) {
-      if (std::find(remove_from_index_list.begin(), remove_from_index_list.end(), i) == remove_from_index_list.end())
+      if (std::find(remove_from_index_list.begin(),
+                    remove_from_index_list.end(),
+                    i) == remove_from_index_list.end())
         new_index_list.push_back(i);
     }
     check_index_list = new_index_list;
@@ -247,9 +271,9 @@ bool Generator::SolutionIsUnique(sat::SatProblem problem,
 }
 bool Generator::SolutionIsUnique(Sudoku problem, Sudoku solution) {
 
-  solver_->Solve(encoder.Encode(solution));
+  solver_->Solve(encoder_.Encode(solution));
   std::vector<bool> sat_solution = solver_->GetSolution();
-  return SolutionIsUnique(encoder.Encode(problem), sat_solution);
+  return SolutionIsUnique(encoder_.Encode(problem), sat_solution);
 }
 int Generator::GetFilledCells(Sudoku problem) {
   int filled_cells = 0;
@@ -260,7 +284,7 @@ int Generator::GetFilledCells(Sudoku problem) {
   return filled_cells;
 }
 bool Generator::ExhaustiveSearch(Sudoku &problem, Sudoku solution, int given) {
-  solver_->Solve(encoder.Encode(solution));
+  solver_->Solve(encoder_.Encode(solution));
   std::vector<bool> sat_solution = solver_->GetSolution();
 
   problem =
@@ -276,13 +300,13 @@ bool Generator::MinSolution(Sudoku &problem, Sudoku solution,
   if (unassigned_givens < 0)
     return false;
 
-  sat::SatProblem sat_problem = encoder.Encode(problem);
+  sat::SatProblem sat_problem = encoder_.Encode(problem);
   sat::SatProblem second_sol_problem =
       CreateSecondSolutionProblem(sat_problem, sat_solution);
   bool unique = !solver_->Solve(second_sol_problem);
   if (!unique) {
     auto second_sat_sol = solver_->GetSolution();
-    Sudoku second_sol = encoder.Decode(second_sat_sol);
+    Sudoku second_sol = encoder_.Decode(second_sat_sol);
     std::vector<int> candidates = DifferenceIndex(solution, second_sol);
     for (int c : candidates) {
       if (c < next_cell)
@@ -296,6 +320,7 @@ bool Generator::MinSolution(Sudoku &problem, Sudoku solution,
     }
     return false;
   } else {
+    // revealed cells is less than desired amount
     for (int i = 0; i < problem.cells.size(); i++) {
       if (unassigned_givens == 0)
         break;
