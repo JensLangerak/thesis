@@ -14,6 +14,8 @@
 using simple_sat_solver::solver_wrappers::ISolver;
 namespace simple_sat_solver::sudoku_generator {
 /// Generate a sudoku by modeling the entire search path.
+// TODO perhaps move state construction with reasoning to different clause (builder)
+// where the reasoning constraints can be added via public methods, should make testing easier.
 class GeneratorV2 {
 public:
   /// Create a generator

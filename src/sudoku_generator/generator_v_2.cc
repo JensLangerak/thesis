@@ -52,8 +52,7 @@ void GeneratorV2::CreateNextState(sat::SatProblem &problem,
     AddHiddenSingles(start_prev, reason_lits, problem);
     AddRowGridConstraint(start_prev, reason_lits, problem);
     AddColumnGridConstraint(start_prev, reason_lits, problem);
-    // TODO fix bug in pairs functions
-    //        AddPairs(start_index, reason_lits, problem);
+    AddPairs(start_prev, reason_lits, problem);
   }
 
   // add the clauses that allow a c,v to become false based on the constructed
@@ -245,8 +244,7 @@ void GeneratorV2::AddHiddenSingles(int prev_start_index,
       // test if c if the hidden single
       int reason = problem.AddNewVar();
       problem.Implies(reason, hidden_single);
-      problem.AddClause(
-          {~Lit(reason), Lit(VarIndex(prev_start_index, c1, v))});
+      problem.AddClause({~Lit(reason), Lit(VarIndex(prev_start_index, c1, v))});
 
       for (int v2 = 0; v2 < size_; ++v2) {
         reasons[VarIndex(0, c1, v2)].push_back(Lit(reason));
@@ -341,7 +339,6 @@ void GeneratorV2::AddPairGroup(int prev_start_index,
                                std::vector<int> cell_indices,
                                std::vector<std::vector<sat::Lit>> &reasons,
                                sat::SatProblem &problem) {
-  // todo fix bug
   std::vector<int> pair;
   for (int v = 0; v < size_; ++v)
     pair.push_back(problem.AddNewVar());
