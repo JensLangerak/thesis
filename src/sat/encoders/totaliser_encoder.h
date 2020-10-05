@@ -7,17 +7,10 @@
 
 #include "../sat_problem.h"
 namespace simple_sat_solver::sat {
-struct Node {
-  int index;
-  std::vector<Lit> variables;
-  std::vector<Lit> counting_variables;
-  Node *left;
-  Node *right;
-  Node() : left(nullptr),  right(nullptr) {}
-  ~Node();
-};
+
 
 class TotaliserEncoder {
+
 public:
   static void Encode(SatProblem &sat, std::vector<Lit> variables, int min,
                      int max);
@@ -26,14 +19,25 @@ private:
   TotaliserEncoder(SatProblem *sat, std::vector<Lit> variables, int min,
                    int max);
   ~TotaliserEncoder();
+
+  struct Node {
+    int index;
+    std::vector<Lit> variables;
+    std::vector<Lit> counting_variables;
+    Node *left;
+    Node *right;
+    Node() : left(nullptr),  right(nullptr) {}
+    ~Node();
+  };
+
   Node *CreateTree(std::vector<Lit> variables);
+
 
   SatProblem *sat_;
   std::vector<Lit> variables_;
   int min_;
   int max_;
-  std::vector<Lit> linking_variables_;
-  Node *root;
+  Node *root_;
   void SetMin();
   void SetMax();
 };

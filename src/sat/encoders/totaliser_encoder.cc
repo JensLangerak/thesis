@@ -7,15 +7,15 @@ namespace simple_sat_solver::sat {
 TotaliserEncoder::TotaliserEncoder(SatProblem *sat, std::vector<Lit> variables,
                                    int min, int max)
     : sat_(sat), variables_(variables), min_(min), max_(max),
-      linking_variables_(), root(nullptr){}
+      root_(nullptr){}
 void TotaliserEncoder::Encode(SatProblem &sat, std::vector<Lit> variables,
                               int min, int max) {
   TotaliserEncoder encoder(&sat, variables, min, max);
-  encoder.root = encoder.CreateTree(variables);
+  encoder.root_ = encoder.CreateTree(variables);
   encoder.SetMin();
   encoder.SetMax();
 }
-Node *TotaliserEncoder::CreateTree(std::vector<Lit> variables) {
+TotaliserEncoder::Node *TotaliserEncoder::CreateTree(std::vector<Lit> variables) {
   Node *n = new Node();
   n->index = variables.size();
   n->variables = variables;
@@ -90,7 +90,7 @@ Node *TotaliserEncoder::CreateTree(std::vector<Lit> variables) {
   }
   return n;
 }
-TotaliserEncoder::~TotaliserEncoder() { delete root; }
+TotaliserEncoder::~TotaliserEncoder() { delete root_; }
 void TotaliserEncoder::SetMin() {
   if (min_ < 1)
     return;
@@ -101,7 +101,7 @@ void TotaliserEncoder::SetMin() {
     return;
   }
   for (int i = 0; i<min_; ++i) {
-    sat_->AddClause({Lit(root->counting_variables[i])});
+    sat_->AddClause({Lit(root_->counting_variables[i])});
   }
 
 }
@@ -113,12 +113,12 @@ void TotaliserEncoder::SetMax() {
   if (max_ < 0)
     throw "max is negative";
   // set the value max_ + 1 to false. This has index max_
-  for (int i = max_; i<root->counting_variables.size(); ++i) {
-    sat_->AddClause({Lit(~root->counting_variables[i])});
+  for (int i = max_; i< root_->counting_variables.size(); ++i) {
+    sat_->AddClause({Lit(~root_->counting_variables[i])});
   }
 
 }
-Node::~Node() {
+TotaliserEncoder::Node::~Node() {
   if (left!= nullptr)
   delete left;
   if (left != nullptr)

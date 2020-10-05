@@ -7,7 +7,7 @@
 #include "src/solver_wrappers/simple_solver.h"
 
 namespace simple_sat_solver::sat {
-TEST_CASE("Min max bounds", "[encoder]") {
+TEST_CASE("Totaliser: Min max bounds", "[encoder]") {
   solver_wrappers::SimpleSolver solver;
   SatProblem sat(3);
   std::vector<Lit> vars = {Lit(0), Lit(1), Lit(2)};
@@ -31,7 +31,7 @@ TEST_CASE("Min max bounds", "[encoder]") {
     REQUIRE_FALSE(solver.Solve(sat));
   }
 }
-TEST_CASE("Test single var", "[encoder]") {
+TEST_CASE("Totaliser: Test single var", "[encoder]") {
   solver_wrappers::SimpleSolver solver;
   SatProblem sat(1);
   SECTION("No limit") {
@@ -71,7 +71,7 @@ TEST_CASE("Test single var", "[encoder]") {
     }
   }
 }
-TEST_CASE("Test multiple var", "[encoder]") {
+TEST_CASE("Totaliser: Test multiple var", "[encoder]") {
   solver_wrappers::SimpleSolver solver;
   SatProblem sat(10);
   std::vector<Lit> vars;
