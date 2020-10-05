@@ -1,1 +1,1 @@
-add_library(sat sat_problem.cc sat_problem.h types.h ../solver_wrappers/i_solver.h)
+add_library(sat sat_problem.cc sat_problem.h types.h ../solver_wrappers/i_solver.h encoders/totaliser_encoder.cc encoders/totaliser_encoder.h)
