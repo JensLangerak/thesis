@@ -38,29 +38,29 @@ std::vector<Lit> CardinalityNetwork::HMerge(std::vector<Lit> a,
         b_odd.push_back(b[I(i)]);
       }
     }
-      std::vector<Lit> d = HMerge(a_odd, b_odd);
-      std::vector<Lit> e = HMerge(a_even, b_even);
+    std::vector<Lit> d = HMerge(a_odd, b_odd);
+    std::vector<Lit> e = HMerge(a_even, b_even);
 
-      std::vector<Lit> c;
-      c.push_back(d[I(1)]);
-      int n = a.size();
-      for (int i = 2; i <= n * 2 - 1; ++i) {
-        c.emplace_back(sat_->AddNewVar());
-      }
-      c.push_back(e[I(n)]);
-      for (int i = 1; i <= n - 1; ++i) {
-        sat_->AddClause({~d[I(i + 1)], ~e[I(i)], c[I(2 * i + 1)]});
-        sat_->AddClause({~d[I(i+1)], c[I(2 * i)]});
-        sat_->AddClause({~e[I(i)], c[I(2 * i)]});
-      }
-      I2O l;
-      l.a = a;
-      l.b = b;
-      l.d = d;
-      l.e = e;
-      l.o = c;
-      HMerge_.push_back(l);
-      return c;
+    std::vector<Lit> c;
+    c.push_back(d[I(1)]);
+    int n = a.size();
+    for (int i = 2; i <= n * 2 - 1; ++i) {
+      c.emplace_back(sat_->AddNewVar());
+    }
+    c.push_back(e[I(n)]);
+    for (int i = 1; i <= n - 1; ++i) {
+      sat_->AddClause({~d[I(i + 1)], ~e[I(i)], c[I(2 * i + 1)]});
+      sat_->AddClause({~d[I(i + 1)], c[I(2 * i)]});
+      sat_->AddClause({~e[I(i)], c[I(2 * i)]});
+    }
+    I2O l;
+    l.a = a;
+    l.b = b;
+    l.d = d;
+    l.e = e;
+    l.o = c;
+    HMerge_.push_back(l);
+    return c;
   }
 }
 std::vector<Lit> CardinalityNetwork::HSort(std::vector<Lit> a) {
@@ -79,7 +79,7 @@ std::vector<Lit> CardinalityNetwork::HSort(std::vector<Lit> a) {
     std::vector<Lit> r(a.begin() + half_size, a.end());
     std::vector<Lit> l_sorted = HSort(l);
     std::vector<Lit> r_sorted = HSort(r);
-    std::vector<Lit> res =  HMerge(l_sorted, r_sorted);
+    std::vector<Lit> res = HMerge(l_sorted, r_sorted);
     I1O l2;
     l2.a = a;
     l2.o = res;
@@ -120,20 +120,20 @@ std::vector<Lit> CardinalityNetwork::SMerge(std::vector<Lit> a,
         b_odd.push_back(b[I(i)]);
       }
     }
-      std::vector<Lit> d = SMerge(a_odd, b_odd);
-      std::vector<Lit> e = SMerge(a_even, b_even);
+    std::vector<Lit> d = SMerge(a_odd, b_odd);
+    std::vector<Lit> e = SMerge(a_even, b_even);
 
-      std::vector<Lit> c;
-      c.push_back(d[0]);
-      int n = a.size();
-      for (int i = 2; i <= n + 1; ++i) {
-        c.emplace_back(sat_->AddNewVar());
-      }
-      for (int i = 1; i <= n / 2; ++i) {
-        sat_->AddClause({~d[I(i+1)], ~e[I(i)], c[I(2 * i + 1)]});
-        sat_->AddClause({~d[I(i+1)], c[I(2 * i)]});
-        sat_->AddClause({~e[I(i)], c[I(2 * i)]});
-      }
+    std::vector<Lit> c;
+    c.push_back(d[0]);
+    int n = a.size();
+    for (int i = 2; i <= n + 1; ++i) {
+      c.emplace_back(sat_->AddNewVar());
+    }
+    for (int i = 1; i <= n / 2; ++i) {
+      sat_->AddClause({~d[I(i + 1)], ~e[I(i)], c[I(2 * i + 1)]});
+      sat_->AddClause({~d[I(i + 1)], c[I(2 * i)]});
+      sat_->AddClause({~e[I(i)], c[I(2 * i)]});
+    }
     I2O l;
     l.a = a;
     l.b = b;
@@ -141,8 +141,8 @@ std::vector<Lit> CardinalityNetwork::SMerge(std::vector<Lit> a,
     l.e = e;
     l.o = c;
     SMerge_.push_back(l);
-      return c;
-    }
+    return c;
+  }
 }
 std::vector<Lit> CardinalityNetwork::Card(std::vector<Lit> a, int k) {
   if (a.size() == k)
@@ -160,7 +160,7 @@ std::vector<Lit> CardinalityNetwork::Card(std::vector<Lit> a, int k) {
 
   std::vector<Lit> d_l = Card(l, k);
   std::vector<Lit> d_r = Card(r, k);
-  std::vector<Lit> c_e= SMerge(d_l, d_r);
+  std::vector<Lit> c_e = SMerge(d_l, d_r);
   std::vector<Lit> c;
   for (int i = 1; i <= k; ++i) {
     c.push_back(c_e[I(i)]);
@@ -168,8 +168,9 @@ std::vector<Lit> CardinalityNetwork::Card(std::vector<Lit> a, int k) {
   return c;
 }
 CardinalityNetwork::CardinalityNetwork(SatProblem *sat) : sat_(sat) {}
-CardinalityNetwork CardinalityNetwork::Encode(SatProblem &sat, std::vector<Lit> variables,
-                                int max) {
+CardinalityNetwork CardinalityNetwork::Encode(SatProblem &sat,
+                                              std::vector<Lit> variables,
+                                              int max) {
   if (max < 0)
     throw "Max should be positive";
   if (max > variables.size())
@@ -198,14 +199,13 @@ CardinalityNetwork CardinalityNetwork::Encode(SatProblem &sat, std::vector<Lit> 
   sat.AddClause({~Lit(c[max])});
   return network;
 }
-int CardinalityNetwork::I(int i) { return i - 1;}
+int CardinalityNetwork::I(int i) { return i - 1; }
 void CardinalityNetwork::print(std::vector<bool> sol) {
   for (I1O o : HSort_) {
     std::cout << "HSort: " << std::endl;
     print_values(sol, o.a);
     print_values(sol, o.o);
   }
-
 
   for (I2O o : HMerge_) {
     std::cout << "HMerge:: " << std::endl;
@@ -215,7 +215,6 @@ void CardinalityNetwork::print(std::vector<bool> sol) {
     print_values(sol, o.e);
     print_values(sol, o.o);
   }
-
 
   for (I2O o : SMerge_) {
     std::cout << "SMerge:: " << std::endl;
@@ -234,7 +233,5 @@ void CardinalityNetwork::print_values(std::vector<bool> sol,
     std::cout << (s ? "1 " : "0 ");
   }
   std::cout << std::endl;
-
 }
 } // namespace simple_sat_solver::sat
-  // namespace simple_sat_solver::sat
