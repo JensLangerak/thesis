@@ -1,0 +1,7 @@
+add_library(propagator_generic explanation_generic.h propagator_generic.cpp propagator_generic.h reason_generic.h)
+target_link_libraries(propagator_generic basic_data_structures engine)
+add_subdirectory(Clausal)
+add_subdirectory(Pseudo-Boolean)
+
+add_library(propagators INTERFACE)
+target_link_libraries(propagators INTERFACE clausal pseudo_boolean)

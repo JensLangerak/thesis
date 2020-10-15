@@ -1,0 +1,36 @@
+
+add_library(basic_data_structures
+        assignments.cpp
+        assignments.h
+        boolean_literal.cpp
+        boolean_literal.h
+        boolean_variable.cpp
+        boolean_variable.h
+        counters.cpp
+        counters.h
+        cumulative_moving_average.cpp
+        cumulative_moving_average.h
+        custom_vector.cpp
+        custom_vector.h
+        exponential_moving_average.cpp
+        exponential_moving_average.h
+        fraction_unsigned_64bit.cpp
+        fraction_unsigned_64bit.h
+        key_value_heap.cpp
+        key_value_heap.h
+        learned_pseudo_boolean_constraint.cpp
+        learned_pseudo_boolean_constraint.h
+        learned_pseudo_boolean_constraint_iterator.cpp
+        learned_pseudo_boolean_constraint_iterator.h
+        problem_specification.cpp
+        problem_specification.h
+        pseudo_boolean_term_iterator_abstract.h
+        runtime_assert.h
+        simple_moving_average.cpp
+        simple_moving_average.h
+        small_helper_structures.h
+        solver_output.h
+        solver_parameters.h
+        stopwatch.h
+        vector_object_indexed.h
+        )

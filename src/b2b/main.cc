@@ -6,16 +6,22 @@
 #include <string>
 
 #include "../solver_wrappers/simple_solver.h"
+#include "../solver_wrappers/pumpkin.h"
 #include "b2b_converter.h"
 #include "b2b_parser.h"
+
 namespace simple_sat_solver::b2b {
+
+solver_wrappers::ISolver * CreateSolver() {
+  return new solver_wrappers::Pumpkin();
+}
 
 bool TestFile(std::string path) {
   std::cout << "Test: " << path << std::endl;
   B2B problem = B2bParser::Parse(path);
   B2bConverter converter(problem);
   sat::SatProblem sat = converter.ToSat();
-  solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
+  solver_wrappers::ISolver *solver = CreateSolver();
   bool res = solver->Solve(sat);
   if (res) {
     auto sol = converter.DecodeSolution(solver->GetSolution());
@@ -49,7 +55,7 @@ void TestSingleFile(std::string path) {
   B2B problem = B2bParser::Parse(path);
   B2bConverter converter(problem);
   sat::SatProblem sat = converter.ToSat();
-  solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
+  solver_wrappers::ISolver *solver = CreateSolver();
   bool res = solver->Solve(sat);
   if (res) {
     std::vector<int> schedule = converter.DecodeSolution(solver->GetSolution());
@@ -61,8 +67,11 @@ void TestSingleFile(std::string path) {
 } // namespace simple_sat_solver::b2b
 
 int main() {
+  std::clock_t start = std::clock();
   simple_sat_solver::b2b::TestDir("../../../data/b2b/b2bV2/dzn/");
   simple_sat_solver::b2b::TestDir("../../../data/b2b/b2bsat/dzn/");
+  double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout<<"printf: "<< duration <<'\n';
   //  simple_sat_solver::b2b::TestSingleFile(
   //      "../../../data/b2b/b2bsat/dzn/forum-14.dzn");
 }
