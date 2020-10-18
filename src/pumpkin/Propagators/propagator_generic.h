@@ -1,8 +1,9 @@
 #ifndef PROPAGATOR_GENERIC_H
 #define PROPAGATOR_GENERIC_H
 
-#include "reason_generic.h"
 #include "explanation_generic.h"
+#include "reason_generic.h"
+#include <list>
 
 namespace Pumpkin
 {
@@ -15,7 +16,7 @@ public:
 	PropagatorGeneric();
 
 	bool Propagate(SolverState &state); //does full propagation, i.e. until there is nothing else left to propagate
-	bool PropagateOneLiteral(SolverState &state); //does only a single literal propagation, which is useful since it allows us to then ask simpler propagators to propagate with respect to the new enqueued literal before going further with this propagator
+	virtual bool PropagateOneLiteral(SolverState &state); //does only a single literal propagation, which is useful since it allows us to then ask simpler propagators to propagate with respect to the new enqueued literal before going further with this propagator
 	virtual void Synchronise(SolverState &state); //after the state backtracks, it should call this synchronise method which will internally set the pointer of the trail to the new correct position
 
 	virtual ExplanationGeneric * ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state) = 0; //returns the explanation of the propagation. Assumes the input literal is not undefined.
@@ -35,6 +36,8 @@ protected:
 	//tracks the position of the literals on the trail that needs to be propagated
 	//needs to be updated each Backtrack using Synchronise
 	size_t next_position_on_trail_to_propagate_;
+//        std::list<BooleanLiteral>::iterator next_position_on_trail_to_propagate_it;
+//        bool it_end = false;
 };
 
 } //end Pumpkin namespace

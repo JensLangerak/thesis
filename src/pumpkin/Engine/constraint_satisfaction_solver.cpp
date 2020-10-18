@@ -235,9 +235,12 @@ BooleanLiteral ConstraintSatisfactionSolver::FindNextReasonLiteralOnTheTrail()
 	//find a literal that you have already seen
 	//the ones you have not seen are not important for this conflict
 	BooleanLiteral next_literal;
+        auto it = state_.GetTrailEnd();
 	do
 	{
-		next_literal = state_.GetLiteralFromTheBackOfTheTrail(num_trail_literals_examined_);
+          //TODO
+                it--;
+		next_literal = *it; //state_.GetLiteralFromTheBackOfTheTrail(num_trail_literals_examined_);
 		assert(state_.assignments_.GetAssignmentLevel(next_literal.Variable()) == state_.GetCurrentDecisionLevel());
 		num_trail_literals_examined_++;
 	} while (seen_[next_literal.Variable().index_] == false);

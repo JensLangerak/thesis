@@ -14,6 +14,7 @@
 #include "value_selector.h"
 #include "variable_selector.h"
 
+#include <list>
 #include <vector>
 
 namespace Pumpkin
@@ -141,14 +142,18 @@ public:
 
         void AddCardinality(Pumpkin::CardinalityConstraint &constraint);
 
+        std::_List_iterator<BooleanLiteral> GetTrailEnd();
+
+        std::_List_iterator<BooleanLiteral> GetTrailBegin();
+
       private:
 	//performs an assignment to make the literal true. 
 	//Note that the corresponding variable is considered to be assigned a value (0 if the literal was negative, 1 if the literal was positive). Used internally, consider using 'enqueue' instead.
 	void MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code); 
 	
 //private class variables--------------------------
-	std::vector<BooleanLiteral> trail_;
-	std::vector<int> trail_delimiter_; //[i] is the position where the i-th decision level ends (exclusive) on the trail.
+	std::list<BooleanLiteral> trail_;
+	std::vector<std::list<BooleanLiteral>::iterator> trail_delimiter_; //[i] is the position where the i-th decision level ends (exclusive) on the trail.
 
 	int decision_level_;
 };
