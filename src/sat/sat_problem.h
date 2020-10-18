@@ -38,6 +38,7 @@ public:
   /// \param k the max number of lits that is allowed to be true.
   /// \param lits
   void AtMostK(int k, const std::vector<Lit> &lits);
+  void AddCardinalityConstraint(const std::vector<Lit> &lits, int min, int max);
 
   /// Add a constraint the exactly one of the given lits must be true.
   /// \param lits
@@ -69,6 +70,8 @@ public:
 
   int AddNewVars(int nr_vars);
 
+  std::vector<CardinalityConstraint> GetConstraints() const;
+
 private:
   // TODO move to types
   static bool TestLit(const Lit &l, const std::vector<bool> &vars);
@@ -77,6 +80,7 @@ private:
 
   int nr_vars_;
   std::vector<std::vector<Lit>> clauses_;
+  std::vector<CardinalityConstraint> constraints;
 };
 } // namespace simple_sat_solver::sat
 

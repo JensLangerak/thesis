@@ -1,301 +1,312 @@
 #include "solver_state.h"
 #include "../Basic Data Structures/runtime_assert.h"
 
-#include <assert.h>
 #include <algorithm>
+#include <assert.h>
 #include <iostream>
 
-namespace Pumpkin
-{
+namespace Pumpkin {
 
-SolverState::SolverState(int64_t num_Boolean_variables, SolverParameters &params):
-	variable_selector_(num_Boolean_variables),
-	value_selector_(num_Boolean_variables),
-	assignments_(num_Boolean_variables), //note that the 0th position is not used
-	propagator_clausal_(num_Boolean_variables, params.learned_clause_decay_factor),   
-	propagator_pseudo_boolean_(num_Boolean_variables),
-	decision_level_(0),
-	simple_moving_average_lbd(params.glucose_queue_lbd_limit),
-	simple_moving_average_block(params.glucose_queue_reset_limit)
-{	
+SolverState::SolverState(int64_t num_Boolean_variables,
+                         SolverParameters &params)
+    : variable_selector_(num_Boolean_variables),
+      value_selector_(num_Boolean_variables),
+      assignments_(
+          num_Boolean_variables), // note that the 0th position is not used
+      propagator_clausal_(num_Boolean_variables,
+                          params.learned_clause_decay_factor),
+      propagator_pseudo_boolean_(num_Boolean_variables),
+      propagator_cardinality_(num_Boolean_variables),
+      decision_level_(0),
+      simple_moving_average_lbd(params.glucose_queue_lbd_limit),
+      simple_moving_average_block(params.glucose_queue_reset_limit) {}
+
+void SolverState::EnqueueDecisionLiteral(BooleanLiteral decision_literal) {
+  MakeAssignment(decision_literal, NULL, NULL);
 }
 
-void SolverState::EnqueueDecisionLiteral(BooleanLiteral decision_literal)
-{
-	MakeAssignment(decision_literal, NULL, NULL);
+bool SolverState::EnqueuePropagatedLiteral(
+    BooleanLiteral literal, PropagatorGeneric *responsible_propagator,
+    uint64_t code) {
+  assert(responsible_propagator != NULL);
+  if (assignments_.IsAssigned(literal) ==
+      true) // we are trying to propagate a variable that has already been
+            // assigned a value
+  {
+    return assignments_.GetAssignment(literal.Variable()) ==
+           literal; // return if the assignment is consistent with the
+                    // propagation
+  } else {
+    MakeAssignment(literal, responsible_propagator, code);
+    return true;
+  }
 }
 
-bool SolverState::EnqueuePropagatedLiteral(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code)
-{
-	assert(responsible_propagator != NULL);
-	if (assignments_.IsAssigned(literal) == true) //we are trying to propagate a variable that has already been assigned a value
-	{		
-		return assignments_.GetAssignment(literal.Variable()) == literal; //return if the assignment is consistent with the propagation
-	}
-	else
-	{
-		MakeAssignment(literal, responsible_propagator, code);
-		return true;
-	}
+PropagatorGeneric *SolverState::PropagateEnqueued() {
+  size_t trail_before = trail_.size() - 1;
+
+  while (propagator_clausal_.IsPropagationComplete(*this) == false ||
+         propagator_pseudo_boolean_.IsPropagationComplete(*this) == false ||
+         propagator_cardinality_.IsPropagationComplete(*this) == false) {
+    if (!propagator_clausal_.Propagate(*this)) {
+      return &propagator_clausal_;
+    }
+
+    if (!propagator_pseudo_boolean_.PropagateOneLiteral(*this)) {
+      return &propagator_pseudo_boolean_;
+    }
+    if (!propagator_cardinality_.PropagateOneLiteral(*this)) {
+      return &propagator_cardinality_;
+    }
+  }
+  return NULL;
 }
 
-PropagatorGeneric* SolverState::PropagateEnqueued()
-{
-	size_t trail_before = trail_.size()-1;
-
-	while (propagator_clausal_.IsPropagationComplete(*this) == false || propagator_pseudo_boolean_.IsPropagationComplete(*this) == false)
-	{
-		if (!propagator_clausal_.Propagate(*this)) { return &propagator_clausal_; }
-		
-		if (!propagator_pseudo_boolean_.PropagateOneLiteral(*this)) { return &propagator_pseudo_boolean_; }
-	}
-	return NULL;
+void SolverState::IncreaseDecisionLevel() {
+  decision_level_++;
+  trail_delimiter_.push_back(int(trail_.size()));
 }
 
-void SolverState::IncreaseDecisionLevel()
-{
-	decision_level_++;
-	trail_delimiter_.push_back(int(trail_.size()));
+void SolverState::Backtrack(int backtrack_level) {
+  runtime_assert(backtrack_level >= 0);
+  runtime_assert(backtrack_level < decision_level_);
+
+  while (decision_level_ != backtrack_level) {
+    BacktrackOneLevel();
+  }
+  propagator_clausal_.Synchronise(*this);
+  propagator_pseudo_boolean_.Synchronise(*this);
+  propagator_cardinality_.Synchronise(*this);
 }
 
-void SolverState::Backtrack(int backtrack_level)
-{
-	runtime_assert(backtrack_level >= 0);
-	runtime_assert(backtrack_level < decision_level_);
-
-	while (decision_level_ != backtrack_level)
-	{
-		BacktrackOneLevel();
-	}
-	propagator_clausal_.Synchronise(*this);
-	propagator_pseudo_boolean_.Synchronise(*this);
+void SolverState::Reset() {
+  if (GetCurrentDecisionLevel() != 0)
+    Backtrack(0);
 }
 
-void SolverState::Reset()
-{
-	if (GetCurrentDecisionLevel() != 0) Backtrack(0);
+void SolverState::BacktrackOneLevel() {
+  int num_assignments_for_removal =
+      int(trail_.size() - trail_delimiter_.back());
+  assert(num_assignments_for_removal >= 0);
+  for (int i = 0; i < num_assignments_for_removal; i++) {
+    UndoLastAssignment();
+  }
+  trail_delimiter_.pop_back();
+  decision_level_--;
 }
 
-void SolverState::BacktrackOneLevel()
-{
-	int num_assignments_for_removal = int(trail_.size() - trail_delimiter_.back());
-	assert(num_assignments_for_removal >= 0);
-	for (int i = 0; i < num_assignments_for_removal; i++)
-	{
-		UndoLastAssignment();
-	}
-	trail_delimiter_.pop_back();
-	decision_level_--;
+void SolverState::UndoLastAssignment() {
+  BooleanVariable last_assigned_variable = trail_.back().Variable();
+  variable_selector_.Readd(last_assigned_variable);
+  value_selector_.UpdatePolarity(
+      last_assigned_variable,
+      assignments_.IsAssignedTrue(last_assigned_variable));
+  assignments_.UnassignVariable(last_assigned_variable);
+  trail_.pop_back();
 }
 
-void SolverState::UndoLastAssignment()
-{
-	BooleanVariable last_assigned_variable = trail_.back().Variable();
-	variable_selector_.Readd(last_assigned_variable);
-	value_selector_.UpdatePolarity(last_assigned_variable, assignments_.IsAssignedTrue(last_assigned_variable));
-	assignments_.UnassignVariable(last_assigned_variable);
-	trail_.pop_back();
+BooleanVariable SolverState::GetHighestActivityUnassignedVariable() {
+  BooleanVariable selected_variable =
+      variable_selector_.PopHighestActivityVariable();
+  while (selected_variable.IsUndefined() == false &&
+         assignments_.IsAssigned(selected_variable) ==
+             true) // iterate until you find the highest +unassigned+ variable -
+                   // variable selection is done in a lazy fashion
+  {
+    selected_variable = variable_selector_.PopHighestActivityVariable();
+  }
+  if (selected_variable.IsUndefined() == false) {
+    variable_selector_.Readd(
+        selected_variable); // pop removes it, but we want to keep it inside the
+                            // data structure in this call
+  }
+  return selected_variable;
 }
 
-BooleanVariable SolverState::GetHighestActivityUnassignedVariable()
-{
-	BooleanVariable selected_variable = variable_selector_.PopHighestActivityVariable();
-	while (selected_variable.IsUndefined() == false && assignments_.IsAssigned(selected_variable) == true) //iterate until you find the highest +unassigned+ variable - variable selection is done in a lazy fashion
-	{
-		selected_variable = variable_selector_.PopHighestActivityVariable();
-	}
-	if (selected_variable.IsUndefined() == false)
-	{
-		variable_selector_.Readd(selected_variable); //pop removes it, but we want to keep it inside the data structure in this call
-	}
-	return selected_variable;
+BooleanLiteral SolverState::getLastDecisionLiteralOnTrail() const {
+  return GetDecisionLiteralForLevel(GetCurrentDecisionLevel());
 }
 
-BooleanLiteral SolverState::getLastDecisionLiteralOnTrail() const
-{
-	return GetDecisionLiteralForLevel(GetCurrentDecisionLevel());
+BooleanLiteral
+SolverState::GetDecisionLiteralForLevel(int decision_level) const {
+  runtime_assert(decision_level <= GetCurrentDecisionLevel());
+
+  if (decision_level == 0) {
+    return BooleanLiteral();
+  } // return undefined literal when there are no decisions on the trail
+
+  BooleanLiteral decision_literal =
+      trail_[trail_delimiter_[decision_level - 1]];
+
+  assert(assignments_.GetAssignmentPropagator(decision_literal.Variable()) ==
+         NULL);
+  assert(assignments_.GetAssignmentLevel(decision_literal.Variable()) ==
+         decision_level);
+  return decision_literal;
 }
 
-BooleanLiteral SolverState::GetDecisionLiteralForLevel(int decision_level) const
-{
-	runtime_assert(decision_level <= GetCurrentDecisionLevel());
-
-	if (decision_level == 0) { return BooleanLiteral(); } //return undefined literal when there are no decisions on the trail
-
-	BooleanLiteral decision_literal = trail_[trail_delimiter_[decision_level - 1]];
-	
-	assert(assignments_.GetAssignmentPropagator(decision_literal.Variable()) == NULL);
-	assert(assignments_.GetAssignmentLevel(decision_literal.Variable()) == decision_level);
-	return decision_literal;
+int SolverState::GetHighestDecisionLevelForLiterals(
+    std::vector<BooleanLiteral> &literals) const {
+  int backtrack_level = 0;
+  for (BooleanLiteral literal : literals) {
+    backtrack_level = std::max(
+        backtrack_level, assignments_.GetAssignmentLevel(literal.Variable()));
+  }
+  return backtrack_level;
 }
 
-int SolverState::GetHighestDecisionLevelForLiterals(std::vector<BooleanLiteral>& literals) const
-{
-	int backtrack_level = 0;
-	for (BooleanLiteral literal : literals)
-	{
-		backtrack_level = std::max(backtrack_level, assignments_.GetAssignmentLevel(literal.Variable()));
-	}
-	return backtrack_level;
+int SolverState::GetCurrentDecisionLevel() const { return decision_level_; }
+
+size_t SolverState::GetNumberOfAssignedVariables() const {
+  return int(trail_.size());
 }
 
-int SolverState::GetCurrentDecisionLevel() const
-{
-	return decision_level_;
+size_t SolverState::GetNumberOfVariables() const {
+  return int(assignments_.GetNumberOfVariables());
 }
 
-size_t SolverState::GetNumberOfAssignedVariables() const
-{
-	return int(trail_.size());
+BooleanLiteral SolverState::GetLiteralFromTrailAtPosition(size_t index) const {
+  return trail_[index];
 }
 
-size_t SolverState::GetNumberOfVariables() const
-{
-	return int(assignments_.GetNumberOfVariables());
+BooleanLiteral
+SolverState::GetLiteralFromTheBackOfTheTrail(size_t index) const {
+  return trail_[trail_.size() - index - 1];
 }
 
-BooleanLiteral SolverState::GetLiteralFromTrailAtPosition(size_t index) const
-{
-	return trail_[index];
+std::vector<bool> SolverState::GetOutputAssignment() const {
+  std::vector<bool> output(GetNumberOfVariables() + 1);
+  for (int i = 1; i <= GetNumberOfVariables(); i++) {
+    runtime_assert(assignments_.IsAssigned(BooleanVariable(i)));
+    output[i] = assignments_.GetAssignment(BooleanVariable(i)).IsPositive();
+  }
+  return output;
 }
 
-BooleanLiteral SolverState::GetLiteralFromTheBackOfTheTrail(size_t index) const
-{
-	return trail_[trail_.size() - index - 1];
+bool SolverState::IsAssignmentBuilt() {
+  // check if there are any variables left that need to be assigned
+  // if not, then the assignment is complete
+  return GetHighestActivityUnassignedVariable().IsUndefined();
 }
 
-std::vector<bool> SolverState::GetOutputAssignment() const
-{
-	std::vector<bool> output(GetNumberOfVariables() + 1);
-	for (int i = 1; i <= GetNumberOfVariables(); i++)
-	{
-		runtime_assert(assignments_.IsAssigned(BooleanVariable(i)));
-		output[i] = assignments_.GetAssignment(BooleanVariable(i)).IsPositive();
-	}
-	return output;
+void SolverState::PrintTrail() const {
+  std::cout << "Trail\n";
+  for (int i = 0; i < GetNumberOfAssignedVariables(); i++) {
+    std::cout << GetLiteralFromTheBackOfTheTrail(i).VariableIndex() << "\n";
+  }
+  std::cout << "end trail\n";
 }
 
-bool SolverState::IsAssignmentBuilt()
-{
-	//check if there are any variables left that need to be assigned
-	//if not, then the assignment is complete
-	return GetHighestActivityUnassignedVariable().IsUndefined();
+BooleanVariable SolverState::CreateNewVariable() {
+  BooleanVariable new_variable(GetNumberOfVariables() + 1);
+
+  variable_selector_.Grow();
+  value_selector_.Grow();
+  assignments_.Grow();
+  propagator_clausal_.clause_database_.watch_list_.Grow();
+  propagator_pseudo_boolean_.constraint_database_.watch_list_.Grow();
+  propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
+  propagator_cardinality_.cardinality_database_.watch_list_true.Grow();
+
+  return new_variable;
 }
 
-void SolverState::PrintTrail() const
-{
-	std::cout << "Trail\n";
-	for (int i = 0; i < GetNumberOfAssignedVariables(); i++)
-	{
-		std::cout << GetLiteralFromTheBackOfTheTrail(i).VariableIndex() << "\n";
-	}
-	std::cout << "end trail\n";
+void SolverState::CreateVariablesUpToIndex(int largest_variable_index) {
+  for (int i = GetNumberOfVariables() + 1; i <= largest_variable_index; i++) {
+    CreateNewVariable();
+  }
 }
 
-BooleanVariable SolverState::CreateNewVariable()
-{
-	BooleanVariable new_variable(GetNumberOfVariables() + 1);
-
-	variable_selector_.Grow();
-	value_selector_.Grow();
-	assignments_.Grow();
-	propagator_clausal_.clause_database_.watch_list_.Grow();
-	propagator_pseudo_boolean_.constraint_database_.watch_list_.Grow();
-
-	return new_variable;
+void SolverState::AddUnitClause(BooleanLiteral &literal) {
+  propagator_clausal_.clause_database_.AddUnitClause(literal);
 }
 
-void SolverState::CreateVariablesUpToIndex(int largest_variable_index)
-{
-	for (int i = GetNumberOfVariables() + 1; i <= largest_variable_index; i++) { CreateNewVariable(); }
+void SolverState::AddUnitClauses(std::vector<BooleanLiteral> &units) {
+  for (BooleanLiteral literal : units) {
+    AddUnitClause(literal);
+  }
 }
 
-void SolverState::AddUnitClause(BooleanLiteral& literal)
-{
-	propagator_clausal_.clause_database_.AddUnitClause(literal);
+void SolverState::AddClause(std::vector<BooleanLiteral> &literals) {
+  propagator_clausal_.clause_database_.AddPermanentClause(literals, *this);
 }
 
-void SolverState::AddUnitClauses(std::vector<BooleanLiteral>& units)
-{
-	for (BooleanLiteral literal : units) { AddUnitClause(literal); }
+bool SolverState::AddUnitClauseDuringSearch(BooleanLiteral literal) {
+  if (assignments_.IsAssigned(literal)) {
+    return assignments_.IsAssignedTrue(literal);
+  }
+
+  if (GetCurrentDecisionLevel() != 0)
+    Backtrack(0);
+  EnqueueDecisionLiteral(literal);
+
+  PropagatorGeneric *conflict_propagator = PropagateEnqueued();
+
+  return conflict_propagator == NULL;
 }
 
-void SolverState::AddClause(std::vector<BooleanLiteral>& literals)
-{
-	propagator_clausal_.clause_database_.AddPermanentClause(literals, *this);
+void SolverState::AddBinaryClause(BooleanLiteral a, BooleanLiteral b) {
+  std::vector<BooleanLiteral> lits;
+  lits.push_back(a);
+  lits.push_back(b);
+  AddClause(lits);
 }
 
-bool SolverState::AddUnitClauseDuringSearch(BooleanLiteral literal)
-{
-	if (assignments_.IsAssigned(literal))
-	{
-		return assignments_.IsAssignedTrue(literal);
-	}
-
-	if (GetCurrentDecisionLevel() != 0) Backtrack(0);
-	EnqueueDecisionLiteral(literal);
-
-	PropagatorGeneric* conflict_propagator = PropagateEnqueued();
-
-	return conflict_propagator == NULL;
+void SolverState::AddTernaryClause(BooleanLiteral a, BooleanLiteral b,
+                                   BooleanLiteral c) {
+  std::vector<BooleanLiteral> lits;
+  lits.push_back(a);
+  lits.push_back(b);
+  lits.push_back(c);
+  AddClause(lits);
 }
 
-void SolverState::AddBinaryClause(BooleanLiteral a, BooleanLiteral b)
-{
-	std::vector<BooleanLiteral> lits;
-	lits.push_back(a);
-	lits.push_back(b);
-	AddClause(lits);
+void SolverState::AddImplication(BooleanLiteral a, BooleanLiteral b) {
+  AddBinaryClause(~a, b);
 }
 
-void SolverState::AddTernaryClause(BooleanLiteral a, BooleanLiteral b, BooleanLiteral c)
-{
-	std::vector<BooleanLiteral> lits;
-	lits.push_back(a);
-	lits.push_back(b);
-	lits.push_back(c);
-	AddClause(lits);
+TwoWatchedClause *
+SolverState::AddLearnedClauseToDatabase(std::vector<BooleanLiteral> &literals) {
+  TwoWatchedClause *learned_clause;
+  if (TwoWatchedClause::computeLBD(literals, *this) <= 2) {
+    // counters_.small_lbd_clauses_learned++;
+
+    learned_clause =
+        this->propagator_clausal_.clause_database_.AddPermanentClause(literals,
+                                                                      *this);
+  } else {
+    learned_clause =
+        this->propagator_clausal_.clause_database_.AddTemporaryClause(literals,
+                                                                      *this);
+    this->propagator_clausal_.clause_database_.BumpClauseActivity(
+        learned_clause);
+
+    // counters_.ternary_clauses_learned += (literals.size() == 3); //I don't
+    // think I should keep the counter code here
+  }
+  return learned_clause;
 }
 
-void SolverState::AddImplication(BooleanLiteral a, BooleanLiteral b)
-{
-	AddBinaryClause(~a, b);
+void SolverState::UpdateMovingAveragesForRestarts(int learned_clause_lbd) {
+  simple_moving_average_lbd.AddTerm(learned_clause_lbd);
+  cumulative_moving_average_lbd.AddTerm(learned_clause_lbd);
+  simple_moving_average_block.AddTerm(GetNumberOfAssignedVariables());
 }
 
-TwoWatchedClause* SolverState::AddLearnedClauseToDatabase(std::vector<BooleanLiteral>& literals)
-{
-	TwoWatchedClause* learned_clause;
-	if (TwoWatchedClause::computeLBD(literals, *this) <= 2)
-	{
-		//counters_.small_lbd_clauses_learned++;
+void SolverState::MakeAssignment(BooleanLiteral literal,
+                                 PropagatorGeneric *responsible_propagator,
+                                 uint64_t code) {
+  assert(literal.IsUndefined() == false);
+  assert(assignments_.IsAssigned(literal) == false);
 
-		learned_clause = this->propagator_clausal_.clause_database_.AddPermanentClause(literals, *this);
-	}
-	else
-	{
-		learned_clause = this->propagator_clausal_.clause_database_.AddTemporaryClause(literals, *this);
-		this->propagator_clausal_.clause_database_.BumpClauseActivity(learned_clause);
+  assignments_.MakeAssignment(literal.Variable(), literal.IsPositive(),
+                              GetCurrentDecisionLevel(), responsible_propagator,
+                              code, trail_.size());
 
-		//counters_.ternary_clauses_learned += (literals.size() == 3); //I don't think I should keep the counter code here
-	}
-	return learned_clause;
+  trail_.push_back(literal);
+}
+void SolverState::AddCardinality(CardinalityConstraint &constraint) {
+  propagator_cardinality_.cardinality_database_.AddPermanentConstraint(constraint, *this);
 }
 
-void SolverState::UpdateMovingAveragesForRestarts(int learned_clause_lbd)
-{
-	simple_moving_average_lbd.AddTerm(learned_clause_lbd);
-	cumulative_moving_average_lbd.AddTerm(learned_clause_lbd);
-	simple_moving_average_block.AddTerm(GetNumberOfAssignedVariables());
-}
-
-void SolverState::MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code)
-{
-	assert(literal.IsUndefined() == false);
-	assert(assignments_.IsAssigned(literal) == false);
-
-	assignments_.MakeAssignment(literal.Variable(), literal.IsPositive(), GetCurrentDecisionLevel(), responsible_propagator, code, trail_.size());
-
-	trail_.push_back(literal);
-}
-
-} //end Pumpkin namespace
+} // namespace Pumpkin

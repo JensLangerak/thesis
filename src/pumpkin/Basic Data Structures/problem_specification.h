@@ -5,25 +5,33 @@
 #include <vector>
 #include <string>
 
-namespace Pumpkin
-{
+namespace Pumpkin {
 
-struct WeightedLiteral
-{
-	WeightedLiteral() :weight(-1) {};
-	WeightedLiteral(BooleanLiteral literal, int64_t weight) :literal(literal), weight(weight) {}
+struct WeightedLiteral {
+  WeightedLiteral() : weight(-1){};
+  WeightedLiteral(BooleanLiteral literal, int64_t weight)
+      : literal(literal), weight(weight) {}
 
-	BooleanLiteral literal;
-	int64_t weight;
+  BooleanLiteral literal;
+  int64_t weight;
 };
 
-struct PseudoBooleanConstraint
-{
-	PseudoBooleanConstraint(std::vector<BooleanLiteral>& lits, std::vector<uint32_t>& coefs, int rhs) :literals(lits), coefficients(coefs), right_hand_side(rhs) {}
+struct PseudoBooleanConstraint {
+  PseudoBooleanConstraint(std::vector<BooleanLiteral> &lits,
+                          std::vector<uint32_t> &coefs, int rhs)
+      : literals(lits), coefficients(coefs), right_hand_side(rhs) {}
 
-	std::vector<BooleanLiteral> literals;
-	std::vector<uint32_t> coefficients;
-	int right_hand_side;
+  std::vector<BooleanLiteral> literals;
+  std::vector<uint32_t> coefficients;
+  int right_hand_side;
+};
+
+struct CardinalityConstraint
+{
+  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max) : literals(lits), min(min), max(max) {}
+  std::vector<BooleanLiteral> literals;
+  int min;
+  int max;
 };
 
 class ProblemSpecification
@@ -41,6 +49,7 @@ public:
 	std::vector<BooleanLiteral> unit_clauses_;
 	std::vector<std::vector<BooleanLiteral> > clauses_;
 	std::vector<PseudoBooleanConstraint> pseudo_boolean_constraints_;
+        std::vector<CardinalityConstraint> cardinality_constraints_;
 	
 	//objective function
 	std::vector<WeightedLiteral> objective_literals_;

@@ -107,5 +107,13 @@ int SatProblem::AddNewVars(int nr_vars){
   int res = nr_vars_;
   nr_vars_ += nr_vars;
   return res;
+}
+void SatProblem::AddCardinalityConstraint(const std::vector<Lit> &lits, int min,
+                                          int max){
+    constraints.push_back(CardinalityConstraint(lits, min, max));
+
+}
+std::vector<CardinalityConstraint> SatProblem::GetConstraints() const {
+ return constraints;
 };
 } // namespace simple_sat_solver::sat

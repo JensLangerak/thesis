@@ -1,16 +1,18 @@
 #pragma once
 
-#include "../Basic Data Structures/boolean_variable.h"
+#include "../Basic Data Structures/assignments.h"
 #include "../Basic Data Structures/boolean_literal.h"
-#include "variable_selector.h"
-#include "value_selector.h"
+#include "../Basic Data Structures/boolean_variable.h"
+#include "../Basic Data Structures/cumulative_moving_average.h"
+#include "../Basic Data Structures/problem_specification.h"
+#include "../Basic Data Structures/simple_moving_average.h"
 #include "../Basic Data Structures/small_helper_structures.h"
 #include "../Basic Data Structures/solver_parameters.h"
-#include "../Basic Data Structures/assignments.h"
+#include "../Propagators/Cardinality/propagator_cardinality.h"
 #include "../Propagators/Clausal/propagator_clausal.h"
 #include "../Propagators/Pseudo-Boolean/propagator_pseudo_boolean_constraints.h"
-#include "../Basic Data Structures/simple_moving_average.h"
-#include "../Basic Data Structures/cumulative_moving_average.h"
+#include "value_selector.h"
+#include "variable_selector.h"
 
 #include <vector>
 
@@ -131,12 +133,15 @@ public:
 	//propagators
 	PropagatorClausal propagator_clausal_;
 	PropagatorPseudoBooleanConstraints propagator_pseudo_boolean_;
+        PropagatorCardinality propagator_cardinality_;
 	
 	//data structures that control restarts
 	SimpleMovingAverage simple_moving_average_block, simple_moving_average_lbd;
 	CumulativeMovingAverage cumulative_moving_average_lbd;
 
-private:
+        void AddCardinality(Pumpkin::CardinalityConstraint &constraint);
+
+      private:
 	//performs an assignment to make the literal true. 
 	//Note that the corresponding variable is considered to be assigned a value (0 if the literal was negative, 1 if the literal was positive). Used internally, consider using 'enqueue' instead.
 	void MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code); 

@@ -4,27 +4,44 @@
 
 #include "pumpkin.h"
 
-
 #include "../pumpkin/Basic Data Structures/boolean_literal.h"
-#include "../pumpkin/Engine/constraint_optimisation_solver.h"
+#include "../pumpkin/Basic Data Structures/problem_specification.h"
 #include "../pumpkin/Basic Data Structures/solver_parameters.h"
+#include "../pumpkin/Engine/constraint_optimisation_solver.h"
+#include "../sat/encoders/totaliser_encoder.h"
 
 namespace simple_sat_solver::solver_wrappers {
 using namespace Pumpkin;
 
-bool Pumpkin::Solve(const sat::SatProblem &p) {
+bool Pumpkin::Solve(const sat::SatProblem &p2) {
   solved_ = false;
+  sat::SatProblem p = p2;
+  //  for (sat::CardinalityConstraint c : p.GetConstraints()) {
+  //    sat::TotaliserEncoder::Encode(p, c.lits, c.min, c.max);
+  //  }
+
   ProblemSpecification problem;
   problem.num_Boolean_variables_ = p.GetNrVars();
-
   for (const auto &c : p.GetClauses()) {
     std::vector<::Pumpkin::BooleanLiteral> clause;
     for (sat::Lit l : c) {
-      ::Pumpkin::BooleanLiteral lit = ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
+      ::Pumpkin::BooleanLiteral lit =
+          ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
       clause.push_back(lit);
     }
     problem.AddClause(clause);
+  }
 
+  for (sat::CardinalityConstraint c : p.GetConstraints()) {
+
+    std::vector<::Pumpkin::BooleanLiteral> lits;
+    for (sat::Lit l : c.lits) {
+      ::Pumpkin::BooleanLiteral lit =
+          ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
+      lits.push_back(lit);
+    }
+    problem.cardinality_constraints_.push_back(
+        ::Pumpkin::CardinalityConstraint(lits, c.min, c.max));
   }
 
   SolverParameters params;

@@ -16,7 +16,7 @@ public:
 
 	bool Propagate(SolverState &state); //does full propagation, i.e. until there is nothing else left to propagate
 	bool PropagateOneLiteral(SolverState &state); //does only a single literal propagation, which is useful since it allows us to then ask simpler propagators to propagate with respect to the new enqueued literal before going further with this propagator
-	void Synchronise(SolverState &state); //after the state backtracks, it should call this synchronise method which will internally set the pointer of the trail to the new correct position
+	virtual void Synchronise(SolverState &state); //after the state backtracks, it should call this synchronise method which will internally set the pointer of the trail to the new correct position
 
 	virtual ExplanationGeneric * ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state) = 0; //returns the explanation of the propagation. Assumes the input literal is not undefined.
 	virtual ExplanationGeneric * ExplainFailure(SolverState &state) = 0; //returns the explanation of the failure

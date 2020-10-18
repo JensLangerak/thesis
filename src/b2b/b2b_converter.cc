@@ -82,11 +82,11 @@ void B2bConverter::AddMaxMeetings() {
     for (int m = 0; m < nr_meetings_; m++) {
       at_most_k.emplace_back(GetMeetingTimeslotIndex(m, t));
     }
-    sat_problem_.AtMostK(nr_locations_, at_most_k);
+    sat_problem_.AddCardinalityConstraint(at_most_k, 0, nr_locations_);
   }
 }
 std::vector<int> B2bConverter::DecodeSolution(std::vector<bool> solution) {
-  if (solution.size() != sat_problem_.GetNrVars())
+  if (solution.size() < sat_problem_.GetNrVars())
     throw "Solution has not enough vars";
   std::vector<int> result;
   for (int m = 0; m < nr_meetings_; m++) {
