@@ -9,7 +9,8 @@ namespace Pumpkin {
 
 SolverState::SolverState(int64_t num_Boolean_variables,
                          SolverParameters &params)
-    : variable_selector_(num_Boolean_variables),
+    : trail_(),
+      variable_selector_(num_Boolean_variables),
       value_selector_(num_Boolean_variables),
       assignments_(
           num_Boolean_variables), // note that the 0th position is not used
@@ -19,15 +20,15 @@ SolverState::SolverState(int64_t num_Boolean_variables,
       propagator_cardinality_(num_Boolean_variables),
       decision_level_(0),
       simple_moving_average_lbd(params.glucose_queue_lbd_limit),
-      simple_moving_average_block(params.glucose_queue_reset_limit) {}
+      simple_moving_average_block(params.glucose_queue_reset_limit) {
+  propagator_clausal_.SetTrailIterator(trail_.begin());
+  propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
+  propagator_cardinality_.SetTrailIterator(trail_.begin());
+
+}
 
 void SolverState::EnqueueDecisionLiteral(BooleanLiteral decision_literal) {
   MakeAssignment(decision_literal, NULL, NULL);
-
-  // TODO needed for the list
-  auto it = trail_.end();
-  --it;
-  trail_delimiter_.push_back(it);
 }
 
 bool SolverState::EnqueuePropagatedLiteral(
@@ -69,6 +70,7 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
 
 void SolverState::IncreaseDecisionLevel() {
   decision_level_++;
+  trail_delimiter_.push_back(trail_.end());
 
 //  trail_delimiter_.push_back(int(trail_.size()));
 }
@@ -180,20 +182,20 @@ size_t SolverState::GetNumberOfVariables() const {
 }
 
 BooleanLiteral SolverState::GetLiteralFromTrailAtPosition(size_t index) const {
+  int t = trail_.size();
   assert(index < trail_.size());
   auto it = trail_.begin();
   for (size_t i = 0; i < index; ++i)
-    it++;
+    it.Next();
   return *it;
 }
 
 BooleanLiteral
 SolverState::GetLiteralFromTheBackOfTheTrail(size_t index) const {
   assert(index < trail_.size());
-  auto it = trail_.end();
+  TrailList<BooleanLiteral>::Iterator it = trail_.last();
   for (int i = 0; i < index; ++i)
-    it--;
-  it--;
+    it.Previous();
   return *it;
 //  return trail_[trail_.size() - index - 1];
 }
@@ -335,8 +337,8 @@ void SolverState::MakeAssignment(BooleanLiteral literal,
 void SolverState::AddCardinality(CardinalityConstraint &constraint) {
   propagator_cardinality_.cardinality_database_.AddPermanentConstraint(constraint, *this);
 }
-std::_List_iterator<BooleanLiteral> SolverState::GetTrailEnd() { return trail_.end();}
-std::_List_iterator<BooleanLiteral> SolverState::GetTrailBegin() {
+TrailList<BooleanLiteral>::Iterator SolverState::GetTrailEnd() { return trail_.end();}
+TrailList<BooleanLiteral>::Iterator SolverState::GetTrailBegin() {
   return trail_.begin();
 }
 

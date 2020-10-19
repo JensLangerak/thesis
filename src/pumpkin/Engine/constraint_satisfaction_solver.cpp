@@ -239,7 +239,7 @@ BooleanLiteral ConstraintSatisfactionSolver::FindNextReasonLiteralOnTheTrail()
 	do
 	{
           //TODO
-                it--;
+          it.Previous();
 		next_literal = *it; //state_.GetLiteralFromTheBackOfTheTrail(num_trail_literals_examined_);
 		assert(state_.assignments_.GetAssignmentLevel(next_literal.Variable()) == state_.GetCurrentDecisionLevel());
 		num_trail_literals_examined_++;

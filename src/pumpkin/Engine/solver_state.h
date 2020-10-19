@@ -8,6 +8,7 @@
 #include "../Basic Data Structures/simple_moving_average.h"
 #include "../Basic Data Structures/small_helper_structures.h"
 #include "../Basic Data Structures/solver_parameters.h"
+#include "../Basic Data Structures/trail_list.h"
 #include "../Propagators/Cardinality/propagator_cardinality.h"
 #include "../Propagators/Clausal/propagator_clausal.h"
 #include "../Propagators/Pseudo-Boolean/propagator_pseudo_boolean_constraints.h"
@@ -142,9 +143,9 @@ public:
 
         void AddCardinality(Pumpkin::CardinalityConstraint &constraint);
 
-        std::_List_iterator<BooleanLiteral> GetTrailEnd();
+        TrailList<BooleanLiteral>::Iterator GetTrailEnd();
 
-        std::_List_iterator<BooleanLiteral> GetTrailBegin();
+        TrailList<BooleanLiteral>::Iterator GetTrailBegin();
 
       private:
 	//performs an assignment to make the literal true. 
@@ -152,8 +153,10 @@ public:
 	void MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code); 
 	
 //private class variables--------------------------
-	std::list<BooleanLiteral> trail_;
-	std::vector<std::list<BooleanLiteral>::iterator> trail_delimiter_; //[i] is the position where the i-th decision level ends (exclusive) on the trail.
+//	std::list<BooleanLiteral> trail_;
+        TrailList<BooleanLiteral> trail_;
+//	std::vector<std::list<BooleanLiteral>::iterator> trail_delimiter_; //[i] is the position where the i-th decision level ends (exclusive) on the trail.
+        std::vector<TrailList<BooleanLiteral>::Iterator> trail_delimiter_;
 
 	int decision_level_;
 };

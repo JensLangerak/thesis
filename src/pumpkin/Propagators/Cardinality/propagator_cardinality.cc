@@ -9,7 +9,8 @@
 namespace Pumpkin {
 
 PropagatorCardinality::PropagatorCardinality(int64_t num_variables)
-    : cardinality_database_(num_variables), last_index_(0),
+    : PropagatorGeneric(),
+      cardinality_database_(num_variables), last_index_(0),
       last_propagated_(BooleanLiteral()) {}
 bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
                                              SolverState &state) {
@@ -87,13 +88,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
 
   watchers_true.resize(end_position);
   next_position_on_trail_to_propagate_++;
-//  next_position_on_trail_to_propagate_it++;
-//  if (next_position_on_trail_to_propagate_it == state.GetTrailEnd()) {
-//    next_position_on_trail_to_propagate_it--;
-//    it_end =true;
-//  } else {
-//    it_end = false;
-//  }
+  next_position_on_trail_to_propagate_it.Next();
   return true;
 }
 ReasonGeneric *PropagatorCardinality::ReasonFailure(SolverState &state) {
@@ -160,7 +155,8 @@ bool PropagatorCardinality::PropagateOneLiteral(SolverState &state) {
 
     BooleanLiteral propagation_literal = state.GetLiteralFromTrailAtPosition(
         next_position_on_trail_to_propagate_);
-//        BooleanLiteral propagation_literal = *next_position_on_trail_to_propagate_it;
+        BooleanLiteral propagation_literal2 = *next_position_on_trail_to_propagate_it;
+        assert(propagation_literal == propagation_literal2);
 //    next_position_on_trail_to_propagate_++;
     bool success = PropagateLiteral(propagation_literal, state);
     if (success == false) {

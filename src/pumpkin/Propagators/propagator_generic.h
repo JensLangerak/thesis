@@ -3,6 +3,7 @@
 
 #include "explanation_generic.h"
 #include "reason_generic.h"
+#include "../Basic Data Structures/trail_list.h"
 #include <list>
 
 namespace Pumpkin
@@ -27,6 +28,8 @@ public:
 	
 	bool IsPropagationComplete(SolverState &state);
 
+        inline void SetTrailIterator(TrailList<BooleanLiteral>::Iterator iterator) { next_position_on_trail_to_propagate_it = iterator;}
+
 protected:
 	//this is the main propagation method. Note that it will change watch lists of true_literal and some other literals and enqueue assignments
 	virtual bool PropagateLiteral(BooleanLiteral true_literal, SolverState &state) = 0;
@@ -36,8 +39,7 @@ protected:
 	//tracks the position of the literals on the trail that needs to be propagated
 	//needs to be updated each Backtrack using Synchronise
 	size_t next_position_on_trail_to_propagate_;
-//        std::list<BooleanLiteral>::iterator next_position_on_trail_to_propagate_it;
-//        bool it_end = false;
+        TrailList<BooleanLiteral>::Iterator next_position_on_trail_to_propagate_it;
 };
 
 } //end Pumpkin namespace
