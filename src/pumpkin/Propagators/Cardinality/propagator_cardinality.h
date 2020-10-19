@@ -43,6 +43,13 @@ private:
 
   void AddEncoding(SolverState &state,
                    WatchedCardinalityConstraint *constraint);
+  struct PropLevel {
+    BooleanLiteral l;
+    int level;
+    uint64_t code;
+    PropLevel(BooleanLiteral l, int level, uint64_t code) : l(l), level(level), code(code) {};
+  };
+  void PropagateClause(SolverState &state, std::vector<PropLevel> &prop_queue);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_CARDINALITY_H_

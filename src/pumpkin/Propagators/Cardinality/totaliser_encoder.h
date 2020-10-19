@@ -12,7 +12,7 @@ namespace Pumpkin {
 class TotaliserEncoder {
 
 public:
-  static void Encode(SolverState &state, std::vector<BooleanLiteral> variables, int min,
+  static std::vector<std::vector<BooleanLiteral>> Encode(SolverState &state, std::vector<BooleanLiteral> variables, int min,
                      int max);
 
 private:
@@ -35,6 +35,7 @@ private:
 
   SolverState *solver_state_;
   std::vector<BooleanLiteral> variables_;
+  std::vector<std::vector<BooleanLiteral>> added_clauses_;
   int min_;
   int max_;
   Node *root_;

@@ -8,12 +8,13 @@ TotaliserEncoder::TotaliserEncoder(SolverState &solver_state, std::vector<Boolea
                                    int min, int max)
     : solver_state_(&solver_state), variables_(variables), min_(min), max_(max),
       root_(nullptr){}
-void TotaliserEncoder::Encode(SolverState &solver_state, std::vector<BooleanLiteral> variables,
+std::vector<std::vector<BooleanLiteral>> TotaliserEncoder::Encode(SolverState &solver_state, std::vector<BooleanLiteral> variables,
                               int min, int max) {
   TotaliserEncoder encoder(solver_state, variables, min, max);
   encoder.root_ = encoder.CreateTree(variables);
   encoder.SetMin();
   encoder.SetMax();
+  return encoder.added_clauses_;
 }
 TotaliserEncoder::Node *TotaliserEncoder::CreateTree(std::vector<BooleanLiteral> variables) {
   Node *n = new Node();
@@ -50,9 +51,11 @@ TotaliserEncoder::Node *TotaliserEncoder::CreateTree(std::vector<BooleanLiteral>
         clause = {n->left->counting_variables[0],
                   n->right->counting_variables[b + 1],
                   ~n->counting_variables[d + 1]};
+        added_clauses_.push_back(clause);
       solver_state_->AddClause(clause);
     } else {
         clause = {n->left->counting_variables[0], ~n->counting_variables[d+1]};
+        added_clauses_.push_back(clause);
         solver_state_->AddClause(clause);
       }
     }
@@ -67,10 +70,12 @@ TotaliserEncoder::Node *TotaliserEncoder::CreateTree(std::vector<BooleanLiteral>
        clause = {n->left->counting_variables[a],
                         n->right->counting_variables[0],
                         ~n->counting_variables[d + 1]};
+        added_clauses_.push_back(clause);
        solver_state_->AddClause(clause);
      } else {
      clause =
             {n->right->counting_variables[0], ~n->counting_variables[d + 1]};
+        added_clauses_.push_back(clause);
         solver_state_->AddClause(clause);
       }
     }
@@ -81,6 +86,7 @@ TotaliserEncoder::Node *TotaliserEncoder::CreateTree(std::vector<BooleanLiteral>
         std::vector<BooleanLiteral> clause = {~n->left->counting_variables[a],
                          ~n->right->counting_variables[b],
                          n->counting_variables[d]};
+        added_clauses_.push_back(clause);
         solver_state_->AddClause(clause);
         bool max_a = a == n->left->counting_variables.size() - 1;
         bool max_b = b == n->right->counting_variables.size() - 1;
@@ -88,14 +94,17 @@ TotaliserEncoder::Node *TotaliserEncoder::CreateTree(std::vector<BooleanLiteral>
           clause = {n->left->counting_variables[a + 1],
                            n->right->counting_variables[b + 1],
                            ~n->counting_variables[d + 1]};
+          added_clauses_.push_back(clause);
               solver_state_->AddClause(clause);
           }else if (!max_b) {
           clause = {n->right->counting_variables[b + 1],
                            ~n->counting_variables[d + 1]};
+          added_clauses_.push_back(clause);
             solver_state_->AddClause(clause);
         } else if (!max_a) {
           clause= {n->left->counting_variables[a + 1],
                              ~n->counting_variables[d + 1]};
+          added_clauses_.push_back(clause);
             solver_state_->AddClause(clause);
           }
       }
@@ -111,13 +120,15 @@ void TotaliserEncoder::SetMin() {
     throw "min is larger than the max";
   if (min_ > (int) variables_.size()) {
     std::vector<BooleanLiteral> clause;
+    added_clauses_.push_back(clause);
     solver_state_->AddClause(clause);
     return;
   }
   for (int i = 0; i<min_; ++i) {
    BooleanLiteral clause = root_->counting_variables[i];
+    added_clauses_.push_back({clause});
     solver_state_->AddUnitClause(clause);
-    solver_state_->InsertPropagatedLiteral(clause, NULL, NULL, 0);
+//    solver_state_->InsertPropagatedLiteral(clause, NULL, NULL, 0);
   }
 
 }
@@ -131,8 +142,9 @@ void TotaliserEncoder::SetMax() {
   // set the value max_ + 1 to false. This has index max_
   for (int i = max_; i< root_->counting_variables.size(); ++i) {
     BooleanLiteral clause = ~root_->counting_variables[i];
+    added_clauses_.push_back({clause});
     solver_state_->AddUnitClause(clause);
-    solver_state_->InsertPropagatedLiteral(clause, NULL, NULL, 0);
+//    solver_state_->InsertPropagatedLiteral(clause, NULL, NULL, 0);
   }
 
 }
