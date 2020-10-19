@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "../Propagators/Cardinality/totaliser_encoder.h"
 namespace Pumpkin
 {
 
@@ -23,12 +24,18 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification&
         for (auto& clause : problem_specification.clauses_) { state_.AddClause(clause); }
 	for (auto& constraint : problem_specification.cardinality_constraints_) { state_.AddCardinality(constraint); }
 	if (!problem_specification.pseudo_boolean_constraints_.empty()) { std::cout << "TODO: add pseudo-Boolean constraints!\n"; }
+
 }
+
 
 SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
 {
-	Initialise(time_limit_in_seconds);
-	
+//  for (auto c : state_.propagator_cardinality_.cardinality_database_.permanent_constraints_) {
+//    TotaliserEncoder::Encode(state_, c->literals_, c->min_, c->max_);
+//    c->encoding_add = true;
+//  }
+
+  Initialise(time_limit_in_seconds);
 	//check failure by unit propagation at root
 	if (SetUnitClauses() == false) { return SolverOutput(stopwatch_.TimeElapsedInSeconds(), false, std::vector<bool>()); } 
 
@@ -119,6 +126,9 @@ ConflictAnalysisResultClausal ConstraintSatisfactionSolver::AnalyseConflict(Prop
 {
 	runtime_assert(conflict_propagator != NULL);
 	assert(CheckConflictAnalysisDataStructures());
+        if (seen_.size() < state_.GetNumberOfVariables() +1)
+          seen_.resize(state_.GetNumberOfVariables() + 1);
+        assert(seen_.size() == state_.GetNumberOfVariables() + 1);
 	use_glucose_bumping_ = false; //disabling glucose bumping functionality, will enable in the future
 
 	//initialise the analysis with the conflict explanation
@@ -151,7 +161,8 @@ ConflictAnalysisResultClausal ConstraintSatisfactionSolver::AnalyseConflict(Prop
 
 void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *conflict_propagator, BooleanLiteral propagated_literal)
 {
-	runtime_assert(conflict_propagator != NULL);
+  assert(seen_.size() == state_.GetNumberOfVariables() + 1);
+  runtime_assert(conflict_propagator != NULL);
 	//analyse the reason_constraint of the conflict. 
 	//Add new literals to the learned clause_ if their decision level if lower than the current one
 	//otherwise increase the number of the number of literals in the current decision level
@@ -228,7 +239,8 @@ void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysi
 
 BooleanLiteral ConstraintSatisfactionSolver::FindNextReasonLiteralOnTheTrail()
 {
-	runtime_assert(num_current_decision_level_literals_ > 0);
+  assert(seen_.size() == state_.GetNumberOfVariables() + 1);
+  runtime_assert(num_current_decision_level_literals_ > 0);
 	//expand a node of the current decision level
 	//find a literal that you have already seen
 	//the ones you have not seen are not important for this conflict

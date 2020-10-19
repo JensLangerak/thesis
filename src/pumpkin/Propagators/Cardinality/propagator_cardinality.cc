@@ -6,6 +6,7 @@
 #include "../../Engine/solver_state.h"
 #include "reason_cardinality_constraint.h"
 #include "watch_list_cardinality.h"
+#include "totaliser_encoder.h"
 namespace Pumpkin {
 
 PropagatorCardinality::PropagatorCardinality(int64_t num_variables)
@@ -71,12 +72,17 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
       }
       watchers_true.resize(end_position);
       failure_constraint_ = constraint;
-      return false;
+//      return false;
+      AddEncoding(state, constraint);
+      return true;
     }
     if (true_count == constraint->max_ ||
         false_count == constraint->literals_.size() - constraint->min_) {
       for (BooleanLiteral l : constraint->literals_) {
+
         if (!state.assignments_.IsAssigned(l)) {
+          AddEncoding(state, constraint);
+          return true;
           uint64_t code = reinterpret_cast<uint64_t>(
               constraint); // the code will simply be a pointer to the
                            // propagating clause
@@ -93,7 +99,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
   }
 
   watchers_true.resize(end_position);
-  next_position_on_trail_to_propagate_++;
+//  next_position_on_trail_to_propagate_++;
   next_position_on_trail_to_propagate_it.Next();
   return true;
 }
@@ -149,10 +155,10 @@ void PropagatorCardinality::Synchronise(SolverState &state) {
   }}
 //  if (next_position_on_trail_to_propagate_ > state.GetNumberOfAssignedVariables()) {
     if (!state.assignments_.IsAssigned(next_position_on_trail_to_propagate_it.GetData())) {
-      assert(next_position_on_trail_to_propagate_ >= state.GetNumberOfAssignedVariables());
+//      assert(next_position_on_trail_to_propagate_ >= state.GetNumberOfAssignedVariables());
     while (next_position_on_trail_to_propagate_it != state.GetTrailEnd()) {
       next_position_on_trail_to_propagate_it.Previous();
-      --next_position_on_trail_to_propagate_;
+//      --next_position_on_trail_to_propagate_;
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
       for (auto wc : cardinality_database_.watch_list_true[l]) {
         assert(wc.constraint_->true_log.back().count == wc.constraint_->true_count_);
@@ -165,10 +171,10 @@ void PropagatorCardinality::Synchronise(SolverState &state) {
         //      wc.constraint_->false_count_--;
       }
     }
-    assert(next_position_on_trail_to_propagate_ == state.GetNumberOfAssignedVariables());
+//    assert(next_position_on_trail_to_propagate_ == state.GetNumberOfAssignedVariables());
     assert(next_position_on_trail_to_propagate_it == state.GetTrailEnd());
   } else {
-    assert(next_position_on_trail_to_propagate_ < state.GetNumberOfAssignedVariables());
+//    assert(next_position_on_trail_to_propagate_ < state.GetNumberOfAssignedVariables());
   }
   PropagatorGeneric::Synchronise(state);
   last_propagated_ = BooleanLiteral();
@@ -178,15 +184,37 @@ void PropagatorCardinality::Synchronise(SolverState &state) {
 bool PropagatorCardinality::PropagateOneLiteral(SolverState &state) {
   if (IsPropagationComplete(state) == false) {
 
-    BooleanLiteral propagation_literal = state.GetLiteralFromTrailAtPosition(
-        next_position_on_trail_to_propagate_);
+//    BooleanLiteral propagation_literal = state.GetLiteralFromTrailAtPosition(
+//        next_position_on_trail_to_propagate_);
         BooleanLiteral propagation_literal2 = *next_position_on_trail_to_propagate_it;
-        assert(propagation_literal == propagation_literal2);
+//        assert(propagation_literal == propagation_literal2);
     bool success = PropagateLiteral(propagation_literal2, state);
     if (success == false) {
       return false;
     }
   }
   return true; // no conflicts occurred during propagation
+}
+void PropagatorCardinality::AddEncoding(
+    SolverState &state, WatchedCardinalityConstraint *constraint) {
+  assert(constraint->encoding_add == false);
+  TotaliserEncoder::Encode(state, constraint->literals_, constraint->min_, constraint->max_);
+  constraint->encoding_add = true;
+  state.FullReset();
+
+//  int rollback = state.assignments_.GetAssignmentLevel(constraint->literals_[0].Variable());
+//  for (BooleanLiteral lit : constraint->literals_) {
+//    rollback = std::min(rollback, state.assignments_.GetAssignmentLevel(lit.Variable()));
+//  }
+//  if (rollback == 0)
+//    state.Backtrack(rollback);
+//  else
+//  state.Backtrack(rollback - 1);
+}
+void PropagatorCardinality::ResetCounts() {
+  for(auto c : cardinality_database_.permanent_constraints_) {
+    c->true_count_ = 0;
+    c->false_count_ = 0;
+  }
 }
 } // namespace Pumpkin

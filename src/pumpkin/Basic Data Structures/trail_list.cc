@@ -44,7 +44,8 @@ template <typename T> void TrailList<T>::pop_back() {
 template <typename T>
 void TrailList<T>::insert(TrailList::Iterator place, T data) {
   Node * n = new Node(data, place.node->previous, place.node);
-  n->previous->next = n;
+  if (n->previous != nullptr)
+    n->previous->next = n;
   n->next->previous = n;
   ++size_;
 }

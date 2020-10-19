@@ -40,7 +40,7 @@ public:
 	void EnqueueDecisionLiteral(BooleanLiteral); 
 	
 	//places the literal in the queue, noting it was a result of the propagator given in input
-	bool EnqueuePropagatedLiteral(BooleanLiteral propagated_literal, PropagatorGeneric *responsible_propagator, uint64_t code);  
+	bool EnqueuePropagatedLiteral(BooleanLiteral propagated_literal, PropagatorGeneric *responsible_propagator, uint64_t code);
 		
 	//propagates all the enqueued learned_clause_literals and returns the first propagator that reported a conflict or NULL if no conflict was detected
 	PropagatorGeneric * PropagateEnqueued(); 
@@ -147,12 +147,18 @@ public:
 
         TrailList<BooleanLiteral>::Iterator GetTrailBegin();
 
+        bool InsertPropagatedLiteral(BooleanLiteral propagated_literal,
+                                      PropagatorGeneric *responsible_propagator,
+                                      uint64_t code, int decision_level);
+        void FullReset();
+
       private:
 	//performs an assignment to make the literal true. 
 	//Note that the corresponding variable is considered to be assigned a value (0 if the literal was negative, 1 if the literal was positive). Used internally, consider using 'enqueue' instead.
-	void MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code); 
-	
-//private class variables--------------------------
+        void MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code);
+  void MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code, int decision_level);
+
+  //private class variables--------------------------
 //	std::list<BooleanLiteral> trail_;
         TrailList<BooleanLiteral> trail_;
 //	std::vector<std::list<BooleanLiteral>::iterator> trail_delimiter_; //[i] is the position where the i-th decision level ends (exclusive) on the trail.

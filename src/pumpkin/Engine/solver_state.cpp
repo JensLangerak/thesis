@@ -31,6 +31,17 @@ void SolverState::EnqueueDecisionLiteral(BooleanLiteral decision_literal) {
   MakeAssignment(decision_literal, NULL, NULL);
 }
 
+bool SolverState::InsertPropagatedLiteral(BooleanLiteral propagated_literal, PropagatorGeneric *responsible_propagator, uint64_t code, int decision_level) {
+  if (assignments_.IsAssigned(propagated_literal)) {
+    assert(assignments_.GetAssignment(propagated_literal) == true);
+
+  } else {
+    MakeAssignment(propagated_literal, responsible_propagator, code, decision_level);
+  }
+  return true;
+
+}
+
 bool SolverState::EnqueuePropagatedLiteral(
     BooleanLiteral literal, PropagatorGeneric *responsible_propagator,
     uint64_t code) {
@@ -319,6 +330,19 @@ void SolverState::UpdateMovingAveragesForRestarts(int learned_clause_lbd) {
   simple_moving_average_block.AddTerm(GetNumberOfAssignedVariables());
 }
 
+void SolverState::MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code, int decisionLevel) {
+  assert(literal.IsUndefined() == false);
+  assert(assignments_.IsAssigned(literal) == false);
+
+  assignments_.MakeAssignment(literal.Variable(), literal.IsPositive(),
+                              decisionLevel, responsible_propagator,
+                              code, trail_.size());
+  if (decisionLevel == decision_level_) {
+    trail_.push_back(literal);
+  } else {
+    trail_.insert(trail_delimiter_[decisionLevel], literal);
+  }
+}
 void SolverState::MakeAssignment(BooleanLiteral literal,
                                  PropagatorGeneric *responsible_propagator,
                                  uint64_t code) {
@@ -340,6 +364,13 @@ void SolverState::AddCardinality(CardinalityConstraint &constraint) {
 TrailList<BooleanLiteral>::Iterator SolverState::GetTrailEnd() { return trail_.end();}
 TrailList<BooleanLiteral>::Iterator SolverState::GetTrailBegin() {
   return trail_.begin();
+}
+void SolverState::FullReset() {
+  Reset();
+  propagator_clausal_.SetTrailIterator(trail_.begin());
+  propagator_cardinality_.SetTrailIterator(trail_.begin());
+  propagator_cardinality_.ResetCounts();
+  propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
 }
 
 } // namespace Pumpkin

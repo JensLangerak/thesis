@@ -26,6 +26,15 @@ public:
 
 	size_t size_;
 	BooleanLiteral literals_[0];
+
+        bool operator==(LiteralVector o) const {bool res = this->Size() == o.Size();
+        if (!res)
+          return false;
+        for (int i = 0; i < this->Size(); ++i) {
+          if (literals_[i] != o.literals_[i])
+            return false;
+        }
+        return true;};
 };
 
 } //end Pumpkin namespace

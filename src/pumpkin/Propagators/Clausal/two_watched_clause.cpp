@@ -235,15 +235,19 @@ int TwoWatchedClause::computeLBD(LiteralVector & literals, const SolverState & s
 	int counter = 0;
 	for (BooleanLiteral lit : literals)
 	{
-		int i = state.assignments_.GetAssignmentLevel(lit.Variable());
-		counter += (seen_decision_level[i] == false);
-		seen_decision_level[i] = true;
+          if (state.assignments_.IsAssigned(lit)) {
+            int i = state.assignments_.GetAssignmentLevel(lit.Variable());
+            counter += (seen_decision_level[i] == false);
+            seen_decision_level[i] = true;
+          }
 	}
 	//clear the seen_decision_level data structure - all of its values should be false for the next function call
 	for (BooleanLiteral lit : literals)
 	{
-		int i = state.assignments_.GetAssignmentLevel(lit.Variable());
-		seen_decision_level[i] = false;
+          if (state.assignments_.IsAssigned(lit)) {
+            int i = state.assignments_.GetAssignmentLevel(lit.Variable());
+            seen_decision_level[i] = false;
+          }
 	}
 	return counter;
 }

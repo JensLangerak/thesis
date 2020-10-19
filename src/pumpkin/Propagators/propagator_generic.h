@@ -39,7 +39,7 @@ protected:
 	
 	//tracks the position of the literals on the trail that needs to be propagated
 	//needs to be updated each Backtrack using Synchronise
-	size_t next_position_on_trail_to_propagate_;
+//	size_t next_position_on_trail_to_propagate_;
         TrailList<BooleanLiteral>::Iterator next_position_on_trail_to_propagate_it;
 };
 
