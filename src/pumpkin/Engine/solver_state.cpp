@@ -78,7 +78,7 @@ void SolverState::IncreaseDecisionLevel() {
 void SolverState::Backtrack(int backtrack_level) {
   runtime_assert(backtrack_level >= 0);
   runtime_assert(backtrack_level < decision_level_);
-
+  int tet = decision_level_;
   while (decision_level_ != backtrack_level) {
     BacktrackOneLevel();
   }

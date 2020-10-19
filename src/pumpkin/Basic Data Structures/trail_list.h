@@ -11,11 +11,12 @@ template <typename T> class TrailList {
 private:
   struct Node {
     T data;
+    bool valid_data;
     Node *next;
     Node *previous;
 
     Node(T data, Node *previous, Node *next)
-        : data(data), next(next), previous(previous){};
+        : data(data), next(next), previous(previous), valid_data(true){};
   };
 public:
   struct Iterator {
@@ -31,6 +32,7 @@ public:
       node = node->previous;
     };
     bool IsLast() const { return node->next == nullptr; };
+    bool IsPastTrail() const { return node->valid_data == false;}
     bool IsFirst() const { return node->previous == nullptr; };
 
     T operator*() const { return GetData(); };

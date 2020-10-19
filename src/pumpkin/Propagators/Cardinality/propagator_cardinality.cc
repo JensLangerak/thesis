@@ -33,15 +33,19 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
   for (; current_index < watchers_true.size(); ++current_index) {
     WatchedCardinalityConstraint *constraint =
         watchers_true[current_index].constraint_;
-//    if (last_index_ != current_index || (!already_partly_done))
-//      constraint->true_count_++;
-//    already_partly_done = false;
+    bool inc = false;
+    if (last_index_ != current_index || (!already_partly_done)) {
+      constraint->true_count_++;
+      constraint->true_log.emplace_back(constraint->true_count_, true_literal);
+      inc = true;
+      }
+    already_partly_done = false;
     last_index_ = current_index;
     int true_count = 0;
     int false_count = 0;
     int unassinged_count = 0;
     for (BooleanLiteral l : constraint->literals_) {
-      if (!state.assignments_.IsAssigned(l)) {
+      if (!state.assignments_.IsAssigned(l) || state.assignments_.GetTrailPosition(l.Variable()) > state.assignments_.GetTrailPosition(true_literal.Variable())) {
         ++unassinged_count;
       } else if (state.assignments_.IsAssignedTrue(l)) {
         ++true_count;
@@ -50,13 +54,25 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
       }
     }
     // TODO handle with propagation
-    constraint->true_count_ = true_count;
+//    constraint->true_count_ = true_count;
     assert(constraint->true_count_ == true_count);
     constraint->false_count_ = false_count;
+//    int true_count = constraint->true_count_;
+//    int false_count = constraint->false_count_;
 
     watchers_true[end_position] = watchers_true[current_index];
     ++end_position;
-
+    if (true_count > constraint->max_ ||
+        false_count > constraint->literals_.size() - constraint->min_) {
+      // restore remaining watchers
+      for (size_t k = current_index + 1; k < watchers_true.size(); ++k) {
+        watchers_true[end_position] = watchers_true[current_index];
+        ++end_position;
+      }
+      watchers_true.resize(end_position);
+      failure_constraint_ = constraint;
+      return false;
+    }
     if (true_count == constraint->max_ ||
         false_count == constraint->literals_.size() - constraint->min_) {
       for (BooleanLiteral l : constraint->literals_) {
@@ -73,17 +89,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
       }
     }
 
-    if (true_count > constraint->max_ ||
-        false_count > constraint->literals_.size() - constraint->min_) {
-      // restore remaining watchers
-      for (size_t k = current_index + 1; k < watchers_true.size(); ++k) {
-        watchers_true[end_position] = watchers_true[current_index];
-        ++end_position;
-      }
-      watchers_true.resize(end_position);
-      failure_constraint_ = constraint;
-      return false;
-    }
+
   }
 
   watchers_true.resize(end_position);
@@ -119,32 +125,51 @@ ExplanationGeneric *PropagatorCardinality::ExplainLiteralPropagation(
   return propagating_constraint->ExplainLiteralPropagation(propagated_literal,
                                                            state);
 }
+
 void PropagatorCardinality::Synchronise(SolverState &state) {
 
   //TODO do this before the trail is rolled back
-//  if (last_index_ != 0 && last_propagated_ == state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_)) {
-//    BooleanLiteral l =state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_);
-//    assert(last_index_ < cardinality_database_.watch_list_true[l].size());
-//    for (int i = 0; i <= last_index_; ++i) {
-//      cardinality_database_.watch_list_true[l][i].constraint_->true_count_--;
-//    }
-//    //TODO roll back false
-//  }
-//  --next_position_on_trail_to_propagate_;
-//  while (next_position_on_trail_to_propagate_ >
-//         state.GetNumberOfAssignedVariables()) {
-//    BooleanLiteral l =state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_);
-//    for (auto wc : cardinality_database_.watch_list_true[l]) {
-//      wc.constraint_->true_count_--;
-//    }
-//    for (auto wc : cardinality_database_.watch_list_false[~l]) {
-////      wc.constraint_->false_count_--;
-//    }
-//    next_position_on_trail_to_propagate_--;
-//  }
-//  next_position_on_trail_to_propagate_ =
-//      std::min(next_position_on_trail_to_propagate_,
-//               state.GetNumberOfAssignedVariables());
+  BooleanLiteral l2;
+  if ((!last_propagated_.IsUndefined()) && last_propagated_ == next_position_on_trail_to_propagate_it.GetData()) {
+    BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
+    l2 = l;
+    if (!cardinality_database_.watch_list_true[l].empty()) {
+    assert(last_index_ < cardinality_database_.watch_list_true[l].size());
+    for (int i = 0; i <= last_index_; ++i) {
+
+      assert(cardinality_database_.watch_list_true[l][i].constraint_->true_log.back().count == cardinality_database_.watch_list_true[l][i].constraint_->true_count_);
+      assert(cardinality_database_.watch_list_true[l][i].constraint_->true_log.back().lit == l);
+      cardinality_database_.watch_list_true[l][i].constraint_->true_count_--;
+      cardinality_database_.watch_list_true[l][i].constraint_->true_log.pop_back();
+      assert(cardinality_database_.watch_list_true[l][i].constraint_->true_log.empty() && cardinality_database_.watch_list_true[l][i].constraint_->true_count_ == 0
+           || cardinality_database_.watch_list_true[l][i].constraint_->true_log.back().count == cardinality_database_.watch_list_true[l][i].constraint_->true_count_);
+    }
+    last_index_ = 0;
+    //TODO roll back false
+  }}
+//  if (next_position_on_trail_to_propagate_ > state.GetNumberOfAssignedVariables()) {
+    if (!state.assignments_.IsAssigned(next_position_on_trail_to_propagate_it.GetData())) {
+      assert(next_position_on_trail_to_propagate_ >= state.GetNumberOfAssignedVariables());
+    while (next_position_on_trail_to_propagate_it != state.GetTrailEnd()) {
+      next_position_on_trail_to_propagate_it.Previous();
+      --next_position_on_trail_to_propagate_;
+      BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
+      for (auto wc : cardinality_database_.watch_list_true[l]) {
+        assert(wc.constraint_->true_log.back().count == wc.constraint_->true_count_);
+        assert(wc.constraint_->true_log.back().lit == l);
+        wc.constraint_->true_count_--;
+        wc.constraint_->true_log.pop_back();
+        assert(wc.constraint_->true_log.empty() && wc.constraint_->true_count_ == 0 ||wc.constraint_->true_log.back().count == wc.constraint_->true_count_);
+      }
+      for (auto wc : cardinality_database_.watch_list_false[~l]) {
+        //      wc.constraint_->false_count_--;
+      }
+    }
+    assert(next_position_on_trail_to_propagate_ == state.GetNumberOfAssignedVariables());
+    assert(next_position_on_trail_to_propagate_it == state.GetTrailEnd());
+  } else {
+    assert(next_position_on_trail_to_propagate_ < state.GetNumberOfAssignedVariables());
+  }
   PropagatorGeneric::Synchronise(state);
   last_propagated_ = BooleanLiteral();
   last_index_ = 0;
@@ -157,8 +182,7 @@ bool PropagatorCardinality::PropagateOneLiteral(SolverState &state) {
         next_position_on_trail_to_propagate_);
         BooleanLiteral propagation_literal2 = *next_position_on_trail_to_propagate_it;
         assert(propagation_literal == propagation_literal2);
-//    next_position_on_trail_to_propagate_++;
-    bool success = PropagateLiteral(propagation_literal, state);
+    bool success = PropagateLiteral(propagation_literal2, state);
     if (success == false) {
       return false;
     }

@@ -72,6 +72,6 @@ int main() {
   simple_sat_solver::b2b::TestDir("../../../data/b2b/b2bsat/dzn/");
   double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"printf: "<< duration <<'\n';
-  //  simple_sat_solver::b2b::TestSingleFile(
-  //      "../../../data/b2b/b2bsat/dzn/forum-14.dzn");
+//    simple_sat_solver::b2b::TestSingleFile("../../../data/b2b/b2bsat/dzn/ticf-13crafa.dzn");
+//        "../../../data/b2b/b2bsat/dzn/forum-14.dzn");
 }

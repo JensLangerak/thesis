@@ -20,6 +20,7 @@ template <typename T> TrailList<T>::TrailList() :size_(0), removed_nodes_(nullpt
 //}
 template <typename T> void TrailList<T>::push_back(T data) {
   end_->data = data;
+  end_->valid_data = true;
   if (removed_nodes_ == nullptr) {
     end_->next = new Node(T(), end_, nullptr);
   } else {
@@ -28,13 +29,16 @@ template <typename T> void TrailList<T>::push_back(T data) {
     end_->next->next = nullptr;
   }
   end_ = end_->next;
+  end_->valid_data = false;
   ++size_;
 }
 template <typename T> void TrailList<T>::pop_back() {
   end_->next = removed_nodes_;
   removed_nodes_ = end_;
   end_ = removed_nodes_->previous;
+  //removed_nodes_->valid_data = false;
   end_->next = nullptr;
+  end_->valid_data = false;
   --size_;
 }
 template <typename T>

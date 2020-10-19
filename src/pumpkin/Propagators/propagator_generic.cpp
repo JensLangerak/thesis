@@ -4,8 +4,8 @@
 
 namespace Pumpkin {
 
-PropagatorGeneric::PropagatorGeneric()
-    : next_position_on_trail_to_propagate_(0),
+PropagatorGeneric::PropagatorGeneric() :
+     next_position_on_trail_to_propagate_(0),
       next_position_on_trail_to_propagate_it(nullptr){}
 
 bool PropagatorGeneric::Propagate(SolverState &state) {
@@ -32,9 +32,13 @@ bool PropagatorGeneric::PropagateOneLiteral(SolverState &state) {
 
 void PropagatorGeneric::Synchronise(SolverState &state) {
   // TODO
-  if (next_position_on_trail_to_propagate_ > state.GetNumberOfAssignedVariables()) {
+  if (next_position_on_trail_to_propagate_it.IsPastTrail()) {
+    assert(next_position_on_trail_to_propagate_ >= state.GetNumberOfAssignedVariables());
     while (next_position_on_trail_to_propagate_it != state.GetTrailEnd())
       next_position_on_trail_to_propagate_it.Previous();
+  } else {
+    assert(state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_) == next_position_on_trail_to_propagate_it.GetData());
+    assert(next_position_on_trail_to_propagate_ < state.GetNumberOfAssignedVariables());
   }
   next_position_on_trail_to_propagate_ =
       std::min(next_position_on_trail_to_propagate_,
@@ -51,7 +55,7 @@ PropagatorGeneric::GetAndPopNextLiteralToPropagate(SolverState &state) {
   BooleanLiteral return_literal2 = *next_position_on_trail_to_propagate_it;
   assert(return_literal == return_literal2);
   next_position_on_trail_to_propagate_it.Next();
-  return return_literal;
+  return return_literal2;
 }
 
 bool PropagatorGeneric::IsPropagationComplete(SolverState &state) {
@@ -61,7 +65,24 @@ bool PropagatorGeneric::IsPropagationComplete(SolverState &state) {
   bool res2 =  next_position_on_trail_to_propagate_ ==
          state.GetNumberOfAssignedVariables();
   assert(res1 == res2);
-  return res2;
+  return res1;
 }
+bool PropagatorGeneric::CheckTrailIterator(SolverState &state) {
+  if (next_position_on_trail_to_propagate_ >
+      state.GetNumberOfAssignedVariables()) {
+    assert(next_position_on_trail_to_propagate_it.IsPastTrail() ||(!state.assignments_.IsAssigned(
+        next_position_on_trail_to_propagate_it.GetData().Variable())));
+  } else if (next_position_on_trail_to_propagate_ ==
+             state.GetNumberOfAssignedVariables()) {
 
+      assert(next_position_on_trail_to_propagate_it.IsLast() || !state.assignments_.IsAssigned(
+          next_position_on_trail_to_propagate_it.GetData().Variable()));
+      assert(next_position_on_trail_to_propagate_it == state.GetTrailEnd());
+  } else {
+    assert(state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_) == next_position_on_trail_to_propagate_it.GetData());
+    assert(state.assignments_.IsAssigned(
+        next_position_on_trail_to_propagate_it.GetData().Variable()));
+  }
+  return true;
+}
 } // namespace Pumpkin

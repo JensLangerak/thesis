@@ -46,7 +46,6 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
 		{
 			bool success = ResolveConflict(conflicting_propagator);
 			if (success == false) { break; } //UNSAT detected, terminate.
-
 			if (ShouldRestart()) { PerformRestart(); }
 		}
 	}
@@ -107,9 +106,8 @@ bool ConstraintSatisfactionSolver::ResolveConflict(PropagatorGeneric *conflict_p
 		if (state_.GetCurrentDecisionLevel() == 0) { return false; } //conflict found at the root level - unsatisfiability is detected
 
 		ConflictAnalysisResultClausal result = AnalyseConflict(conflict_propagator);
-		
 		ProcessConflictAnalysisResult(result);
-		conflict_propagator = state_.PropagateEnqueued();		
+		conflict_propagator = state_.PropagateEnqueued();
 	}
 	state_.propagator_clausal_.clause_database_.DecayClauseActivities();
 	state_.variable_selector_.DecayActivities();

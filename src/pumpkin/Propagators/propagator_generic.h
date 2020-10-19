@@ -29,6 +29,7 @@ public:
 	bool IsPropagationComplete(SolverState &state);
 
         inline void SetTrailIterator(TrailList<BooleanLiteral>::Iterator iterator) { next_position_on_trail_to_propagate_it = iterator;}
+        bool CheckTrailIterator(SolverState &state);
 
 protected:
 	//this is the main propagation method. Note that it will change watch lists of true_literal and some other literals and enqueue assignments
