@@ -27,7 +27,7 @@ public:
 
   int true_count_;
   int false_count_;
-  bool encoding_add = false;
+  bool encoding_added_ = false;
 
   std::vector<True_count_log> true_log;
 };

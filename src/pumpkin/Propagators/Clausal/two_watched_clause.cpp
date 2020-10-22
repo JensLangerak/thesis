@@ -130,7 +130,7 @@ bool TwoWatchedClause::WatcherComparison(const BooleanLiteral p1, const BooleanL
 	}
 	else //one of the variables is unassigned
 	{
-		return assignments.IsAssigned(p1) > assignments.IsAssigned(p2);
+		return assignments.IsAssigned(p1) < assignments.IsAssigned(p2);
 	}
 	
 	//no means of distinguishing between two unassigned literals
