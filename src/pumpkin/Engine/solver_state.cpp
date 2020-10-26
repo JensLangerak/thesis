@@ -372,5 +372,15 @@ void SolverState::FullReset() {
   propagator_cardinality_.ResetCounts();
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
 }
+void SolverState::ResetPropagatorsToLevel() {
+  TrailList<BooleanLiteral>::Iterator update = trail_.begin();
+  if (decision_level_ > 0) {
+    update = trail_delimiter_[decision_level_ - 1];
+  }
+
+  propagator_clausal_.SetTrailIterator(update);
+  propagator_pseudo_boolean_.SetTrailIterator(update);
+  propagator_cardinality_.SetTrailIterator(update);
+}
 
 } // namespace Pumpkin

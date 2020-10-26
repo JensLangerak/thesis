@@ -26,10 +26,12 @@ public:
   int max_;
 
   int true_count_;
+  int true_count_debug_;
   int false_count_;
   bool encoding_added_ = false;
 
   std::vector<True_count_log> true_log;
+  std::vector<True_count_log> true_log_debug;
 };
 }
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_

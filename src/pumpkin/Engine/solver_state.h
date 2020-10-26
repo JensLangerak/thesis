@@ -152,6 +152,8 @@ public:
                                       uint64_t code, int decision_level);
         void FullReset();
 
+        void ResetPropagatorsToLevel();
+
       private:
 	//performs an assignment to make the literal true. 
 	//Note that the corresponding variable is considered to be assigned a value (0 if the literal was negative, 1 if the literal was positive). Used internally, consider using 'enqueue' instead.

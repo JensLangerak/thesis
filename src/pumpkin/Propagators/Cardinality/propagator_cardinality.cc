@@ -7,6 +7,7 @@
 #include "reason_cardinality_constraint.h"
 #include "totaliser_encoder.h"
 #include "watch_list_cardinality.h"
+#include <iostream>
 namespace Pumpkin {
 
 PropagatorCardinality::PropagatorCardinality(int64_t num_variables)
@@ -40,22 +41,24 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
     int true_count = 0;
     int false_count = 0;
     int unassinged_count = 0;
-    for (BooleanLiteral l : constraint->literals_) {
-      if (!state.assignments_.IsAssigned(l) ||
-          // TODO don;t think that this still works (is debug code anyway)
-          state.assignments_.GetTrailPosition(l.Variable()) >
-              state.assignments_.GetTrailPosition(true_literal.Variable())) {
-        ++unassinged_count;
-      } else if (state.assignments_.IsAssignedTrue(l)) {
-        ++true_count;
-      } else {
-        ++false_count;
-      }
-    }
-    // TODO handle with propagation
-    //    constraint->true_count_ = true_count;
-    assert(constraint->true_count_ == true_count);
-    constraint->false_count_ = false_count;
+//    for (BooleanLiteral l : constraint->literals_) {
+//      if (!state.assignments_.IsAssigned(l) ||
+//          // TODO don;t think that this still works (is debug code anyway)
+//          state.assignments_.GetTrailPosition(l.Variable()) >
+//              state.assignments_.GetTrailPosition(true_literal.Variable())) {
+//        ++unassinged_count;
+//      } else if (state.assignments_.IsAssignedTrue(l)) {
+//        ++true_count;
+//      } else {
+//        ++false_count;
+//      }
+//    }
+//    // TODO handle with propagation
+//    //    constraint->true_count_ = true_count;
+//    assert(constraint->true_count_ == true_count);
+//    constraint->false_count_ = false_count;
+//    constraint->false_count_ = 0;
+    true_count = constraint->true_count_;
     //    int true_count = constraint->true_count_;
     //    int false_count = constraint->false_count_;
 
@@ -81,14 +84,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
         if (!state.assignments_.IsAssigned(l)) {
           AddEncoding(state, constraint);
           return true;
-          uint64_t code = reinterpret_cast<uint64_t>(
-              constraint); // the code will simply be a pointer to the
-                           // propagating clause
-          if (true_count == constraint->max_)
-            state.EnqueuePropagatedLiteral(~l, this, code);
-          else
-            state.EnqueuePropagatedLiteral(l, this, code);
-          return true;
+
         }
       }
     }
@@ -252,27 +248,28 @@ void PropagatorCardinality::AddEncoding(
            (state.assignments_.IsAssignedFalse(l2)));
     if ((!state.assignments_.IsAssignedTrue(l1)) &&
         state.assignments_.IsAssignedFalse(l2)) {
-//      std::vector<int> test;
-//      for (int k = 0; k < c->literals_.size_; ++k) {
-//        BooleanLiteral l = c->literals_[k];
-//        if (state.assignments_.IsAssignedTrue(l))
-//          test.push_back(1);
-//        else if (state.assignments_.IsAssignedFalse(l))
-//          test.push_back(2);
-//        else
-//          test.push_back(0);
-//      }
-//      for (int j = 2; j < c->literals_.size_; j++) {
-//        assert(state.assignments_.IsAssignedFalse(c->literals_[j]));
-//      }
+      //      std::vector<int> test;
+      //      for (int k = 0; k < c->literals_.size_; ++k) {
+      //        BooleanLiteral l = c->literals_[k];
+      //        if (state.assignments_.IsAssignedTrue(l))
+      //          test.push_back(1);
+      //        else if (state.assignments_.IsAssignedFalse(l))
+      //          test.push_back(2);
+      //        else
+      //          test.push_back(0);
+      //      }
+      //      for (int j = 2; j < c->literals_.size_; j++) {
+      //        assert(state.assignments_.IsAssignedFalse(c->literals_[j]));
+      //      }
 
       int max_level = state.assignments_.GetAssignmentLevel(l2.Variable());
-//      for (int j = 2; j < c->literals_.size_; j++) {
-//        BooleanLiteral l = c->literals_[j];
-//
-//        max_level = std::max(
-//            max_level, state.assignments_.GetAssignmentLevel(l.Variable()));
-//      }
+      //      for (int j = 2; j < c->literals_.size_; j++) {
+      //        BooleanLiteral l = c->literals_[j];
+      //
+      //        max_level = std::max(
+      //            max_level,
+      //            state.assignments_.GetAssignmentLevel(l.Variable()));
+      //      }
       assert(max_level == state.assignments_.GetAssignmentLevel(l2.Variable()));
       prop_queue.push(PropagtionElement(l1, max_level,
                                         &state.propagator_clausal_,
@@ -280,22 +277,33 @@ void PropagatorCardinality::AddEncoding(
     }
   }
 
+  int decision_level = state.GetCurrentDecisionLevel();
   int backtrack_level = PropagateLiterals(prop_queue, state, var_index);
+  std::cout << decision_level << " - " << backtrack_level << " - " << decision_level - backtrack_level << std::endl;
+  // todo back_track and sync not needed when bachtrack is current level.
   if (backtrack_level == 0)
     state.FullReset();
-  else
-  state.Backtrack(backtrack_level - 1);
+  else {
+    if (backtrack_level < state.GetCurrentDecisionLevel())
+      state.Backtrack(backtrack_level);
+    else
+      Synchronise(state); // TODO move to reset propagators
+    state.ResetPropagatorsToLevel();
+//    assert(CheckCounts(state));
+  }
 }
 void PropagatorCardinality::ResetCounts() {
   for (auto c : cardinality_database_.permanent_constraints_) {
     c->true_count_ = 0;
     c->false_count_ = 0;
+    c->true_log.clear();
   }
 }
 int PropagatorCardinality::PropagateLiteral2(
     BooleanLiteral true_literal, SolverState &state,
     std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
-                        std::greater<PropagtionElement>> &queue, int min_var) {
+                        std::greater<PropagtionElement>> &queue,
+    int min_var) {
   assert(state.assignments_.IsAssignedTrue(true_literal));
 
   // effectively remove all watches from this true_literal
@@ -393,7 +401,6 @@ int PropagatorCardinality::PropagateLiteral2(
     // Has become unit or false. Figure out at which level it could have
     // propagated a value and make sure that the watchers are correct
 
-
     BooleanLiteral prev_l0 = watched_clause->literals_[0];
     BooleanLiteral prev_l1 = watched_clause->literals_[1];
     assert(prev_l1 == ~true_literal);
@@ -402,9 +409,9 @@ int PropagatorCardinality::PropagateLiteral2(
     bool is_assigned = state.assignments_.IsAssigned(prev_l0);
     // make sure that 0 is assigned at the highest level
     if (is_assigned && state.assignments_.GetAssignmentLevel(
-        watched_clause->literals_[0].Variable()) <
-        state.assignments_.GetAssignmentLevel(
-            watched_clause->literals_[1].Variable())) {
+                           watched_clause->literals_[0].Variable()) <
+                           state.assignments_.GetAssignmentLevel(
+                               watched_clause->literals_[1].Variable())) {
       std::swap(watched_clause->literals_[0], watched_clause->literals_[1]);
     }
     for (int i = 2; i < watched_clause->Size(); ++i) {
@@ -414,9 +421,9 @@ int PropagatorCardinality::PropagateLiteral2(
               watched_clause->literals_[i].Variable())) {
         std::swap(watched_clause->literals_[1], watched_clause->literals_[i]);
         if (is_assigned && state.assignments_.GetAssignmentLevel(
-                watched_clause->literals_[0].Variable()) <
-            state.assignments_.GetAssignmentLevel(
-                watched_clause->literals_[1].Variable())) {
+                               watched_clause->literals_[0].Variable()) <
+                               state.assignments_.GetAssignmentLevel(
+                                   watched_clause->literals_[1].Variable())) {
           std::swap(watched_clause->literals_[0], watched_clause->literals_[1]);
         }
       }
@@ -436,7 +443,9 @@ int PropagatorCardinality::PropagateLiteral2(
     if (l1 != ~true_literal && l1 != prev_other)
       watch_list.AddClauseToWatch(l1, watched_clause);
 
-    assert(!state.assignments_.IsAssigned(l0.Variable()) ||   state.assignments_.GetAssignmentLevel(l0.Variable()) >= state.assignments_.GetAssignmentLevel(l1.Variable()));
+    assert(!state.assignments_.IsAssigned(l0.Variable()) ||
+           state.assignments_.GetAssignmentLevel(l0.Variable()) >=
+               state.assignments_.GetAssignmentLevel(l1.Variable()));
     // try to enqueue the propagated assignment
     uint64_t code = reinterpret_cast<uint64_t>(
         watched_clause); // the code will simply be a pointer to the propagating
@@ -464,10 +473,10 @@ int PropagatorCardinality::PropagateLiterals(
   while (!queue.empty()) {
     PropagtionElement p = queue.top();
     queue.pop();
-    if (p.level > state.GetCurrentDecisionLevel())
+    if (p.level >= state.GetCurrentDecisionLevel())
       return reset_level;
     if (p.lit.Variable().index_ < min_var_index) {
-      reset_level = p.level;
+      reset_level = std::min(reset_level, p.level);
       continue;
     }
     if (state.assignments_.IsAssigned(p.lit.Variable())) {
@@ -481,11 +490,12 @@ int PropagatorCardinality::PropagateLiterals(
       if (p.lit.Variable().index_ >= min_var_index) {
         state.InsertPropagatedLiteral(p.lit, p.propagator, p.code, p.level);
         int l = PropagateLiteral2(p.lit, state, queue, min_var_index);
+        assert(cardinality_database_.watch_list_true[p.lit].empty());
         if (l > -1)
           reset_level = std::min(reset_level, l);
         assert(queue.top().level >= p.level);
       } else {
-        state.Backtrack(p.level);
+//        state.Backtrack(p.level);
         while (state.GetCurrentDecisionLevel() > p.level) {
           state.BacktrackOneLevel();
         }
@@ -495,5 +505,64 @@ int PropagatorCardinality::PropagateLiterals(
   }
   return reset_level;
 }
+void PropagatorCardinality::SetTrailIterator(
+    TrailList<BooleanLiteral>::Iterator iterator) {
+  if (iterator.IsFirst()) {
+    PropagatorGeneric::SetTrailIterator(iterator);
+    ResetCounts();
+  } else {
 
+    //  if (next_position_on_trail_to_propagate_ >
+    //  state.GetNumberOfAssignedVariables()) {
+    while (next_position_on_trail_to_propagate_it != iterator) {
+      next_position_on_trail_to_propagate_it.Previous();
+      BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
+      for (auto wc : cardinality_database_.watch_list_true[l]) {
+        assert(wc.constraint_->true_log.back().count ==
+               wc.constraint_->true_count_);
+        assert(wc.constraint_->true_log.back().lit == l);
+        wc.constraint_->true_count_--;
+        wc.constraint_->true_log.pop_back();
+        assert(wc.constraint_->true_log.empty() &&
+                   wc.constraint_->true_count_ == 0 ||
+               wc.constraint_->true_log.back().count ==
+                   wc.constraint_->true_count_);
+      }
+    }
+  }
+  assert(next_position_on_trail_to_propagate_it == iterator);
+  last_propagated_ = BooleanLiteral();
+  last_index_ = 0;
+}
+bool PropagatorCardinality::CheckCounts(SolverState &state) {
+  TrailList<BooleanLiteral>::Iterator counter_it = state.GetTrailBegin();
+  for (auto c : cardinality_database_.permanent_constraints_) {
+    c->true_count_debug_ = 0;
+    c->true_log_debug.clear();
+    }
+  while (counter_it != next_position_on_trail_to_propagate_it) {
+    BooleanLiteral l = counter_it.GetData();
+    for (auto c : cardinality_database_.watch_list_true[l]) {
+      c.constraint_->true_count_debug_++;
+      c.constraint_->true_log_debug.emplace_back(c.constraint_->true_count_debug_, l);
+    }
+    counter_it.Next();
+  }
+  int miscount = 0;
+  int l = 0;
+  int g = 0;
+  for (auto c : cardinality_database_.permanent_constraints_) {
+//    assert(c->true_count_debug_ == c->true_count_);
+if (c->true_count_debug_ != c->true_count_) {
+  miscount++;
+  if (c->true_count_debug_ > c->true_count_)
+    ++g;
+  else
+    ++l;
+}
+  }
+
+    assert(miscount == 0);
+    return true;
+}
 } // namespace Pumpkin

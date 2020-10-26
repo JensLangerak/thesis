@@ -35,9 +35,11 @@ public:
 
   DatabaseCardinality cardinality_database_;
 
+  void SetTrailIterator(TrailList<BooleanLiteral>::Iterator iterator)override;
   bool PropagateOneLiteral(SolverState &state) override;
   void ResetCounts();
 
+  bool CheckCounts(SolverState &state);
 private:
   // this is the main propagation method. Note that it will change watch lists
   // of true_literal and some other literals and enqueue assignments

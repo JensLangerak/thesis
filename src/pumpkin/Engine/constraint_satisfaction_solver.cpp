@@ -231,6 +231,7 @@ void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysi
 		TwoWatchedClause* learned_clause = state_.AddLearnedClauseToDatabase(result.learned_clause_literals);
 
 		state_.Backtrack(result.backtrack_level);
+                assert(state_.propagator_cardinality_.CheckCounts(state_));
 		state_.EnqueuePropagatedLiteral(result.propagated_literal, &state_.propagator_clausal_, reinterpret_cast<uint64_t>(learned_clause)); //todo can this be done cleaner, without having to refer to how 'code' is interpreted by the propagator?
 		
 		runtime_assert(lbd == TwoWatchedClause::computeLBD(result.learned_clause_literals, state_));

@@ -28,7 +28,7 @@ public:
 	
 	bool IsPropagationComplete(SolverState &state);
 
-        inline void SetTrailIterator(TrailList<BooleanLiteral>::Iterator iterator) { next_position_on_trail_to_propagate_it = iterator;}
+        inline virtual void SetTrailIterator(TrailList<BooleanLiteral>::Iterator iterator) { next_position_on_trail_to_propagate_it = iterator;}
         bool CheckTrailIterator(SolverState &state);
 
 protected:
