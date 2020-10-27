@@ -20,6 +20,7 @@ sat::SatProblem B2bConverter::ToSat() {
   AddOneMeetingPerPersonTime();
   AddMaxMeetings();
   AddMeetingOnce();
+  AddWaitSlots();
   return sat_problem_;
 }
 
@@ -164,6 +165,30 @@ void B2bConverter::AddMeetingOnce() {
       exactly_once.push_back(Lit(GetMeetingTimeslotIndex(m, t)));
     }
     sat_problem_.ExactlyOne(exactly_once);
+  }
+}
+void B2bConverter::AddWaitSlots() {
+  for (int p = 0; p < nr_persons_; ++p) {
+    int meeting_before_index = sat_problem_.AddNewVars(nr_timeslots_);
+    sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, 0)), Lit(meeting_before_index)});
+    for (int t = 1; t < nr_timeslots_; ++t) {
+      sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, t)), Lit(meeting_before_index + t)});
+      sat_problem_.AddClause({~Lit(meeting_before_index + t - 1), Lit(meeting_before_index + t)});
+    }
+
+    int meeting_after_index = sat_problem_.AddNewVars(nr_timeslots_);
+    for (int t = 0; t < nr_timeslots_ - 1; ++t) {
+      sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, t)), Lit(meeting_after_index + t)});
+      sat_problem_.AddClause({~Lit(meeting_before_index + t + 1), Lit(meeting_after_index + t)});
+    }
+    sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, nr_timeslots_-1)), Lit(meeting_after_index + nr_timeslots_ - 1)});
+
+    for (int t = 0; t < nr_timeslots_; ++t) {
+      int w = sat_problem_.AddNewVar();
+      sat_problem_.AddClause({~Lit(meeting_before_index + t), ~Lit(meeting_after_index + t), Lit(GetPersonTimeslotIndex(p, t)), Lit(w)});
+//      sat_problem_.AddClause({Lit(w)});
+      sat_problem_.AddToMinimize(Lit(w));
+    }
   }
 }
 } // namespace simple_sat_solver::b2b

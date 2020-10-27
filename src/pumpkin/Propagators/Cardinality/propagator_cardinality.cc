@@ -32,9 +32,11 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
   for (; current_index < watchers_true.size(); ++current_index) {
     WatchedCardinalityConstraint *constraint =
         watchers_true[current_index].constraint_;
+    if (constraint->encoding_added_)
+      continue;
     if (last_index_ != current_index || (!already_partly_done)) {
       constraint->true_count_++;
-      constraint->true_log.emplace_back(constraint->true_count_, true_literal);
+//      constraint->true_log.emplace_back(constraint->true_count_, true_literal);
     }
     already_partly_done = false;
     last_index_ = current_index;
@@ -134,24 +136,24 @@ void PropagatorCardinality::Synchronise(SolverState &state) {
       assert(last_index_ < cardinality_database_.watch_list_true[l].size());
       for (int i = 0; i <= last_index_; ++i) {
 
-        assert(cardinality_database_.watch_list_true[l][i]
-                   .constraint_->true_log.back()
-                   .count == cardinality_database_.watch_list_true[l][i]
-                                 .constraint_->true_count_);
-        assert(cardinality_database_.watch_list_true[l][i]
-                   .constraint_->true_log.back()
-                   .lit == l);
+//        assert(cardinality_database_.watch_list_true[l][i]
+//                   .constraint_->true_log.back()
+//                   .count == cardinality_database_.watch_list_true[l][i]
+//                                 .constraint_->true_count_);
+//        assert(cardinality_database_.watch_list_true[l][i]
+//                   .constraint_->true_log.back()
+//                   .lit == l);
         cardinality_database_.watch_list_true[l][i].constraint_->true_count_--;
-        cardinality_database_.watch_list_true[l][i]
-            .constraint_->true_log.pop_back();
-        assert(cardinality_database_.watch_list_true[l][i]
-                       .constraint_->true_log.empty() &&
-                   cardinality_database_.watch_list_true[l][i]
-                           .constraint_->true_count_ == 0 ||
-               cardinality_database_.watch_list_true[l][i]
-                       .constraint_->true_log.back()
-                       .count == cardinality_database_.watch_list_true[l][i]
-                                     .constraint_->true_count_);
+//        cardinality_database_.watch_list_true[l][i]
+//            .constraint_->true_log.pop_back();
+//        assert(cardinality_database_.watch_list_true[l][i]
+//                       .constraint_->true_log.empty() &&
+//                   cardinality_database_.watch_list_true[l][i]
+//                           .constraint_->true_count_ == 0 ||
+//               cardinality_database_.watch_list_true[l][i]
+//                       .constraint_->true_log.back()
+//                       .count == cardinality_database_.watch_list_true[l][i]
+//                                     .constraint_->true_count_);
       }
       last_index_ = 0;
       // TODO roll back false
@@ -165,15 +167,15 @@ void PropagatorCardinality::Synchronise(SolverState &state) {
       //      --next_position_on_trail_to_propagate_;
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
       for (auto wc : cardinality_database_.watch_list_true[l]) {
-        assert(wc.constraint_->true_log.back().count ==
-               wc.constraint_->true_count_);
-        assert(wc.constraint_->true_log.back().lit == l);
+//        assert(wc.constraint_->true_log.back().count ==
+//               wc.constraint_->true_count_);
+//        assert(wc.constraint_->true_log.back().lit == l);
         wc.constraint_->true_count_--;
-        wc.constraint_->true_log.pop_back();
-        assert(wc.constraint_->true_log.empty() &&
-                   wc.constraint_->true_count_ == 0 ||
-               wc.constraint_->true_log.back().count ==
-                   wc.constraint_->true_count_);
+//        wc.constraint_->true_log.pop_back();
+//        assert(wc.constraint_->true_log.empty() &&
+//                   wc.constraint_->true_count_ == 0 ||
+//               wc.constraint_->true_log.back().count ==
+//                   wc.constraint_->true_count_);
       }
       for (auto wc : cardinality_database_.watch_list_false[~l]) {
         //      wc.constraint_->false_count_--;
@@ -279,16 +281,18 @@ void PropagatorCardinality::AddEncoding(
 
   int decision_level = state.GetCurrentDecisionLevel();
   int backtrack_level = PropagateLiterals(prop_queue, state, var_index);
-  std::cout << decision_level << " - " << backtrack_level << " - " << decision_level - backtrack_level << std::endl;
+  this->trigger_count_++;
+//  std::cout << decision_level << " - " << backtrack_level << " - " << decision_level - backtrack_level << std::endl;
   // todo back_track and sync not needed when bachtrack is current level.
   if (backtrack_level == 0)
     state.FullReset();
   else {
     if (backtrack_level < state.GetCurrentDecisionLevel())
       state.Backtrack(backtrack_level);
-    else
+    else if (decision_level != backtrack_level)
       Synchronise(state); // TODO move to reset propagators
-    state.ResetPropagatorsToLevel();
+    if (decision_level != backtrack_level)
+      state.ResetPropagatorsToLevel();
 //    assert(CheckCounts(state));
   }
 }
@@ -296,7 +300,7 @@ void PropagatorCardinality::ResetCounts() {
   for (auto c : cardinality_database_.permanent_constraints_) {
     c->true_count_ = 0;
     c->false_count_ = 0;
-    c->true_log.clear();
+//    c->true_log.clear();
   }
 }
 int PropagatorCardinality::PropagateLiteral2(
@@ -518,15 +522,15 @@ void PropagatorCardinality::SetTrailIterator(
       next_position_on_trail_to_propagate_it.Previous();
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
       for (auto wc : cardinality_database_.watch_list_true[l]) {
-        assert(wc.constraint_->true_log.back().count ==
-               wc.constraint_->true_count_);
-        assert(wc.constraint_->true_log.back().lit == l);
+//        assert(wc.constraint_->true_log.back().count ==
+//               wc.constraint_->true_count_);
+//        assert(wc.constraint_->true_log.back().lit == l);
         wc.constraint_->true_count_--;
-        wc.constraint_->true_log.pop_back();
-        assert(wc.constraint_->true_log.empty() &&
-                   wc.constraint_->true_count_ == 0 ||
-               wc.constraint_->true_log.back().count ==
-                   wc.constraint_->true_count_);
+//        wc.constraint_->true_log.pop_back();
+//        assert(wc.constraint_->true_log.empty() &&
+//                   wc.constraint_->true_count_ == 0 ||
+//               wc.constraint_->true_log.back().count ==
+//                   wc.constraint_->true_count_);
       }
     }
   }
@@ -538,13 +542,13 @@ bool PropagatorCardinality::CheckCounts(SolverState &state) {
   TrailList<BooleanLiteral>::Iterator counter_it = state.GetTrailBegin();
   for (auto c : cardinality_database_.permanent_constraints_) {
     c->true_count_debug_ = 0;
-    c->true_log_debug.clear();
+//    c->true_log_debug.clear();
     }
   while (counter_it != next_position_on_trail_to_propagate_it) {
     BooleanLiteral l = counter_it.GetData();
     for (auto c : cardinality_database_.watch_list_true[l]) {
       c.constraint_->true_count_debug_++;
-      c.constraint_->true_log_debug.emplace_back(c.constraint_->true_count_debug_, l);
+//      c.constraint_->true_log_debug.emplace_back(c.constraint_->true_count_debug_, l);
     }
     counter_it.Next();
   }

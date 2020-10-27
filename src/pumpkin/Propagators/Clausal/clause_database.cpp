@@ -339,13 +339,13 @@ void ClauseDatabase::RecomputeAndPrintClauseLengthStatsForPermanentClauses()
 		}
 	}
 
-	std::cout << "c Effective number of variables: " << variable_indicies.size() << "\n";
-	std::cout << "c Number of clauses: " << number_of_clauses << "\n";
-	std::cout << "c Number of literals: " << number_of_literals << "\n";
-	std::cout << "c \tbinary clauses: " << number_of_binary_clauses << "\n";
-	std::cout << "c \tternary clauses: " << number_of_ternary_clauses << "\n";
-	std::cout << "c \tother clauses: " << number_of_other_clauses << "\n";
-	std::cout << "c \tAvg size of other clauses: " << double(sum_of_lengths_of_other_clauses)/number_of_other_clauses << "\n";
+//	std::cout << "c Effective number of variables: " << variable_indicies.size() << "\n";
+//	std::cout << "c Number of clauses: " << number_of_clauses << "\n";
+//	std::cout << "c Number of literals: " << number_of_literals << "\n";
+//	std::cout << "c \tbinary clauses: " << number_of_binary_clauses << "\n";
+//	std::cout << "c \tternary clauses: " << number_of_ternary_clauses << "\n";
+//	std::cout << "c \tother clauses: " << number_of_other_clauses << "\n";
+//	std::cout << "c \tAvg size of other clauses: " << double(sum_of_lengths_of_other_clauses)/number_of_other_clauses << "\n";
 }
 
 bool ClauseDatabase::IsLiteralProperlyWatched(BooleanLiteral literal, const SolverState &state) const

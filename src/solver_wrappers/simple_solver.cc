@@ -27,4 +27,5 @@ bool SimpleSolver::Solve(const sat::SatProblem &p2) {
   return solved_;
 }
 std::vector<bool> SimpleSolver::GetSolution() const { return solution_; }
+bool SimpleSolver::Optimize(const sat::SatProblem &p) { return false; }
 } // namespace simple_sat_solver::solver_wrappers

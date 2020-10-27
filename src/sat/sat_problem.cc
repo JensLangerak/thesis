@@ -115,5 +115,8 @@ void SatProblem::AddCardinalityConstraint(const std::vector<Lit> &lits, int min,
 }
 std::vector<CardinalityConstraint> SatProblem::GetConstraints() const {
  return constraints;
+}
+std::vector<Lit> SatProblem::GetMinimizeLit(){ return minimize_;
+
 };
 } // namespace simple_sat_solver::sat

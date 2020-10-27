@@ -49,9 +49,10 @@ public:
 	std::vector<BooleanLiteral> unit_clauses_;
 	std::vector<std::vector<BooleanLiteral> > clauses_;
 	std::vector<PseudoBooleanConstraint> pseudo_boolean_constraints_;
-        std::vector<CardinalityConstraint> cardinality_constraints_;
-	
-	//objective function
+  std::vector<CardinalityConstraint> dynamic_cardinality_constraints_;
+  std::vector<CardinalityConstraint> propagator_cardinality_constraints_;
+
+  //objective function
 	std::vector<WeightedLiteral> objective_literals_;
 
 	int64_t num_Boolean_variables_;

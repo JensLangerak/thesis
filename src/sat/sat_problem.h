@@ -72,6 +72,10 @@ public:
 
   std::vector<CardinalityConstraint> GetConstraints() const;
 
+  inline void AddToMinimize(Lit l) {minimize_.push_back(l);};
+
+  std::vector<Lit> GetMinimizeLit();
+
 private:
   // TODO move to types
   static bool TestLit(const Lit &l, const std::vector<bool> &vars);
@@ -81,6 +85,7 @@ private:
   int nr_vars_;
   std::vector<std::vector<Lit>> clauses_;
   std::vector<CardinalityConstraint> constraints;
+  std::vector<Lit> minimize_; //TODO different optimize functions
 };
 } // namespace simple_sat_solver::sat
 

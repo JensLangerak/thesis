@@ -20,6 +20,7 @@ public:
 
 	void PrintStats();
 
+  ConstraintSatisfactionSolver constrained_satisfaction_solver_;
 private:
 	//adds a constraint to the constraint_satisfaction_solver forcing the objective to be better than the upper bound. 
 	//After the first call, it will create new variables and clauses since the constraint is encoded into CNF
@@ -36,7 +37,6 @@ private:
 	static bool IsLiteralTrue(BooleanLiteral literal, const std::vector<bool>& solution);//helper method to evaluate a literal given a solution
 
 //class variables------------------
-	ConstraintSatisfactionSolver constrained_satisfaction_solver_;
 	GeneralisedTotaliserCP192* encoder_; //this encoder needs to be redesigned/improved
 	Stopwatch stopwatch_;
 	int64_t lower_bound_, upper_bound_;

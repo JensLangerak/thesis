@@ -18,12 +18,14 @@ SolverState::SolverState(int64_t num_Boolean_variables,
                           params.learned_clause_decay_factor),
       propagator_pseudo_boolean_(num_Boolean_variables),
       propagator_cardinality_(num_Boolean_variables),
+      propagator_cardinality2_(num_Boolean_variables),
       decision_level_(0),
       simple_moving_average_lbd(params.glucose_queue_lbd_limit),
       simple_moving_average_block(params.glucose_queue_reset_limit) {
   propagator_clausal_.SetTrailIterator(trail_.begin());
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.SetTrailIterator(trail_.begin());
+  propagator_cardinality2_.SetTrailIterator(trail_.begin());
 
 }
 
@@ -64,7 +66,8 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
 
   while (propagator_clausal_.IsPropagationComplete(*this) == false ||
          propagator_pseudo_boolean_.IsPropagationComplete(*this) == false ||
-         propagator_cardinality_.IsPropagationComplete(*this) == false) {
+         propagator_cardinality_.IsPropagationComplete(*this) == false ||
+         propagator_cardinality2_.IsPropagationComplete(*this) == false) {
     if (!propagator_clausal_.Propagate(*this)) {
       return &propagator_clausal_;
     }
@@ -74,6 +77,10 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
     }
     if (!propagator_cardinality_.PropagateOneLiteral(*this)) {
       return &propagator_cardinality_;
+    }
+
+    if (!propagator_cardinality2_.PropagateOneLiteral(*this)) {
+      return &propagator_cardinality2_;
     }
   }
   return NULL;
@@ -96,9 +103,13 @@ void SolverState::Backtrack(int backtrack_level) {
   propagator_clausal_.Synchronise(*this);
   propagator_pseudo_boolean_.Synchronise(*this);
   propagator_cardinality_.Synchronise(*this);
+  propagator_cardinality2_.Synchronise(*this);
 }
 
 void SolverState::Reset() {
+  //TODO fix bug
+  propagator_cardinality_.SetTrailIterator(trail_.begin());
+  propagator_cardinality2_.SetTrailIterator(trail_.begin());
   if (GetCurrentDecisionLevel() != 0)
     Backtrack(0);
 }
@@ -244,6 +255,8 @@ BooleanVariable SolverState::CreateNewVariable() {
   propagator_pseudo_boolean_.constraint_database_.watch_list_.Grow();
   propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
   propagator_cardinality_.cardinality_database_.watch_list_true.Grow();
+  propagator_cardinality2_.cardinality_database_.watch_list_false.Grow();
+  propagator_cardinality2_.cardinality_database_.watch_list_true.Grow();
 
   return new_variable;
 }
@@ -361,6 +374,11 @@ void SolverState::MakeAssignment(BooleanLiteral literal,
 void SolverState::AddCardinality(CardinalityConstraint &constraint) {
   propagator_cardinality_.cardinality_database_.AddPermanentConstraint(constraint, *this);
 }
+
+
+void SolverState::AddCardinality2(CardinalityConstraint &constraint) {
+  propagator_cardinality2_.cardinality_database_.AddPermanentConstraint(constraint, *this);
+}
 TrailList<BooleanLiteral>::Iterator SolverState::GetTrailEnd() { return trail_.end();}
 TrailList<BooleanLiteral>::Iterator SolverState::GetTrailBegin() {
   return trail_.begin();
@@ -370,6 +388,8 @@ void SolverState::FullReset() {
   propagator_clausal_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.ResetCounts();
+  propagator_cardinality2_.SetTrailIterator(trail_.begin());
+  propagator_cardinality2_.ResetCounts();
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
 }
 void SolverState::ResetPropagatorsToLevel() {
@@ -381,6 +401,7 @@ void SolverState::ResetPropagatorsToLevel() {
   propagator_clausal_.SetTrailIterator(update);
   propagator_pseudo_boolean_.SetTrailIterator(update);
   propagator_cardinality_.SetTrailIterator(update);
+  propagator_cardinality2_.SetTrailIterator(update);
 }
 
 } // namespace Pumpkin

@@ -354,7 +354,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 
 	if (sorting_in_gte)
 	{
-		printf("c sorting!\n");
+//		printf("c sorting!\n");
 		if (block_sort_size == 1)
 		{
 			if (!stable_sort)
@@ -367,7 +367,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 			}
 		}
 		else {
-			printf("c block sort!\n");
+//			printf("c block sort!\n");
 			int block_size = relevant_variables.size() / block_sort_size;
 			for (int i = 0; i < block_sort_size; i++)
 			{
@@ -395,7 +395,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 		time_t end_time;
 		time(&end_time);
 		double seconds = difftime(start_time, end_time);
-		printf("c sorting took about %f\n", seconds);
+//		printf("c sorting took about %f\n", seconds);
 
 
 
@@ -491,9 +491,9 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 		{
 			if (relevant_variables[i][0].weight != current_weight)
 			{
-				cout << "c merging " << vars_in_block.size() << " of " << current_weight << endl;
+//				cout << "c merging " << vars_in_block.size() << " of " << current_weight << endl;
 				merged_variables.push_back(generalised_totaliser_bottom_up_tree(vars_in_block, rhs, this->backward_propagation));
-				cout << "c \t" << merged_variables.back().size() << endl;
+//				cout << "c \t" << merged_variables.back().size() << endl;
 				vars_in_block.clear();
 				current_weight = relevant_variables[i][0].weight;
 			}
@@ -515,7 +515,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 	time_t end_time;
 	time(&end_time);
 	double seconds = difftime(start_time, end_time);
-	printf("c gte took about %f\n", seconds);
+//	printf("c gte took about %f\n", seconds);
 
 	//for (auto iter = _output_literals.begin(); iter != _output_literals.end(); ++iter)
 	//{

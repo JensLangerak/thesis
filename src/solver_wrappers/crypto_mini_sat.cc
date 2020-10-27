@@ -38,4 +38,5 @@ std::vector<bool> CryptoMiniSat::GetSolution() const {
     throw "Illegal call to solve";
   return solution_;
 }
+bool CryptoMiniSat::Optimize(const sat::SatProblem &p) { return false; }
 } // namespace simple_sat_solver::solver_wrappers

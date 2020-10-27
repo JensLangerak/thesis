@@ -1,32 +1,59 @@
 //
 // Created by jens on 18-09-20.
 //
+#include <assert.h>
 #include <filesystem>
 #include <iostream>
 #include <string>
 
-#include "../solver_wrappers/simple_solver.h"
 #include "../solver_wrappers/pumpkin.h"
+#include "../solver_wrappers/simple_solver.h"
 #include "b2b_converter.h"
 #include "b2b_parser.h"
 
 namespace simple_sat_solver::b2b {
 
 solver_wrappers::ISolver * CreateSolver() {
-  return new solver_wrappers::Pumpkin();
+  return new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Dynamic);
+}
+
+bool Test(std::string path, solver_wrappers::ISolver * solver) {
+  B2B problem = B2bParser::Parse(path);
+  B2bConverter converter(problem);
+  sat::SatProblem sat = converter.ToSat();
+  bool res = solver->Optimize(sat);
+//  bool res = solver->Solve(sat);
+  assert(res);
+  if (res) {
+    auto sol = converter.DecodeSolution(solver->GetSolution());
+  }
 }
 
 bool TestFile(std::string path) {
   std::cout << "Test: " << path << std::endl;
-  B2B problem = B2bParser::Parse(path);
-  B2bConverter converter(problem);
-  sat::SatProblem sat = converter.ToSat();
-  solver_wrappers::ISolver *solver = CreateSolver();
-  bool res = solver->Solve(sat);
-  if (res) {
-    auto sol = converter.DecodeSolution(solver->GetSolution());
-  }
-  return res;
+  std::clock_t start = std::clock();
+  solver_wrappers::ISolver * solver = new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Encode);
+  Test(path, solver);
+  double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout<<"Encoding: "<< duration <<'\n';
+  delete solver;
+
+  start = std::clock();
+  solver = new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Propagator);
+  Test(path, solver);
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout<<"Propagator: "<< duration <<'\n';
+  delete solver;
+
+
+  start = std::clock();
+  solver = new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Dynamic);
+  Test(path, solver);
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout<<"Dynamic: "<< duration <<'\n';
+  delete solver;
+
+  return true;
 //  return solver->Solve(sat);
 }
 void TestDir(std::string path) {

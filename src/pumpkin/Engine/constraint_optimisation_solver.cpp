@@ -45,6 +45,7 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 			lower_bound_ = upper_bound_;
 		}
 	}
+        std::cout << upper_bound_ << std::endl;
 	return GenerateOutput();
 }
 
@@ -74,8 +75,8 @@ void ConstraintOptimisationSolver::UpdateBestSolution(const std::vector<bool>& s
 	best_solution_ = solution;
 	solution_time_stamps_.AddTimePoint(stopwatch_.TimeElapsedInSeconds(), upper_bound_);
 
-	std::cout << "c t=" << stopwatch_.TimeElapsedInSeconds() << "\n";
-	std::cout << "o " << upper_bound_ << "\n";
+//	std::cout << "c t=" << stopwatch_.TimeElapsedInSeconds() << "\n";
+//	std::cout << "o " << upper_bound_ << "\n";
 }
 
 bool ConstraintOptimisationSolver::HasFeasibleSolution() const

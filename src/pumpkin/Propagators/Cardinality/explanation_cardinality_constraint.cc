@@ -26,9 +26,36 @@ ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
         state.assignments_.GetAssignment(l) == select_value)
       lits_.push_back(l);
   }
+
+//  if (select_value && lits_.size() > constraint->true_count_) {
+//    std::vector<BooleanLiteral> lits2;
+//    int min_trail_level = -1;
+//    int min_trail_level_current = -1;
+//    int min_index = -1;
+//    while(lits2.size() <= constraint->true_count_) {
+//      for (int i = 0; i < lits_.size(); ++i) {
+//        BooleanLiteral l = lits_[i];
+//        int trail_pos = state.assignments_.GetTrailPosition(lits_[0].Variable());
+//        if (trail_pos > min_trail_level) {
+//          if (min_index == -1) {
+//            min_index = i;
+//            min_trail_level_current = trail_pos;
+//          } else if (min_trail_level_current > trail_pos) {
+//            min_index = i;
+//            min_trail_level_current = trail_pos;
+//          }
+//        }
+//      }
+//      lits2.push_back(lits_[min_index]);
+//    }
+//
+//    lits_ = lits2;
+//  }
+
   int test = lits_.size();
-  assert(select_value && lits_.size() == constraint->true_count_ ||
-         (!select_value) && lits_.size() == constraint->false_count_);
+  // TODO not sure if >= should be possible or that is should be ==
+  assert(select_value && lits_.size() >= constraint->true_count_ ||
+         (!select_value) && lits_.size() >= constraint->false_count_);
 }
 ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
     const WatchedCardinalityConstraint *constraint, SolverState &state,
