@@ -39,7 +39,12 @@ public:
   bool PropagateOneLiteral(SolverState &state) override;
   void ResetCounts();
 
+  /// Debug function to check if the counts are correct.
+  /// \param state
+  /// \return
   bool CheckCounts(SolverState &state);
+
+  /// Keep track how often it has triggered a constraint. (for debugging etc.)
   int trigger_count_ = 0;
 private:
   // this is the main propagation method. Note that it will change watch lists
@@ -52,6 +57,9 @@ private:
   size_t last_index_;
 
 
+  /// Add the encoding to the clause database.
+  /// \param state
+  /// \param constraint
   void AddEncoding(SolverState &state,
                    WatchedCardinalityConstraint *constraint);
   struct PropagtionElement {
@@ -72,12 +80,14 @@ private:
       return this->level > o.level;
     }
   };
+  /// propagate the literals in the queue to the state.
   int PropagateLiterals(
       std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                           std::greater<PropagtionElement>>
           queue,
       SolverState &state, int min_var_index);
-  int PropagateLiteral2(
+  /// propagate the true_literal using the clause database, enques values that can be propagated to the queue. Thus they are not yet added to the state.
+  void ClausualPropagateLiteral(
       BooleanLiteral true_literal, SolverState &state,
       std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                           std::greater<PropagtionElement>> &queue, int min_var);

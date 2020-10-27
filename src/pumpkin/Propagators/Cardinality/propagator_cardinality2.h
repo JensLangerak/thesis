@@ -13,6 +13,7 @@ namespace Pumpkin {
 
 class SolverState;
 
+// copy from the propagator_cardinality, with the encoding remoced. for testing purposes. //TODO should be removed or something
 class PropagatorCardinality2 : public PropagatorGeneric {
 public:
   explicit PropagatorCardinality2(int64_t num_variables);

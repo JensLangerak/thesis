@@ -10,6 +10,7 @@ TotaliserEncoder::TotaliserEncoder(SolverState &solver_state, std::vector<Boolea
       root_(nullptr){}
 std::vector<std::vector<BooleanLiteral>> TotaliserEncoder::Encode(SolverState &solver_state, std::vector<BooleanLiteral> variables,
                               int min, int max) {
+  assert(min == 0); //TODO implement
   TotaliserEncoder encoder(solver_state, variables, min, max);
   encoder.root_ = encoder.CreateTree(variables);
   encoder.SetMin();

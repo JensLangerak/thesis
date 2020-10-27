@@ -253,9 +253,9 @@ BooleanVariable SolverState::CreateNewVariable() {
   assignments_.Grow();
   propagator_clausal_.clause_database_.watch_list_.Grow();
   propagator_pseudo_boolean_.constraint_database_.watch_list_.Grow();
-  propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
+//  propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
   propagator_cardinality_.cardinality_database_.watch_list_true.Grow();
-  propagator_cardinality2_.cardinality_database_.watch_list_false.Grow();
+//  propagator_cardinality2_.cardinality_database_.watch_list_false.Grow();
   propagator_cardinality2_.cardinality_database_.watch_list_true.Grow();
 
   return new_variable;

@@ -5,7 +5,7 @@
 #ifndef SIMPLESATSOLVER_SRC_SAT_ENCODERS_TOTALISER_ENCODER_H_
 #define SIMPLESATSOLVER_SRC_SAT_ENCODERS_TOTALISER_ENCODER_H_
 
-#include "../../Engine/solver_state.h"
+#include "../../../Engine/solver_state.h"
 namespace Pumpkin {
 
 

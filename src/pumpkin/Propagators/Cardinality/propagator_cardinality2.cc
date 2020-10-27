@@ -4,10 +4,11 @@
 
 #include "propagator_cardinality2.h"
 #include "../../Engine/solver_state.h"
+#include "Encoders/totaliser_encoder.h"
 #include "reason_cardinality_constraint.h"
-#include "totaliser_encoder.h"
 #include "watch_list_cardinality.h"
 #include <iostream>
+//TODO remove file
 namespace Pumpkin {
 
 PropagatorCardinality2::PropagatorCardinality2(int64_t num_variables)

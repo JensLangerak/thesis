@@ -32,7 +32,7 @@ void WatchListCardinality::Remove(BooleanLiteral literal,
       return;
     }
   }
-  assert(1 == 2); //something must have been removed, should never reach this
+//  assert(1 == 2); //something must have been removed, should never reach this
 }
 void WatchListCardinality::Remove(BooleanLiteral literal,
                                   int constraint_index) {

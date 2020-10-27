@@ -15,15 +15,19 @@ class DatabaseCardinality {
 public:
   explicit DatabaseCardinality(uint64_t num_vars);
 
-  void AddPermanentConstraint(WatchedCardinalityConstraint *constraint);
+  /// Create a new WatchedCardinalityConstraint from the given constraint. Add the constraint to the watched lists.
+  ///
+  /// \param constraint
+  /// \param state
+  /// \return the constructed constraint.
   WatchedCardinalityConstraint* AddPermanentConstraint(CardinalityConstraint &constraint,
                               SolverState &state);
-  void AddTemporaryConstraint(WatchedCardinalityConstraint *constraint);
 
   WatchListCardinality watch_list_true;
-  WatchListCardinality watch_list_false;
-  std::vector<WatchedCardinalityConstraint*> permanent_constraints_, temporary_constraints_;
+//  WatchListCardinality watch_list_false;
+  std::vector<WatchedCardinalityConstraint*> permanent_constraints_;
 
+  ~DatabaseCardinality();
 private:
   void AddWatchers(WatchedCardinalityConstraint *constraint);
 };

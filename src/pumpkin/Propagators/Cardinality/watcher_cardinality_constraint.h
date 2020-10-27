@@ -19,6 +19,7 @@ public:
   }
 
 //private:
+  //TODO make private again
   WatchedCardinalityConstraint *constraint_;
 };
 

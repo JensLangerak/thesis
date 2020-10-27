@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "../Propagators/Cardinality/totaliser_encoder.h"
+#include "../Propagators/Cardinality/Encoders/totaliser_encoder.h"
 namespace Pumpkin
 {
 
