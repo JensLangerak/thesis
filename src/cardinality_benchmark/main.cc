@@ -21,12 +21,12 @@ namespace simple_sat_solver::cardinality_benchmark {
     std::cout<<"Duration: "<< duration <<'\n';
   }
   void TestFile(std::string path, int max) {
-    std::cout<<"Encoding - Totalizer" <<std::endl;
-    TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Totolizer, true);
+//    std::cout<<"Encoding - Totalizer" <<std::endl;
+//    TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Totolizer, true);
     std::cout<<"Encoding - Sequential" <<std::endl;
     TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Sequential, true);
-    std::cout<<"Dynamic - Totalizer" <<std::endl;
-    TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Totolizer, false);
+//    std::cout<<"Dynamic - Totalizer" <<std::endl;
+//    TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Totolizer, false);
     std::cout<<"Dynamic - Sequential" <<std::endl;
     TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Sequential, false);
     std::cout<<"Propagator" <<std::endl;
@@ -36,6 +36,6 @@ namespace simple_sat_solver::cardinality_benchmark {
 }
 
 int main() {
-  simple_sat_solver::cardinality_benchmark::TestFile("/home/jens/Downloads/cc.5/cnf.20.t.5", 20);
+  simple_sat_solver::cardinality_benchmark::TestFile("/home/jens/Downloads/cc.1/cnf.10.t.1", 10);
 
 }

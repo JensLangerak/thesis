@@ -12,7 +12,9 @@ class BooleanLiteral;
 class IEncoder {
 public:
   virtual std::vector<std::vector<BooleanLiteral>> Encode(SolverState &state) = 0;
+  virtual std::vector<std::vector<BooleanLiteral>> Encode(SolverState &state, std::vector<BooleanLiteral> lits) ;
   virtual ~IEncoder() = 0;
+  virtual bool SupportsIncremental() { return false;} ;
 
 protected:
   IEncoder(){};

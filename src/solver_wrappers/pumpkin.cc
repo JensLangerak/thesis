@@ -9,6 +9,7 @@
 #include "../pumpkin/Basic Data Structures/solver_parameters.h"
 #include "../pumpkin/Engine/constraint_optimisation_solver.h"
 
+#include "../pumpkin/Propagators/Cardinality/Encoders/incremental_sequential_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/totaliser_encoder.h"
 #include "../sat/encoders/totaliser_encoder.h"
@@ -130,7 +131,7 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
       } else {
         IEncoder *encoder;
         if (cardinality_option_ == CardinalityOption::Sequential)
-          encoder = new ::Pumpkin::SequentialEncoder(lits, c.min, c.max);
+          encoder = new ::Pumpkin::IncrementalSequentialEncoder(lits, c.min, c.max);
         else if (cardinality_option_ == CardinalityOption::Totolizer)
           encoder = new ::Pumpkin::TotaliserEncoder(lits, c.min, c.max);
         problem.dynamic_cardinality_constraints_.push_back(
