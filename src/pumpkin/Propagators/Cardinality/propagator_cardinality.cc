@@ -159,8 +159,9 @@ void PropagatorCardinality::AddEncoding(
   int unit_index =
       state.propagator_clausal_.clause_database_.unit_clauses_.size();
   int var_index = state.assignments_.GetNumberOfVariables() + 1;
-  std::vector<std::vector<BooleanLiteral>> clauses = TotaliserEncoder::Encode(
-      state, constraint->literals_, constraint->min_, constraint->max_);
+  std::vector<std::vector<BooleanLiteral>> clauses = constraint->encoder_->Encode(state);
+//  std::vector<std::vector<BooleanLiteral>> clauses = TotaliserEncoder::Encode(
+//      state, constraint->literals_, constraint->min_, constraint->max_);
   constraint->encoding_added_ = true;
   std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                       std::greater<PropagtionElement>>

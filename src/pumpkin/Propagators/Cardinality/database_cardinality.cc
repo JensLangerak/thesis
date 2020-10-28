@@ -8,7 +8,7 @@ namespace Pumpkin {
 DatabaseCardinality::DatabaseCardinality(uint64_t num_vars)
     : watch_list_true(num_vars) {}
 WatchedCardinalityConstraint* DatabaseCardinality::AddPermanentConstraint(CardinalityConstraint &constraint, SolverState & state) {
-    WatchedCardinalityConstraint * watched = new WatchedCardinalityConstraint(constraint.literals, constraint.min, constraint.max);
+    WatchedCardinalityConstraint * watched = new WatchedCardinalityConstraint(constraint.literals, constraint.min, constraint.max, constraint.encoder);
     permanent_constraints_.push_back(watched);
     AddWatchers(watched);
     return watched;

@@ -8,7 +8,7 @@
 namespace Pumpkin {
 
 WatchedCardinalityConstraint::WatchedCardinalityConstraint(
-    std::vector<BooleanLiteral> &literals, int min, int max) : literals_(literals), min_(min), max_(max), true_count_(0), false_count_(0){}
+    std::vector<BooleanLiteral> &literals, int min, int max, IEncoder * encoder) : encoder_(encoder), literals_(literals), min_(min), max_(max), true_count_(0), false_count_(0){}
 
 ExplanationCardinalityConstraint *
 WatchedCardinalityConstraint::ExplainLiteralPropagation(

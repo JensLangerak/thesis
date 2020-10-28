@@ -2,6 +2,7 @@
 // Created by jens on 05-10-20.
 //
 
+#include "../sat_problem.h"
 #include "totaliser_encoder.h"
 namespace simple_sat_solver::sat {
 TotaliserEncoder::TotaliserEncoder(SatProblem *sat, std::vector<Lit> variables,

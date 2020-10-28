@@ -6,13 +6,14 @@
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_
 
 #include "../../Basic Data Structures/boolean_literal.h"
+#include "Encoders/i_encoder.h"
 #include <vector>
 namespace Pumpkin {
 class ExplanationCardinalityConstraint;
 class SolverState;
 class WatchedCardinalityConstraint {
 public:
-  WatchedCardinalityConstraint(std::vector<BooleanLiteral> &literals, int min, int max);
+  WatchedCardinalityConstraint(std::vector<BooleanLiteral> &literals, int min, int max, IEncoder * encoder);
   ExplanationCardinalityConstraint * ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state) const; //returns the conjunction that forces the assignment of input literal to true. Assumes the input literal is not undefined.
   ExplanationCardinalityConstraint * ExplainFailure(SolverState &state) const; //returns the conjunction that leads to failure
 
@@ -25,6 +26,7 @@ public:
   int false_count_;
   int trigger_count_ = 0;
   bool encoding_added_ = false;
+  IEncoder *encoder_;
 };
 }
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_

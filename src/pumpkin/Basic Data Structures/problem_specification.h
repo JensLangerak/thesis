@@ -1,9 +1,10 @@
 #pragma once
 
+#include "../Propagators/Cardinality/Encoders/i_encoder.h"
 #include "boolean_literal.h"
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace Pumpkin {
 
@@ -28,10 +29,11 @@ struct PseudoBooleanConstraint {
 
 struct CardinalityConstraint
 {
-  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max) : literals(lits), min(min), max(max) {}
+  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max, IEncoder *encoder) : encoder(encoder), literals(lits), min(min), max(max) {};
   std::vector<BooleanLiteral> literals;
   int min;
   int max;
+  IEncoder *encoder;
 };
 
 class ProblemSpecification

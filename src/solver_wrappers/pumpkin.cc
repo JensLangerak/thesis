@@ -8,8 +8,10 @@
 #include "../pumpkin/Basic Data Structures/problem_specification.h"
 #include "../pumpkin/Basic Data Structures/solver_parameters.h"
 #include "../pumpkin/Engine/constraint_optimisation_solver.h"
-#include "../sat/encoders/totaliser_encoder.h"
 
+#include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
+#include "../pumpkin/Propagators/Cardinality/Encoders/totaliser_encoder.h"
+#include "../sat/encoders/totaliser_encoder.h"
 namespace simple_sat_solver::solver_wrappers {
 using namespace Pumpkin;
 
@@ -67,25 +69,37 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
       solution_.push_back(solver_output.solution[i]);
   }
 
-  if (solver.constrained_satisfaction_solver_.state_.propagator_cardinality_.trigger_count_ != 0)
+  if (solver.constrained_satisfaction_solver_.state_.propagator_cardinality_
+          .trigger_count_ != 0)
     std::cout << "count: "
-              << solver.constrained_satisfaction_solver_.state_.propagator_cardinality_.trigger_count_
+              << solver.constrained_satisfaction_solver_.state_
+                     .propagator_cardinality_.trigger_count_
               << std::endl;
-  if (solver.constrained_satisfaction_solver_.state_.propagator_cardinality2_.trigger_count_ != 0) {
+  if (solver.constrained_satisfaction_solver_.state_.propagator_cardinality2_
+          .trigger_count_ != 0) {
     int max_trigger = 0;
-    for (auto c : solver.constrained_satisfaction_solver_.state_.propagator_cardinality2_.cardinality_database_
-                      .permanent_constraints_)
+    for (auto c :
+         solver.constrained_satisfaction_solver_.state_.propagator_cardinality2_
+             .cardinality_database_.permanent_constraints_)
       max_trigger = std::max(max_trigger, c->trigger_count_);
     std::cout << "count2: "
-              << solver.constrained_satisfaction_solver_.state_.propagator_cardinality2_.trigger_count_
+              << solver.constrained_satisfaction_solver_.state_
+                     .propagator_cardinality2_.trigger_count_
               << "  -  " << max_trigger << std::endl;
   }
   return solved_;
 }
 ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
-  if (cardinality_option_ == CardinalityOption::Encode) {
-    for (sat::CardinalityConstraint c : p.GetConstraints()) {
-      sat::TotaliserEncoder::Encode(p, c.lits, c.min, c.max);
+  if (add_encodings_) {
+    if (cardinality_option_ == CardinalityOption::Sequential) {
+      for (sat::CardinalityConstraint c : p.GetConstraints()) {
+        assert(c.min == 0);
+        p.AtMostK(c.max, c.lits);
+      }
+    } else {
+      for (sat::CardinalityConstraint c : p.GetConstraints()) {
+        sat::TotaliserEncoder::Encode(p, c.lits, c.min, c.max);
+      }
     }
   }
 
@@ -108,12 +122,20 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
           ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
       lits.push_back(lit);
     }
-    if (cardinality_option_ == CardinalityOption::Dynamic) {
-      problem.dynamic_cardinality_constraints_.push_back(
-          ::Pumpkin::CardinalityConstraint(lits, c.min, c.max));
-    } else if (cardinality_option_ == CardinalityOption::Propagator) {
-      problem.propagator_cardinality_constraints_.push_back(
-          ::Pumpkin::CardinalityConstraint(lits, c.min, c.max));
+    if (!add_encodings_) {
+      if (cardinality_option_ == CardinalityOption::Propagator) { //TODO less hacky way for this case
+        IEncoder *encoder = nullptr;
+        problem.propagator_cardinality_constraints_.push_back(
+            ::Pumpkin::CardinalityConstraint(lits, c.min, c.max, encoder));
+      } else {
+        IEncoder *encoder;
+        if (cardinality_option_ == CardinalityOption::Sequential)
+          encoder = new ::Pumpkin::SequentialEncoder(lits, c.min, c.max);
+        else if (cardinality_option_ == CardinalityOption::Totolizer)
+          encoder = new ::Pumpkin::TotaliserEncoder(lits, c.min, c.max);
+        problem.dynamic_cardinality_constraints_.push_back(
+            ::Pumpkin::CardinalityConstraint(lits, c.min, c.max, encoder));
+      }
     }
   }
   for (auto l : p.GetMinimizeLit()) {
