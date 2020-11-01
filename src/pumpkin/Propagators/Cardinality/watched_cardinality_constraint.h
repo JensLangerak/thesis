@@ -13,9 +13,15 @@ class ExplanationCardinalityConstraint;
 class SolverState;
 class WatchedCardinalityConstraint {
 public:
-  WatchedCardinalityConstraint(std::vector<BooleanLiteral> &literals, int min, int max, IEncoder * encoder);
-  ExplanationCardinalityConstraint * ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state) const; //returns the conjunction that forces the assignment of input literal to true. Assumes the input literal is not undefined.
-  ExplanationCardinalityConstraint * ExplainFailure(SolverState &state) const; //returns the conjunction that leads to failure
+  WatchedCardinalityConstraint(std::vector<BooleanLiteral> &literals, int min,
+                               int max, IEncoder *encoder);
+  ~WatchedCardinalityConstraint() ;
+  ExplanationCardinalityConstraint *
+  ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state)
+      const; // returns the conjunction that forces the assignment of input
+             // literal to true. Assumes the input literal is not undefined.
+  ExplanationCardinalityConstraint *ExplainFailure(SolverState &state)
+      const; // returns the conjunction that leads to failure
 
   std::vector<BooleanLiteral> literals_;
   int min_;
@@ -25,8 +31,8 @@ public:
   int true_count_;
   int false_count_;
   int trigger_count_ = 0;
-  bool encoding_added_ = false;
+  bool encoding_added_ = false; // TODO move to encoder
   IEncoder *encoder_;
 };
-}
+} // namespace Pumpkin
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_

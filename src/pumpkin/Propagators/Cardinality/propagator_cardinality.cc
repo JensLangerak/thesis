@@ -66,15 +66,15 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
     }
 
     // can propagate
-//    if (true_count == constraint->max_ ||
-//        false_count == constraint->literals_.size() - constraint->min_) {
-//      for (BooleanLiteral l : constraint->literals_) {
-//        if (!state.assignments_.IsAssigned(l)) {
-//          AddEncoding(state, constraint);
-//          return true;
-//        }
-//      }
-//    }
+    if (true_count == constraint->max_ ||
+        false_count == constraint->literals_.size() - constraint->min_) {
+      for (BooleanLiteral l : constraint->literals_) {
+        if (!state.assignments_.IsAssigned(l)) {
+          AddEncoding(state, constraint);
+          return true;
+        }
+      }
+    }
   }
 
   watchers_true.resize(end_position);

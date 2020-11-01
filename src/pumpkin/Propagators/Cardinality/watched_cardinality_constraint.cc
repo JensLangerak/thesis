@@ -19,4 +19,8 @@ ExplanationCardinalityConstraint *
 WatchedCardinalityConstraint::ExplainFailure(SolverState &state) const {
   return new ExplanationCardinalityConstraint(this, state);
 }
+WatchedCardinalityConstraint::~WatchedCardinalityConstraint() {
+  if (encoder_ != nullptr)
+    delete encoder_;
+}
 }

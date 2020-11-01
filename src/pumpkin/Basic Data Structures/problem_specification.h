@@ -29,11 +29,11 @@ struct PseudoBooleanConstraint {
 
 struct CardinalityConstraint
 {
-  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max, IEncoder *encoder) : encoder(encoder), literals(lits), min(min), max(max) {};
+  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max, IEncoder::IFactory *encoder_factory) : encoder_factory(encoder_factory), literals(lits), min(min), max(max) {};
   std::vector<BooleanLiteral> literals;
   int min;
   int max;
-  IEncoder *encoder;
+  IEncoder::IFactory *encoder_factory;
 };
 
 class ProblemSpecification

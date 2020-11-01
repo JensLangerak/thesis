@@ -24,7 +24,9 @@ public:
   ~IncrementalSequentialEncoder() override;
   bool SupportsIncremental() override { return true;} ;
 
-
+  class Factory : public IEncoder::IFactory {
+    IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new IncrementalSequentialEncoder(literals, min, max);};
+  };
 private:
   bool AddLiteral(SolverState &state, BooleanLiteral l, std::vector<std::vector<BooleanLiteral>> &added_clauses);
   std::vector<BooleanLiteral> variables_;

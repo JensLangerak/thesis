@@ -21,18 +21,21 @@ public:
 
   ~TotaliserEncoder() ;
 
-private:
-  struct Node2 {
+  class Factory : public IEncoder::IFactory {
+    IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new TotaliserEncoder(literals, min, max);};
+  };
+
+  struct Node {
     int index;
     std::vector<BooleanLiteral> variables;
     std::vector<BooleanLiteral> counting_variables;
-    Node2 *left;
-    Node2 *right;
-    Node2() : left(nullptr),  right(nullptr) {}
-    ~Node2();
+    Node *left;
+    Node *right;
+    Node() : left(nullptr),  right(nullptr) {}
+    ~Node();
   };
 
-  Node2 *CreateTree(std::vector<BooleanLiteral> variables);
+  Node *CreateTree(std::vector<BooleanLiteral> variables);
 
 
   SolverState *solver_state_;
@@ -40,7 +43,7 @@ private:
   std::vector<std::vector<BooleanLiteral>> added_clauses_;
   int min_;
   int max_;
-  Node2 *root_;
+  Node *root_;
   void SetMin();
   void SetMax();
 };

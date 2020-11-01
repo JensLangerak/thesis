@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 
+#include "../pumpkin/Propagators/Cardinality/Encoders/propagator_encoder.h"
+#include "../pumpkin/Propagators/Cardinality/Encoders/totaliser_encoder.h"
 #include "../solver_wrappers/pumpkin.h"
 #include "../solver_wrappers/simple_solver.h"
 #include "b2b_converter.h"
@@ -14,7 +16,7 @@
 namespace simple_sat_solver::b2b {
 
 solver_wrappers::ISolver * CreateSolver() {
-  return new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Dynamic);
+  return new solver_wrappers::Pumpkin(new Pumpkin::PropagatorEncoder::Factory());
 }
 
 bool Test(std::string path, solver_wrappers::ISolver * solver) {
@@ -32,14 +34,20 @@ bool Test(std::string path, solver_wrappers::ISolver * solver) {
 bool TestFile(std::string path) {
   std::cout << "Test: " << path << std::endl;
   std::clock_t start = std::clock();
-  solver_wrappers::ISolver * solver = new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Encode);
+
+  ::Pumpkin::IEncoder::IFactory * encoder_factory = new ::Pumpkin::TotaliserEncoder::Factory();
+  encoder_factory->add_dynamic_ = false;
+  solver_wrappers::ISolver * solver = new solver_wrappers::Pumpkin(encoder_factory);
   Test(path, solver);
   double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"Encoding: "<< duration <<'\n';
   delete solver;
 
   start = std::clock();
-  solver = new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Propagator);
+  encoder_factory = new ::Pumpkin::PropagatorEncoder::Factory();
+  encoder_factory->add_dynamic_ = true;
+  solver = new solver_wrappers::Pumpkin(encoder_factory);
+
   Test(path, solver);
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"Propagator: "<< duration <<'\n';
@@ -47,7 +55,9 @@ bool TestFile(std::string path) {
 
 
   start = std::clock();
-  solver = new solver_wrappers::Pumpkin(solver_wrappers::Pumpkin::CardinalityOption::Dynamic);
+  encoder_factory = new ::Pumpkin::TotaliserEncoder::Factory();
+  encoder_factory->add_dynamic_ = true;
+  solver = new solver_wrappers::Pumpkin(encoder_factory);
   Test(path, solver);
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"Dynamic: "<< duration <<'\n';

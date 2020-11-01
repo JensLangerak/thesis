@@ -18,9 +18,9 @@ TotaliserEncoder::TotaliserEncoder(
 //  TotaliserEncoder encoder(variables, min, max);
 //  return encoder.Encode(solver_state);
 //}
-TotaliserEncoder::Node2 *
+TotaliserEncoder::Node *
 TotaliserEncoder::CreateTree(std::vector<BooleanLiteral> variables) {
-  Node2 *n = new Node2();
+  Node *n = new Node();
   n->index = variables.size();
   n->variables = variables;
 
@@ -162,7 +162,7 @@ TotaliserEncoder::Encode(SolverState &state) {
   SetMax();
   return added_clauses_;
 }
-TotaliserEncoder::Node2::~Node2() {
+TotaliserEncoder::Node::~Node() {
   if (left != nullptr)
     delete left;
   if (left != nullptr)

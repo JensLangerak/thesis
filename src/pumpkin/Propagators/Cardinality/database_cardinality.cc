@@ -8,7 +8,11 @@ namespace Pumpkin {
 DatabaseCardinality::DatabaseCardinality(uint64_t num_vars)
     : watch_list_true(num_vars) {}
 WatchedCardinalityConstraint* DatabaseCardinality::AddPermanentConstraint(CardinalityConstraint &constraint, SolverState & state) {
-    WatchedCardinalityConstraint * watched = new WatchedCardinalityConstraint(constraint.literals, constraint.min, constraint.max, constraint.encoder);
+    WatchedCardinalityConstraint * watched = new WatchedCardinalityConstraint(constraint.literals, constraint.min, constraint.max, constraint.encoder_factory->Create(constraint));
+    if (!watched->encoder_->AddEncodingDynamic()) {
+      watched->encoder_->Encode(state);
+      watched->encoding_added_ = true;
+    }
     permanent_constraints_.push_back(watched);
     AddWatchers(watched);
     return watched;

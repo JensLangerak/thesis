@@ -6,6 +6,7 @@
 #define SIMPLESATSOLVER_SRC_SOLVER_WRAPPERS_PUMPKIN_H_
 
 #include "i_solver.h"
+#include "../pumpkin/Propagators/Cardinality/Encoders/i_encoder.h"
 namespace Pumpkin {
 class ProblemSpecification;
 }
@@ -13,18 +14,18 @@ namespace simple_sat_solver::solver_wrappers {
 class Pumpkin : public ISolver {
 public:
   enum class CardinalityOption{ Totolizer, Sequential, Propagator};
-  inline Pumpkin(CardinalityOption cardinality_option, bool add_encodings) : add_encodings_(add_encodings), solved_(false), cardinality_option_(cardinality_option){};
+  inline Pumpkin(::Pumpkin::IEncoder::IFactory * encoder_factory) : encoder_factory_(encoder_factory), solved_(false) {};
+
   bool Solve(const sat::SatProblem &p) override;
   bool Optimize(const sat::SatProblem &p) override;
   ::Pumpkin::ProblemSpecification ConvertProblem(sat::SatProblem &p);
   std::vector<bool> GetSolution() const override;
-  ~Pumpkin() {}
+  ~Pumpkin() { delete encoder_factory_;}
 
 private:
   std::vector<bool> solution_;
   bool solved_;
-  bool add_encodings_;
-  CardinalityOption cardinality_option_;
+  ::Pumpkin::IEncoder::IFactory *encoder_factory_;
 
 };
 }

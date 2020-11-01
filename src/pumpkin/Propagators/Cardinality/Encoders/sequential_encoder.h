@@ -19,6 +19,9 @@ public:
 
   ~SequentialEncoder() override;
 
+  class Factory : public IEncoder::IFactory {
+    IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new SequentialEncoder(literals, min, max);};
+  };
 private:
   std::vector<BooleanLiteral> variables_;
   std::vector<std::vector<BooleanLiteral>> added_clauses_;
