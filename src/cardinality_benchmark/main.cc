@@ -50,7 +50,7 @@ namespace simple_sat_solver::cardinality_benchmark {
 }
 
 int main() {
-  simple_sat_solver::cardinality_benchmark::TestFile("/home/jens/Downloads/cc.1/cnf.10.t.1", 10);
+  simple_sat_solver::cardinality_benchmark::TestFile("/home/jens/Downloads/cc.1/cnf.10.t.1", 9);
 
 
 }
