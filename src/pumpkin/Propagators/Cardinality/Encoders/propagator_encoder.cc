@@ -8,6 +8,6 @@ namespace Pumpkin {
 
 std::vector<std::vector<BooleanLiteral>>
 PropagatorEncoder::Encode(SolverState &state) {
-  assert(false);
+  return std::vector<std::vector<BooleanLiteral>>();
 }
 }

@@ -46,7 +46,7 @@ public:
 
   /// Keep track how often it has triggered a constraint. (for debugging etc.)
   int trigger_count_ = 0;
-private:
+//private:
   // this is the main propagation method. Note that it will change watch lists
   // of true_literal and some other literals and enqueue assignments
   bool PropagateLiteral(BooleanLiteral true_literal,
@@ -60,7 +60,7 @@ private:
   /// Add the encoding to the clause database.
   /// \param state
   /// \param constraint
-  void AddEncoding(SolverState &state,
+  bool AddEncoding(SolverState &state,
                    WatchedCardinalityConstraint *constraint);
   struct PropagtionElement {
     PropagtionElement(BooleanLiteral lit, int level,
@@ -87,11 +87,24 @@ private:
           queue,
       SolverState &state, int min_var_index);
   /// propagate the true_literal using the clause database, enques values that can be propagated to the queue. Thus they are not yet added to the state.
-  void ClausualPropagateLiteral(
+  bool ClausualPropagateLiteral(
       BooleanLiteral true_literal, SolverState &state,
       std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                           std::greater<PropagtionElement>> &queue, int min_var);
 
+  bool PropagateIncremental(SolverState &state,
+                            WatchedCardinalityConstraint *constraint);
+  std::vector<std::vector<BooleanLiteral>>
+  AddEncodingClauses(SolverState &state,
+                     WatchedCardinalityConstraint *constraint);
+  std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
+                      std::greater<PropagtionElement>>
+  InitPropagationQueue(SolverState &state, std::vector<std::vector<BooleanLiteral>> clauses, int unit_start_index, int clause_start_index);
+  void UpdatePropagation(SolverState &state,
+      std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
+                          std::greater<PropagtionElement>>
+          queue, int min_var_index);
+  void RepairTrailPositions(SolverState &state);
 };
 } // namespace Pumpkin
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_CARDINALITY_H_

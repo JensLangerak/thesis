@@ -7,16 +7,23 @@
 
 #include "../../../Basic Data Structures/boolean_literal.h"
 #include "i_encoder.h"
+#include <cassert>
 #include <vector>
 namespace Pumpkin {
 class IncrementalSequentialEncoder : public IEncoder {
 
 public:
+  void PrintInfo() override;
   std::vector<std::vector<BooleanLiteral>>
   Encode(SolverState &state) override;
   std::vector<std::vector<BooleanLiteral>>
   Encode(SolverState &state, std::vector<BooleanLiteral> lits) override;
-  bool IsAdded(BooleanLiteral lit);
+
+  std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propagated_values) override;
+  bool IsAdded(BooleanLiteral lit) override;
+  bool EncodingAdded() override { return false;};
+  std::vector<BooleanLiteral> PropagatePartialClause() override { return paritial_propagate_clause_; }
+
 
 
   IncrementalSequentialEncoder(std::vector<BooleanLiteral> variables, int min, int max);
@@ -27,13 +34,16 @@ public:
   class Factory : public IEncoder::IFactory {
     IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new IncrementalSequentialEncoder(literals, min, max);};
   };
-private:
+
+  std::vector<std::vector<BooleanLiteral>> hist;
+//private:
   bool AddLiteral(SolverState &state, BooleanLiteral l, std::vector<std::vector<BooleanLiteral>> &added_clauses);
   std::vector<BooleanLiteral> variables_;
   std::vector<BooleanLiteral> added_lits_;
   std::vector<BooleanLiteral> previous_added_lits_;
 //  std::vector<std::vector<BooleanLiteral>> added_clauses_;
   int max_;
+  std::vector<BooleanLiteral> paritial_propagate_clause_;
 };
 }
 

@@ -31,20 +31,10 @@ bool PropagatorGeneric::PropagateOneLiteral(SolverState &state) {
 }
 
 void PropagatorGeneric::Synchronise(SolverState &state) {
-  // TODO
   if (next_position_on_trail_to_propagate_it.IsPastTrail()) {
-//    assert(next_position_on_trail_to_propagate_ >= state.GetNumberOfAssignedVariables());
     while (next_position_on_trail_to_propagate_it != state.GetTrailEnd())
       next_position_on_trail_to_propagate_it.Previous();
-  } else {
-//    assert(state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_) == next_position_on_trail_to_propagate_it.GetData());
-//    assert(next_position_on_trail_to_propagate_ < state.GetNumberOfAssignedVariables());
   }
-//  next_position_on_trail_to_propagate_ =
-//      std::min(next_position_on_trail_to_propagate_,
-//               state.GetNumberOfAssignedVariables());
-//  assert(next_position_on_trail_to_propagate_ == state.GetNumberOfAssignedVariables() && next_position_on_trail_to_propagate_it == state.GetTrailEnd()
-//         || state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_) == *next_position_on_trail_to_propagate_it);
 }
 
 BooleanLiteral

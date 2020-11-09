@@ -160,6 +160,7 @@ TotaliserEncoder::Encode(SolverState &state) {
   root_ = CreateTree(variables_);
   SetMin();
   SetMax();
+  encoding_added_ = true;
   return added_clauses_;
 }
 TotaliserEncoder::Node::~Node() {

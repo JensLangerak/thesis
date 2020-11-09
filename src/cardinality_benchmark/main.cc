@@ -2,6 +2,8 @@
 // Created by jens on 28-10-20.
 //
 
+#include "../pumpkin/Propagators/Cardinality/Encoders/incremental_sequential_encoder.h"
+#include "../pumpkin/Propagators/Cardinality/Encoders/propagator_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
 #include "../solver_wrappers/pumpkin.h"
 #include "../solver_wrappers/simple_solver.h"
@@ -35,14 +37,20 @@ namespace simple_sat_solver::cardinality_benchmark {
     encoder_factory = new Pumpkin::SequentialEncoder::Factory();
     encoder_factory->add_dynamic_ = true;
     TestCardinalityOption(path, max, encoder_factory);
-//    std::cout<<"Propagator" <<std::endl;
-//    TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Propagator, false);
+    std::cout<<"Incremental - Sequential" <<std::endl;
+    encoder_factory = new Pumpkin::IncrementalSequentialEncoder::Factory();
+    encoder_factory->add_dynamic_ = true;
+    TestCardinalityOption(path, max, encoder_factory);
+    std::cout<<"Propagator" <<std::endl;
+    encoder_factory = new Pumpkin::PropagatorEncoder::Factory();
+    encoder_factory->add_dynamic_ = false;
+    TestCardinalityOption(path, max, encoder_factory);
 
   }
 }
 
 int main() {
-  simple_sat_solver::cardinality_benchmark::TestFile("/home/jens/Downloads/cc.1/cnf.12.t.1", 11);
+  simple_sat_solver::cardinality_benchmark::TestFile("/home/jens/Downloads/cc.1/cnf.10.t.1", 10);
 
 
 }

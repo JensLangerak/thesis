@@ -39,6 +39,7 @@ bool SolverState::InsertPropagatedLiteral(BooleanLiteral propagated_literal, Pro
 
   } else {
     MakeAssignment(propagated_literal, responsible_propagator, code, decision_level);
+    assert(propagator_cardinality_.cardinality_database_.watch_list_true[propagated_literal].empty());
   }
   return true;
 
@@ -75,9 +76,11 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
     if (!propagator_pseudo_boolean_.PropagateOneLiteral(*this)) {
       return &propagator_pseudo_boolean_;
     }
+    assert(propagator_cardinality_.CheckCounts(*this));
     if (!propagator_cardinality_.PropagateOneLiteral(*this)) {
       return &propagator_cardinality_;
     }
+    assert(propagator_cardinality_.CheckCounts(*this));
 
     if (!propagator_cardinality2_.PropagateOneLiteral(*this)) {
       return &propagator_cardinality2_;

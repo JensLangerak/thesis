@@ -31,7 +31,6 @@ public:
   int true_count_;
   int false_count_;
   int trigger_count_ = 0;
-  bool encoding_added_ = false; // TODO move to encoder
   IEncoder *encoder_;
 };
 } // namespace Pumpkin

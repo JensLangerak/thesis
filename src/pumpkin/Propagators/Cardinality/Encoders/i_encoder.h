@@ -5,6 +5,7 @@
 #ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_ENCODERS_I_ENCODER_H_
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_ENCODERS_I_ENCODER_H_
 
+#include <cassert>
 #include <vector>
 namespace Pumpkin {
 class SolverState;
@@ -13,14 +14,19 @@ class WatchedCardinalityConstraint;
 class CardinalityConstraint;
 class IEncoder {
 public:
+  virtual void PrintInfo() { };
   virtual std::vector<std::vector<BooleanLiteral>>
   Encode(SolverState &state) = 0;
   virtual std::vector<std::vector<BooleanLiteral>>
   Encode(SolverState &state, std::vector<BooleanLiteral> lits);
+  virtual std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propage_values) { assert(false);};
+
   virtual ~IEncoder();
   virtual bool SupportsIncremental() { return false; };
   bool AddEncodingDynamic() { return add_dynamic_; };
-
+  virtual std::vector<BooleanLiteral> PropagatePartialClause() { assert(false); }
+  virtual bool EncodingAdded() { return encoding_added_;};
+  virtual bool IsAdded(BooleanLiteral l);
   class IFactory {
   public:
     IEncoder *Create(std::vector<BooleanLiteral> variables, int min, int max);
@@ -38,6 +44,7 @@ public:
 protected:
   IEncoder(){};
   bool add_dynamic_ = false;
+  bool encoding_added_ = false;
 };
 } // namespace Pumpkin
 

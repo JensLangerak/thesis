@@ -42,7 +42,7 @@ public:
 
 	void Grow();
 
-private:
+//private:
 
 	//TODO convert into bitset later on
 	std::vector<char> truth_values_; //[i] is the truth value assignment for the i-th variable with the codes: 2 - unassigned; 1 - true; 0 - false

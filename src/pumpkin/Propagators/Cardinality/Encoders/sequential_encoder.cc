@@ -75,6 +75,7 @@ SequentialEncoder::Encode(SolverState &state) {
     else
     state.AddClause(c);
   }
+  encoding_added_ = true;
   return added_clauses_;
 }
 }

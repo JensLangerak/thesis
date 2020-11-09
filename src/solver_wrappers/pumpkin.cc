@@ -35,10 +35,11 @@ bool Pumpkin::Solve(const sat::SatProblem &p2) {
       solution_.push_back(solver_output.solution[i]);
   }
 
-  if (solver.state_.propagator_cardinality_.trigger_count_ != 0)
+//  if (solver.state_.propagator_cardinality_.trigger_count_ != 0)
     std::cout << "count: "
               << solver.state_.propagator_cardinality_.trigger_count_
               << std::endl;
+    solver.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_[0]->encoder_->PrintInfo();
   if (solver.state_.propagator_cardinality2_.trigger_count_ != 0) {
     int max_trigger = 0;
     for (auto c : solver.state_.propagator_cardinality2_.cardinality_database_
@@ -125,12 +126,12 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
       lits.push_back(lit);
     }
     //    if (!add_encodings_) {
-    if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
-        nullptr)
-      problem.propagator_cardinality_constraints_.push_back(
-          ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
-                                           encoder_factory_));
-    else
+//    if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
+//        nullptr)
+//      problem.propagator_cardinality_constraints_.push_back(
+//          ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
+//                                           encoder_factory_));
+//    else
       problem.dynamic_cardinality_constraints_.push_back(
           ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
                                            encoder_factory_));

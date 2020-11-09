@@ -141,6 +141,7 @@ ConflictAnalysisResultClausal ConstraintSatisfactionSolver::AnalyseConflict(Prop
 	{
 		BooleanLiteral resolution_literal = FindNextReasonLiteralOnTheTrail(); //recall this method will lower the num_current_decision_level_literals counter
 		conflict_propagator = state_.assignments_.GetAssignmentPropagator(resolution_literal.Variable());
+                auto test = state_.assignments_.info_[resolution_literal.Variable().index_];
 		ProcessConflictPropagator(conflict_propagator, resolution_literal);
 
 		seen_[resolution_literal.Variable().index_] = false; //note that we cannot see this variable again in the graph, so we clear its flag here

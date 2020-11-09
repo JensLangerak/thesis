@@ -157,7 +157,7 @@ public:
 
         void ResetPropagatorsToLevel();
 
-      private:
+//      private:
 	//performs an assignment to make the literal true. 
 	//Note that the corresponding variable is considered to be assigned a value (0 if the literal was negative, 1 if the literal was positive). Used internally, consider using 'enqueue' instead.
         void MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code);

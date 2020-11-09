@@ -10,6 +10,7 @@ std::vector<std::vector<BooleanLiteral>>
 IEncoder::Encode(SolverState &state, std::vector<BooleanLiteral> lits) {
     return Encode(state);
 }
+bool IEncoder::IsAdded(BooleanLiteral l) { return EncodingAdded();}
 IEncoder *IEncoder::IFactory::Create(WatchedCardinalityConstraint &constraint) {
   return Create(constraint.literals_, constraint.min_, constraint.max_);
 }

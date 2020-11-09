@@ -43,15 +43,14 @@ bool TestFile(std::string path) {
   std::cout<<"Encoding: "<< duration <<'\n';
   delete solver;
 
-  start = std::clock();
-  encoder_factory = new ::Pumpkin::PropagatorEncoder::Factory();
-  encoder_factory->add_dynamic_ = true;
-  solver = new solver_wrappers::Pumpkin(encoder_factory);
-
-  Test(path, solver);
-  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-  std::cout<<"Propagator: "<< duration <<'\n';
-  delete solver;
+//  start = std::clock();
+//  encoder_factory = new ::Pumpkin::PropagatorEncoder::Factory();
+//  encoder_factory->add_dynamic_ = false;
+//  solver = new solver_wrappers::Pumpkin(encoder_factory);
+//  Test(path, solver);
+//  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+//  std::cout<<"Propagator: "<< duration <<'\n';
+//  delete solver;
 
 
   start = std::clock();
