@@ -14,7 +14,7 @@ class Lit;
 class TotaliserEncoder {
 
 public:
-  static void Encode(SatProblem &sat, std::vector<Lit> variables, int min,
+  static  void Encode(SatProblem &sat, std::vector<Lit> variables, int min,
                      int max);
 
 private:

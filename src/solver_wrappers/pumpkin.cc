@@ -25,7 +25,8 @@ bool Pumpkin::Solve(const sat::SatProblem &p2) {
   SolverParameters params;
   params.bump_decision_variables = true;
   ConstraintSatisfactionSolver solver(problem, params);
-  SolverOutput solver_output = solver.Solve(std::numeric_limits<double>::max());
+  SolverOutput solver_output = solver.Solve(60);
+  std::cout << "Sol found: " << (solver_output.timeout_happened ? "F" : "T") <<std::endl;
   solved_ = solver_output.HasSolution();
 
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());
@@ -39,7 +40,7 @@ bool Pumpkin::Solve(const sat::SatProblem &p2) {
     std::cout << "count: "
               << solver.state_.propagator_cardinality_.trigger_count_
               << std::endl;
-    solver.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_[0]->encoder_->PrintInfo();
+//    solver.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_[0]->encoder_->PrintInfo();
   if (solver.state_.propagator_cardinality2_.trigger_count_ != 0) {
     int max_trigger = 0;
     for (auto c : solver.state_.propagator_cardinality2_.cardinality_database_

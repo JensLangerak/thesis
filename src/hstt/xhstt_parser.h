@@ -50,6 +50,10 @@ public:
   const char * kDuration = "Duration";
   const char * kRole = "Role";
   const char * kWorkload = "Workload";
+  const char * kConstraints = "Constraints";
+  const char * kAssignResourceConstraint  = "AssignResourceConstraint ";
+  const char * kAssignTimeConstraint  = "AssignTimeConstraint";
+  const char * kSplitEventsConstraint  = "SplitEventsConstraint";
 
   void ParseTimeGroups(Hstt &hstt);
   void ParseTimes(Hstt &hstt);
@@ -58,6 +62,7 @@ public:
   void ParseResources(Hstt &hstt);
   void ParseEventGroups(Hstt &hstt);
   void ParseEvents(Hstt &hstt);
+  void ParseConstraints(Hstt &hstt);
 };
 
 }

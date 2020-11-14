@@ -2,8 +2,9 @@
 // Created by jens on 05-10-20.
 //
 
-#include "../sat_problem.h"
 #include "totaliser_encoder.h"
+#include "../sat_problem.h"
+#include <cassert>
 namespace simple_sat_solver::sat {
 TotaliserEncoder::TotaliserEncoder(SatProblem *sat, std::vector<Lit> variables,
                                    int min, int max)
@@ -11,7 +12,10 @@ TotaliserEncoder::TotaliserEncoder(SatProblem *sat, std::vector<Lit> variables,
       root_(nullptr){}
 void TotaliserEncoder::Encode(SatProblem &sat, std::vector<Lit> variables,
                               int min, int max) {
-  TotaliserEncoder encoder(&sat, variables, min, max);
+  if (variables.size() < 1) {
+    return;
+  }
+  TotaliserEncoder  encoder =  TotaliserEncoder(&sat, variables, min, max);
   encoder.root_ = encoder.CreateTree(variables);
   encoder.SetMin();
   encoder.SetMax();
@@ -41,51 +45,33 @@ TotaliserEncoder::Node *TotaliserEncoder::CreateTree(std::vector<Lit> variables)
         n->variables.size())
       throw "Tree not correct";
 
-    // count a = 0 (index -1)
-    for (int b = 0; b < n->right->counting_variables.size(); ++b) {
-      int d = b;
-      sat_->AddClause(
-          {~n->right->counting_variables[b], n->counting_variables[d]});
-      if (b < n->right->counting_variables.size() - 1)
-      sat_->AddClause({n->left->counting_variables[0],
-                       n->right->counting_variables[b + 1],
-                       ~n->counting_variables[d + 1]});
-      else {
-        sat_->AddClause({n->left->counting_variables[0], ~n->counting_variables[d+1]});
-      }
-    }
+    for(int a = 0; a <= n->left->counting_variables.size(); ++a) {
+      for (int b = 0; b <= n->right->counting_variables.size(); ++b) {
+        int d = a + b;
 
-    // count b = 0 (index -1)
-    for (int a = 0; a < n->left->counting_variables.size(); ++a) {
-      int d = a;
-      sat_->AddClause(
-          {~n->left->counting_variables[a], n->counting_variables[d]});
-      if (a < n->left->counting_variables.size() - 1)
-      sat_->AddClause({n->left->counting_variables[a],
-                       n->right->counting_variables[0],
-                       ~n->counting_variables[d + 1]});
-      else
-      sat_->AddClause({n->right->counting_variables[0], ~n->counting_variables[d+1]});
-    }
+        int index_a = a - 1;
+        int index_b = b - 1;
+        int index_d = d - 1;
 
-    for (int a = 0; a < n->left->counting_variables.size(); ++a) {
-      for (int b = 0; b < n->right->counting_variables.size(); ++b) {
-        int d = (a + 1) + (b + 1) - 1;
-        sat_->AddClause({~n->left->counting_variables[a],
-                         ~n->right->counting_variables[b],
-                         n->counting_variables[d]});
-        bool max_a = a == n->left->counting_variables.size() - 1;
-        bool max_b = b == n->right->counting_variables.size() - 1;
-        if (!(max_a || max_b))
-          sat_->AddClause({n->left->counting_variables[a + 1],
-                           n->right->counting_variables[b + 1],
-                           ~n->counting_variables[d + 1]});
-        else if (!max_b)
-          sat_->AddClause({n->right->counting_variables[b + 1],
-                           ~n->counting_variables[d + 1]});
-        else if (!max_a)
-          sat_->AddClause({n->left->counting_variables[a + 1],
-                           ~n->counting_variables[d + 1]});
+        std::vector<Lit> c1;
+        if (index_a >= 0)
+          c1.push_back(~n->left->counting_variables[index_a]);
+        if (index_b >= 0)
+          c1.push_back(~n->right->counting_variables[index_b]);
+        if (index_d >= 0) {
+          c1.push_back(n->counting_variables[index_d]);
+          sat_->AddClause(c1);
+        }
+
+        std::vector<Lit> c2;
+        if (index_a + 1 < n->left->counting_variables.size())
+          c2.push_back(n->left->counting_variables[index_a + 1]);
+        if (index_b + 1 < n->right->counting_variables.size())
+          c2.push_back(n->right->counting_variables[index_b + 1]);
+        if (index_d + 1 < n->counting_variables.size()) {
+          c2.push_back(~n->counting_variables[index_d + 1]);
+          sat_->AddClause(c2);
+        }
       }
     }
   }
@@ -119,6 +105,7 @@ void TotaliserEncoder::SetMax() {
   }
 
 }
+
 TotaliserEncoder::Node::~Node() {
   if (left!= nullptr)
   delete left;

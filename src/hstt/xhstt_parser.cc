@@ -31,6 +31,7 @@ Hstt XhsttParser::ParseNextInstance() {
   ParseResources(res);
   ParseEventGroups(res);
   ParseEvents(res);
+  ParseConstraints(res);
 
   return res;
 }
@@ -181,5 +182,12 @@ void XhsttParser::ParseEvents(Hstt &hstt) {
     }
     hstt.events_.push_back(event);
   }
+}
+void XhsttParser::ParseConstraints(Hstt &hstt) {
+  auto constraints = next_problem->FirstChildElement(kConstraints);
+  for (auto constraint = constraints->FirstChildElement(); constraint; constraint = constraint->NextSiblingElement()) {
+
+  }
+
 }
 } // namespace simple_sat_solver::hstt

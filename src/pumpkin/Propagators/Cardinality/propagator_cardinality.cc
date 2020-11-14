@@ -318,6 +318,8 @@ bool PropagatorCardinality::ClausualPropagateLiteral(
         watches[end_position] = watches[current_index]; // keep the watch
         end_position++;
       }
+      if (decision_level < decision_level_true)
+        queue.push(PropagtionElement(watched_clause->literals_[0], decision_level, &state.propagator_clausal_, reinterpret_cast<uint64_t>(watched_clause)));
       continue;
     }
 
@@ -680,6 +682,8 @@ void PropagatorCardinality::UpdatePropagation(
                         std::greater<PropagtionElement>>
         propagation_queue,
     int min_var_index) {
+//  state.FullReset(); //Sometimes faster (especially for incremental TODO configure and test)
+//  return;
 
 
   int decision_level = state.GetCurrentDecisionLevel();
@@ -691,6 +695,7 @@ void PropagatorCardinality::UpdatePropagation(
   // and do the backtrack in the method
   backtrack_level = std::min(state.GetCurrentDecisionLevel(),
                              backtrack_level); // TODO find bug
+//  backtrack_level = 0;
    if (backtrack_level <= 0)
     state.FullReset();
   else {
@@ -711,6 +716,7 @@ void PropagatorCardinality::UpdatePropagation(
 
   }
   RepairTrailPositions(state);
+
 
 }
 void PropagatorCardinality::RepairTrailPositions(SolverState &state) {

@@ -7,9 +7,10 @@
 
 #include <cassert>
 #include <vector>
+
+#include "../../../Basic Data Structures/boolean_literal.h"
 namespace Pumpkin {
 class SolverState;
-class BooleanLiteral;
 class WatchedCardinalityConstraint;
 class CardinalityConstraint;
 class IEncoder {

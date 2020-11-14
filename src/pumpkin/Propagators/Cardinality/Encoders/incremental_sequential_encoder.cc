@@ -73,7 +73,7 @@ bool IncrementalSequentialEncoder::AddLiteral(
                                previous_added_lits_[i + 1],
                                ~added_lits_.back()});
     }
-    added_clauses.push_back({~added_lits_.back(), ~current_added_lits[max_-1]}); //TODO wrong is s before or after l?
+    added_clauses.push_back({~added_lits_.back(), ~current_added_lits[max_-1]});
   }
 
   previous_added_lits_ = current_added_lits;
@@ -95,6 +95,9 @@ IncrementalSequentialEncoder::Propagate(
   std::vector<std::vector<BooleanLiteral>> added_clauses;
   for (BooleanLiteral l : propagated_values) {
     assert(!state.assignments_.IsAssigned(l));
+    auto test = state.assignments_.info_[added_lits_.back().VariableIndex()];
+    auto test1 = state.assignments_.IsAssigned(added_lits_.back().Variable());
+    auto test2 = state.assignments_.IsAssignedTrue(added_lits_.back().Variable());
     assert(!IsAdded(l));
     std::vector<BooleanLiteral> learned_clause = paritial_propagate_clause_;
     learned_clause.push_back(~l);
