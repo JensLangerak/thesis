@@ -41,15 +41,7 @@ bool Pumpkin::Solve(const sat::SatProblem &p2) {
               << solver.state_.propagator_cardinality_.trigger_count_
               << std::endl;
 //    solver.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_[0]->encoder_->PrintInfo();
-  if (solver.state_.propagator_cardinality2_.trigger_count_ != 0) {
-    int max_trigger = 0;
-    for (auto c : solver.state_.propagator_cardinality2_.cardinality_database_
-                      .permanent_constraints_)
-      max_trigger = std::max(max_trigger, c->trigger_count_);
-    std::cout << "count2: "
-              << solver.state_.propagator_cardinality2_.trigger_count_
-              << "  -  " << max_trigger << std::endl;
-  }
+
   return solved_;
 }
 std::vector<bool> Pumpkin::GetSolution() const { return solution_; }
@@ -79,18 +71,7 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
               << solver.constrained_satisfaction_solver_.state_
                      .propagator_cardinality_.trigger_count_
               << std::endl;
-  if (solver.constrained_satisfaction_solver_.state_.propagator_cardinality2_
-          .trigger_count_ != 0) {
-    int max_trigger = 0;
-    for (auto c :
-         solver.constrained_satisfaction_solver_.state_.propagator_cardinality2_
-             .cardinality_database_.permanent_constraints_)
-      max_trigger = std::max(max_trigger, c->trigger_count_);
-    std::cout << "count2: "
-              << solver.constrained_satisfaction_solver_.state_
-                     .propagator_cardinality2_.trigger_count_
-              << "  -  " << max_trigger << std::endl;
-  }
+
   return solved_;
 }
 ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {

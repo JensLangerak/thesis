@@ -10,7 +10,6 @@
 #include "../Basic Data Structures/solver_parameters.h"
 #include "../Basic Data Structures/trail_list.h"
 #include "../Propagators/Cardinality/propagator_cardinality.h"
-#include "../Propagators/Cardinality/propagator_cardinality2.h"
 #include "../Propagators/Clausal/propagator_clausal.h"
 #include "../Propagators/Pseudo-Boolean/propagator_pseudo_boolean_constraints.h"
 #include "value_selector.h"
@@ -137,14 +136,12 @@ public:
 	PropagatorClausal propagator_clausal_;
 	PropagatorPseudoBooleanConstraints propagator_pseudo_boolean_;
   PropagatorCardinality propagator_cardinality_;
-  PropagatorCardinality2 propagator_cardinality2_;
 
   //data structures that control restarts
 	SimpleMovingAverage simple_moving_average_block, simple_moving_average_lbd;
 	CumulativeMovingAverage cumulative_moving_average_lbd;
 
   void AddCardinality(Pumpkin::CardinalityConstraint &constraint);
-  void AddCardinality2(Pumpkin::CardinalityConstraint &constraint);
 
   TrailList<BooleanLiteral>::Iterator GetTrailEnd();
 
