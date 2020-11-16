@@ -37,7 +37,7 @@ namespace simple_sat_solver::cardinality_benchmark {
     std::cout<<"Dynamic - Sequential" <<std::endl;
     encoder_factory = new Pumpkin::SequentialEncoder::Factory();
     encoder_factory->add_dynamic_ = true;
-    TestCardinalityOption(path, max, encoder_factory);
+//    TestCardinalityOption(path, max, encoder_factory);
     std::cout<<"Incremental - Sequential" <<std::endl;
     encoder_factory = new Pumpkin::IncrementalSequentialEncoder::Factory();
     encoder_factory->add_dynamic_ = true;
@@ -53,9 +53,9 @@ namespace simple_sat_solver::cardinality_benchmark {
 int main() {
   std::string x = std::to_string(1);
   std::string y = "t";
-  for (int i = 7; i <= 20; i++) {
+  for (int i = 3; i <= 20; i++) {
     simple_sat_solver::cardinality_benchmark::TestFile(
-        "/home/jens/Downloads/cc." + x +"/cnf." + std::to_string(i) + "." +y +"." + x, i);
+        "/home/jens/Downloads/cc." + x +"/cnf." + std::to_string(i) + "." +y +"." + x, i-1);
   }
 //  for (int i = 3; i <= 20; i++) {
 //    simple_sat_solver::cardinality_benchmark::TestFile(

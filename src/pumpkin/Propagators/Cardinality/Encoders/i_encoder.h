@@ -25,7 +25,6 @@ public:
   virtual ~IEncoder();
   virtual bool SupportsIncremental() { return false; };
   bool AddEncodingDynamic() { return add_dynamic_; };
-  virtual std::vector<BooleanLiteral> PropagatePartialClause() { assert(false); }
   virtual bool EncodingAdded() { return encoding_added_;};
   virtual bool IsAdded(BooleanLiteral l);
   class IFactory {

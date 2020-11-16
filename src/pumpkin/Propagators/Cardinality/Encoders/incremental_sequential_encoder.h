@@ -22,7 +22,6 @@ public:
   std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propagated_values) override;
   bool IsAdded(BooleanLiteral lit) override;
   bool EncodingAdded() override { return false;};
-  std::vector<BooleanLiteral> PropagatePartialClause() override { return paritial_propagate_clause_; }
 
 
 
@@ -43,7 +42,8 @@ public:
   std::vector<BooleanLiteral> previous_added_lits_;
 //  std::vector<std::vector<BooleanLiteral>> added_clauses_;
   int max_;
-  std::vector<BooleanLiteral> paritial_propagate_clause_;
+
+  void PrintState(SolverState &state);
 };
 }
 

@@ -59,6 +59,7 @@ ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
         state.assignments_.GetAssignment(l) == cause_value)
       lits_.push_back(l);
   }
+  // TODO trim lits if to many
 }
 size_t ExplanationCardinalityConstraint::Size() const { return lits_.size(); }
 } // namespace Pumpkin

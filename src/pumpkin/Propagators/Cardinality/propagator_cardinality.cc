@@ -129,6 +129,7 @@ ReasonGeneric *PropagatorCardinality::ReasonLiteralPropagation(
       state.assignments_.GetAssignmentCode(propagated_literal.Variable());
   WatchedCardinalityConstraint *propagating_constraint =
       reinterpret_cast<WatchedCardinalityConstraint *>(code);
+  // TODO check if encoding should be added (if called it is not yet added)
   return new ReasonCardinalityConstraint(propagating_constraint,
                                          propagated_literal, state);
 }
@@ -143,6 +144,7 @@ ExplanationGeneric *PropagatorCardinality::ExplainLiteralPropagation(
       state.assignments_.GetAssignmentCode(propagated_literal.Variable());
   WatchedCardinalityConstraint *propagating_constraint =
       reinterpret_cast<WatchedCardinalityConstraint *>(code);
+  // TODO check if encoding should be added (if called it is not yet added)
   return propagating_constraint->ExplainLiteralPropagation(propagated_literal,
                                                            state);
 }
@@ -592,9 +594,14 @@ bool PropagatorCardinality::PropagateIncremental(
         constraint->encoder_->Propagate(state, reason, propagate);
     for (auto c : propagate_clauses)
       clauses.push_back(c);
+  } else {
+//    state.FullReset();
+//    return true;
   }
 
 
+//  std::cout << "--------------  " << constraint->true_count_<< std::endl;
+  ((IncrementalSequentialEncoder *)constraint->encoder_)->PrintState(state);
 
   std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                       std::greater<PropagtionElement>>
@@ -602,6 +609,7 @@ bool PropagatorCardinality::PropagateIncremental(
           InitPropagationQueue(state, clauses, unit_index, clause_index);
   UpdatePropagation(state, propagation_queue, var_index);
 
+  ((IncrementalSequentialEncoder *)constraint->encoder_)->PrintState(state);
     return true;
 }
 
@@ -664,9 +672,26 @@ PropagatorCardinality::InitPropagationQueue(
     assert((!state.assignments_.IsAssigned(l1)) ||
            (state.assignments_.IsAssignedTrue(l1)) ||
            (state.assignments_.IsAssignedFalse(l2)));
+    auto test1 = state.assignments_.IsAssignedTrue(l1.Variable());
+    auto test2 = state.assignments_.IsAssigned(l1.Variable());
+    auto test3 = state.assignments_.IsAssignedTrue(l2.Variable());
+    auto test4 = state.assignments_.IsAssigned(l2.Variable());
     if ((!state.assignments_.IsAssignedTrue(l1)) &&
         state.assignments_.IsAssignedFalse(l2)) {
 
+      int max_level = state.assignments_.GetAssignmentLevel(l2.Variable());
+      propagation_queue.push(PropagtionElement(l1, max_level,
+                                               &state.propagator_clausal_,
+                                               reinterpret_cast<uint64_t>(c)));
+    } else if (state.assignments_.IsAssignedFalse(l2) && state.assignments_.GetAssignmentLevel(l2.Variable()) < state.assignments_.GetAssignmentLevel(l1.Variable())) {
+      int index = l2 == c->literals_[0] ? 0 : 1;
+      for (int i = 2; i < c->literals_.size_; ++i) {
+        if (state.assignments_.GetAssignmentLevel(c->literals_[index].Variable()) < state.assignments_.GetAssignmentLevel(c->literals_[i].Variable())) {
+          index = i;
+        }
+      }
+
+      assert (index <= 1);
       int max_level = state.assignments_.GetAssignmentLevel(l2.Variable());
       propagation_queue.push(PropagtionElement(l1, max_level,
                                                &state.propagator_clausal_,
@@ -695,6 +720,7 @@ void PropagatorCardinality::UpdatePropagation(
   // and do the backtrack in the method
   backtrack_level = std::min(state.GetCurrentDecisionLevel(),
                              backtrack_level); // TODO find bug
+//  std::cout << "b: "<< backtrack_level << std::endl;
 //  backtrack_level = 0;
    if (backtrack_level <= 0)
     state.FullReset();
