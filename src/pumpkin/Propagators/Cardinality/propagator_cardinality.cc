@@ -48,14 +48,14 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
     last_index_ = current_index;
     int true_count = 0;
     int false_count = 0;
-//    for (BooleanLiteral l : constraint->literals_) {
-//      if (state.assignments_.IsAssignedTrue(l) &&
-//          state.assignments_.GetTrailPosition(l.Variable()) <=
-//              state.assignments_.GetTrailPosition(true_literal.Variable()))
-//        true_count++;
-//    }
-//        assert(true_count == constraint->true_count_);
-//    constraint->true_count_ = true_count;
+    //    for (BooleanLiteral l : constraint->literals_) {
+    //      if (state.assignments_.IsAssignedTrue(l) &&
+    //          state.assignments_.GetTrailPosition(l.Variable()) <=
+    //              state.assignments_.GetTrailPosition(true_literal.Variable()))
+    //        true_count++;
+    //    }
+    //        assert(true_count == constraint->true_count_);
+    //    constraint->true_count_ = true_count;
     true_count = constraint->true_count_;
 
     watchers_true[end_position] = watchers_true[current_index];
@@ -91,13 +91,14 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
           constraint->encoder_->SupportsIncremental()) {
         bool res = PropagateIncremental(state, constraint);
         if (res)
-        return true;
+          return true;
       } else {
         for (BooleanLiteral l : constraint->literals_) {
           if (!state.assignments_.IsAssigned(l)) {
             if (constraint->encoder_->AddEncodingDynamic()) {
               assert(!constraint->encoder_->SupportsIncremental());
               bool res = AddEncoding(state, constraint);
+
               assert(res);
               return true;
             } else {
@@ -200,13 +201,38 @@ bool PropagatorCardinality::AddEncoding(
   int unit_index =
       state.propagator_clausal_.clause_database_.unit_clauses_.size();
   int var_index = state.assignments_.GetNumberOfVariables() + 1;
+
+  int special_min = ((IncrementalSequentialEncoder *)constraint->encoder_)
+                        ->hist.back()[0]
+                        .VariableIndex();
+  int special_max = ((IncrementalSequentialEncoder *)constraint->encoder_)
+                        ->hist.back()
+                        .back()
+                        .VariableIndex();
+  std::queue<PropagatorCardinality::SpecialTrailPosition> special_position;
+  auto lits = ((IncrementalSequentialEncoder *) constraint->encoder_)->previous_added_lits_;
+  for (BooleanLiteral l : lits) {
+    if (state.assignments_.IsAssignedTrue(l)) {
+      int level = state.assignments_.GetAssignmentLevel(l.Variable());
+      auto it = state.trail_.begin();
+      if (level > 0)
+        it = state.trail_delimiter_[level - 1];
+      while (it.GetData() != l)
+        it.Next();
+      special_position.push(PropagatorCardinality::SpecialTrailPosition(
+          l, it,level));
+    }
+  }
+
   std::vector<std::vector<BooleanLiteral>> clauses =
       AddEncodingClauses(state, constraint);
   std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                       std::greater<PropagtionElement>>
       propagation_queue =
           InitPropagationQueue(state, clauses, unit_index, clause_index);
-  UpdatePropagation(state, propagation_queue, var_index);
+  UpdatePropagation(state, propagation_queue, var_index, special_min,
+                    special_max, special_position);
+  constraint->encoder_->RepairReasons(state);
   //  state.FullReset();
   return true;
 }
@@ -251,7 +277,7 @@ bool PropagatorCardinality::ClausualPropagateLiteral(
       std::swap(watched_clause->literals_[0], watched_clause->literals_[1]);
     }
 
-    auto test =watched_clause->literals_[0];
+    auto test = watched_clause->literals_[0];
     // check the other watched literal to see if the clause is already satisfied
     if (state.assignments_.IsAssignedTrue(watched_clause->literals_[0]) ==
         true) {
@@ -320,8 +346,11 @@ bool PropagatorCardinality::ClausualPropagateLiteral(
         watches[end_position] = watches[current_index]; // keep the watch
         end_position++;
       }
-      if (decision_level < decision_level_true)
-        queue.push(PropagtionElement(watched_clause->literals_[0], decision_level, &state.propagator_clausal_, reinterpret_cast<uint64_t>(watched_clause)));
+      if (decision_level < decision_level_true && decision_level >= 0)
+        queue.push(
+            PropagtionElement(watched_clause->literals_[0], decision_level,
+                              &state.propagator_clausal_,
+                              reinterpret_cast<uint64_t>(watched_clause), state.trail_.size()));
       continue;
     }
 
@@ -418,8 +447,7 @@ bool PropagatorCardinality::ClausualPropagateLiteral(
         watched_clause); // the code will simply be a pointer to the propagating
                          // clause
     int level = state.assignments_.GetAssignmentLevel(l1.Variable());
-    queue.push(PropagtionElement(l0, level, &state.propagator_clausal_, code));
-
+    queue.push(PropagtionElement(l0, level, &state.propagator_clausal_, code, state.trail_.size()));
   }
   watches.resize(end_position);
   return true_literal.VariableIndex() >= min_var;
@@ -429,15 +457,19 @@ int PropagatorCardinality::PropagateLiterals(
     std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                         std::greater<PropagtionElement>>
         queue,
-    SolverState &state, int min_var_index) {
+    SolverState &state, int min_var_index, int special_min, int special_max, std::queue<SpecialTrailPosition> special_queue) {
   int reset_level = state.GetCurrentDecisionLevel();
   while (!queue.empty()) {
     PropagtionElement p = queue.top();
-    if (p.lit.VariableIndex() < min_var_index)
+    if (p.lit.VariableIndex() < min_var_index &&
+        !(p.lit.VariableIndex() >= special_min ||
+          p.lit.VariableIndex() <= special_max))
       return std::min(reset_level, p.level);
     if (reset_level <= p.level)
       return reset_level;
     queue.pop();
+
+    // TODO is debug code?
     if (p.propagator != NULL) {
       TwoWatchedClause *c = reinterpret_cast<TwoWatchedClause *>(p.code);
       int max_level = 0;
@@ -473,7 +505,12 @@ int PropagatorCardinality::PropagateLiterals(
       } else {
         reset_level = std::min(reset_level,
                                p.level); // TODO figure out why this is needed
-        state.EnqueuePropagatedLiteral(p.lit, p.propagator, p.code);
+        if ((!special_queue.empty()) && special_queue.front().decision_level == p.level) {
+          state.InsertPropagatedLiteral(p.lit, p.propagator, p.code, special_queue.front().location);
+          special_queue.pop();
+        } else{
+          state.EnqueuePropagatedLiteral(p.lit, p.propagator, p.code);
+        }
       }
       continue;
     }
@@ -488,8 +525,13 @@ int PropagatorCardinality::PropagateLiterals(
         reset_level = std::min(reset_level, p.level);
       }
     } else {
+      if ((!special_queue.empty()) && special_queue.front().decision_level == p.level) {
+        state.InsertPropagatedLiteral(p.lit, p.propagator, p.code, special_queue.front().location);
+        special_queue.pop();
+      } else{
+        state.InsertPropagatedLiteral(p.lit, p.propagator, p.code, p.level);
+      }
       //      if (p.lit.Variable().index_ >= min_var_index) {
-      state.InsertPropagatedLiteral(p.lit, p.propagator, p.code, p.level);
       bool res = ClausualPropagateLiteral(p.lit, state, queue, min_var_index);
       if (!cardinality_database_.watch_list_true[p.lit].empty()) {
         reset_level = std::min(reset_level, p.level);
@@ -498,6 +540,7 @@ int PropagatorCardinality::PropagateLiterals(
       assert(queue.top().level >= p.level);
     }
   }
+  assert(special_queue.empty() || special_queue.front().decision_level >= reset_level);
   // TODO update trail positions
   return reset_level;
 }
@@ -584,6 +627,33 @@ bool PropagatorCardinality::PropagateIncremental(
     //    state.FullReset();
     return false;
   }
+  int special_min = -1;
+  int special_max = -1;
+  if (((IncrementalSequentialEncoder *)constraint->encoder_)->hist.size() > 0) {
+     special_min = ((IncrementalSequentialEncoder *)constraint->encoder_)
+                          ->hist.back()[0]
+                          .VariableIndex();
+    special_max = ((IncrementalSequentialEncoder *)constraint->encoder_)
+                          ->hist.back()
+                          .back()
+                          .VariableIndex();
+  }
+
+  std::queue<PropagatorCardinality::SpecialTrailPosition> special_position;
+  auto lits = ((IncrementalSequentialEncoder *) constraint->encoder_)->previous_added_lits_;
+  for (BooleanLiteral l : lits) {
+    if (state.assignments_.IsAssignedTrue(l)) {
+      int level = state.assignments_.GetAssignmentLevel(l.Variable());
+      auto it = state.trail_.begin();
+      if (level > -1)
+        it = state.trail_delimiter_[level - 1];
+      while (it.GetData() != l)
+        it.Next();
+      special_position.push(PropagatorCardinality::SpecialTrailPosition(
+          l, it,level));
+    }
+  }
+
   std::vector<std::vector<BooleanLiteral>> clauses =
       AddEncodingClauses(state, constraint);
   bool clause_empty = clauses.empty();
@@ -595,22 +665,24 @@ bool PropagatorCardinality::PropagateIncremental(
     for (auto c : propagate_clauses)
       clauses.push_back(c);
   } else {
-//    state.FullReset();
-//    return true;
+    //    state.FullReset();
+    //    return true;
   }
 
-
-//  std::cout << "--------------  " << constraint->true_count_<< std::endl;
+  //  std::cout << "--------------  " << constraint->true_count_<< std::endl;
   ((IncrementalSequentialEncoder *)constraint->encoder_)->PrintState(state);
+
+
 
   std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                       std::greater<PropagtionElement>>
       propagation_queue =
           InitPropagationQueue(state, clauses, unit_index, clause_index);
-  UpdatePropagation(state, propagation_queue, var_index);
-
+  UpdatePropagation(state, propagation_queue, var_index, special_min,
+                    special_max, special_position);
+  constraint->encoder_->RepairReasons(state);
   ((IncrementalSequentialEncoder *)constraint->encoder_)->PrintState(state);
-    return true;
+  return true;
 }
 
 std::vector<std::vector<BooleanLiteral>>
@@ -655,7 +727,7 @@ PropagatorCardinality::InitPropagationQueue(
     // add unit classes to the queue.
     BooleanLiteral l =
         state.propagator_clausal_.clause_database_.unit_clauses_[i];
-      propagation_queue.push(PropagtionElement(l, 0, NULL, NULL));
+    propagation_queue.push(PropagtionElement(l, 0, NULL, NULL,state.trail_.size()));
   }
   for (int i = clause_start_index;
        i < state.propagator_clausal_.clause_database_.permanent_clauses_.size();
@@ -682,20 +754,24 @@ PropagatorCardinality::InitPropagationQueue(
       int max_level = state.assignments_.GetAssignmentLevel(l2.Variable());
       propagation_queue.push(PropagtionElement(l1, max_level,
                                                &state.propagator_clausal_,
-                                               reinterpret_cast<uint64_t>(c)));
-    } else if (state.assignments_.IsAssignedFalse(l2) && state.assignments_.GetAssignmentLevel(l2.Variable()) < state.assignments_.GetAssignmentLevel(l1.Variable())) {
+                                               reinterpret_cast<uint64_t>(c), state.assignments_.GetTrailPosition(l2.Variable())));
+    } else if (state.assignments_.IsAssignedFalse(l2) &&
+               state.assignments_.GetAssignmentLevel(l2.Variable()) <
+                   state.assignments_.GetAssignmentLevel(l1.Variable())) {
       int index = l2 == c->literals_[0] ? 0 : 1;
       for (int i = 2; i < c->literals_.size_; ++i) {
-        if (state.assignments_.GetAssignmentLevel(c->literals_[index].Variable()) < state.assignments_.GetAssignmentLevel(c->literals_[i].Variable())) {
+        if (state.assignments_.GetAssignmentLevel(
+                c->literals_[index].Variable()) <
+            state.assignments_.GetAssignmentLevel(c->literals_[i].Variable())) {
           index = i;
         }
       }
 
-      assert (index <= 1);
+      assert(index <= 1);
       int max_level = state.assignments_.GetAssignmentLevel(l2.Variable());
       propagation_queue.push(PropagtionElement(l1, max_level,
                                                &state.propagator_clausal_,
-                                               reinterpret_cast<uint64_t>(c)));
+                                               reinterpret_cast<uint64_t>(c), state.assignments_.GetTrailPosition(l2.Variable())));
     }
   }
 
@@ -706,23 +782,22 @@ void PropagatorCardinality::UpdatePropagation(
     std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                         std::greater<PropagtionElement>>
         propagation_queue,
-    int min_var_index) {
-//  state.FullReset(); //Sometimes faster (especially for incremental TODO configure and test)
-//  return;
-
+    int min_var_index, int special_min, int special_max, std::queue<SpecialTrailPosition> special_queue) {
+  //  state.FullReset(); //Sometimes faster (especially for incremental TODO
+  //  configure and test) return;
 
   int decision_level = state.GetCurrentDecisionLevel();
   // propagate the newly added clauses and vars
-  int backtrack_level =
-      PropagateLiterals(propagation_queue, state, min_var_index);
+  int backtrack_level = PropagateLiterals(
+      propagation_queue, state, min_var_index, special_min, special_max, special_queue);
   RepairTrailPositions(state);
   // TODO handle backtrack more uniform (either return the level or return void
   // and do the backtrack in the method
   backtrack_level = std::min(state.GetCurrentDecisionLevel(),
                              backtrack_level); // TODO find bug
-//  std::cout << "b: "<< backtrack_level << std::endl;
-//  backtrack_level = 0;
-   if (backtrack_level <= 0)
+  //  std::cout << "b: "<< backtrack_level << std::endl;
+  //  backtrack_level = 0;
+  if (backtrack_level <= 0)
     state.FullReset();
   else {
     if (backtrack_level < state.GetCurrentDecisionLevel())
@@ -730,20 +805,15 @@ void PropagatorCardinality::UpdatePropagation(
     else if (decision_level != backtrack_level)
       Synchronise(state); // TODO move to reset propagators
 
-
     // backtrack backtracks to the end of the decision level.
     // However the propagation might have inserted propagation values to that
     // level that should be considered. Currently we do not know which values
     // were inserted, thus reset to the beginning of the level. If there was no
     // backtrack than the newly added propagation values are added to the end,
     // thus no reset needed.
-      state.ResetPropagatorsToLevel();
-
-
+    state.ResetPropagatorsToLevel();
   }
   RepairTrailPositions(state);
-
-
 }
 void PropagatorCardinality::RepairTrailPositions(SolverState &state) {
   auto it = state.GetTrailBegin();

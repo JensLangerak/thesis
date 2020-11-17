@@ -27,6 +27,7 @@ public:
   bool AddEncodingDynamic() { return add_dynamic_; };
   virtual bool EncodingAdded() { return encoding_added_;};
   virtual bool IsAdded(BooleanLiteral l);
+  WatchedCardinalityConstraint * cardinality_constraint_;
   class IFactory {
   public:
     IEncoder *Create(std::vector<BooleanLiteral> variables, int min, int max);
@@ -40,6 +41,8 @@ public:
     virtual IEncoder *CallConstructor(std::vector<BooleanLiteral> variables,
                                       int min, int max) = 0;
   };
+
+  virtual void RepairReasons(SolverState &state);
 
 protected:
   IEncoder(){};

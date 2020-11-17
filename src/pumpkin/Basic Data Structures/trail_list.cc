@@ -65,6 +65,23 @@ template <typename T> TrailList<T>::~TrailList() {
     delete current;
   }
 }
+template <typename T> bool TrailList<T>::remove(T data) {
+  Iterator it = begin();
+  while (!it.IsLast()) {
+    if (it.GetData() == data) {
+      if (it == begin()) {
+        begin_ = it.node->next;
+        begin_->previous= nullptr;
+      } else {
+        it.node->previous->next = it.node->next;
+        it.node->next->previous = it.node->previous;
+      }
+      return true;
+    }
+    it.Next();
+  }
+
+  return false; }
 //template <typename T> class TrailList<T>::Iterator TrailList<T>::last() const {
 //  return end().Previous();
 //}

@@ -83,6 +83,7 @@ public:
   void push_back(T data);
   void pop_back();
   void insert(Iterator place, T data);
+  bool remove(T data);
 
   size_t size() const { return size_;};
 

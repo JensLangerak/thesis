@@ -240,6 +240,9 @@ void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysi
 
 BooleanLiteral ConstraintSatisfactionSolver::FindNextReasonLiteralOnTheTrail()
 {
+  //TODO move
+  if (seen_.size() < state_.GetNumberOfVariables() +1)
+    seen_.resize(state_.GetNumberOfVariables() + 1);
   assert(seen_.size() == state_.GetNumberOfVariables() + 1);
   runtime_assert(num_current_decision_level_literals_ > 0);
 	//expand a node of the current decision level

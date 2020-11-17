@@ -18,12 +18,14 @@ SolverState::SolverState(int64_t num_Boolean_variables,
                           params.learned_clause_decay_factor),
       propagator_pseudo_boolean_(num_Boolean_variables),
       propagator_cardinality_(num_Boolean_variables),
+      propagator_sum_(num_Boolean_variables),
       decision_level_(0),
       simple_moving_average_lbd(params.glucose_queue_lbd_limit),
       simple_moving_average_block(params.glucose_queue_reset_limit) {
   propagator_clausal_.SetTrailIterator(trail_.begin());
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.SetTrailIterator(trail_.begin());
+  propagator_sum_.SetTrailIterator(trail_.begin());
 
 }
 
@@ -31,6 +33,18 @@ void SolverState::EnqueueDecisionLiteral(BooleanLiteral decision_literal) {
   MakeAssignment(decision_literal, NULL, NULL);
 }
 
+
+bool SolverState::InsertPropagatedLiteral(BooleanLiteral propagated_literal, PropagatorGeneric *responsible_propagator, uint64_t code, TrailList<BooleanLiteral>::Iterator location) {
+  if (assignments_.IsAssigned(propagated_literal)) {
+    assert(assignments_.GetAssignment(propagated_literal) == true);
+
+  } else {
+    MakeAssignment(propagated_literal, responsible_propagator, code, location);
+    assert(propagator_cardinality_.cardinality_database_.watch_list_true[propagated_literal].empty());
+  }
+  return true;
+
+}
 bool SolverState::InsertPropagatedLiteral(BooleanLiteral propagated_literal, PropagatorGeneric *responsible_propagator, uint64_t code, int decision_level) {
   if (assignments_.IsAssigned(propagated_literal)) {
     assert(assignments_.GetAssignment(propagated_literal) == true);
@@ -65,7 +79,8 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
 
   while (propagator_clausal_.IsPropagationComplete(*this) == false ||
          propagator_pseudo_boolean_.IsPropagationComplete(*this) == false ||
-         propagator_cardinality_.IsPropagationComplete(*this) == false) {
+         propagator_cardinality_.IsPropagationComplete(*this) == false ||
+         propagator_sum_.IsPropagationComplete(*this) == false) {
     if (!propagator_clausal_.Propagate(*this)) {
       return &propagator_clausal_;
     }
@@ -79,6 +94,9 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
     }
     assert(propagator_cardinality_.CheckCounts(*this));
 
+    if (!propagator_sum_.PropagateOneLiteral(*this)) {
+      return &propagator_sum_;
+    }
   }
   return NULL;
 }
@@ -100,6 +118,7 @@ void SolverState::Backtrack(int backtrack_level) {
   propagator_clausal_.Synchronise(*this);
   propagator_pseudo_boolean_.Synchronise(*this);
   propagator_cardinality_.Synchronise(*this);
+  propagator_sum_.Synchronise(*this);
 }
 
 void SolverState::Reset() {
@@ -136,6 +155,23 @@ void SolverState::UndoLastAssignment() {
 //  if (*trail_delimiter_.back() == trail_.back())
 //    trail_delimiter_.pop_back();
   trail_.pop_back();
+}
+
+void SolverState::UndoAssignment(BooleanLiteral l) {
+  assert(assignments_.IsAssignedTrue(l));
+  if (trail_.back().Variable() == l.Variable())
+    UndoLastAssignment();
+  BooleanVariable last_assigned_variable = l.Variable();
+  variable_selector_.Readd(last_assigned_variable);
+  value_selector_.UpdatePolarity(
+      last_assigned_variable,
+      assignments_.IsAssignedTrue(last_assigned_variable));
+  assignments_.UnassignVariable(last_assigned_variable);
+//  if (*trail_delimiter_.back() == trail_.back())
+//    trail_delimiter_.pop_back();
+  bool res = trail_.remove(l);
+  assert(res);
+
 }
 
 BooleanVariable SolverState::GetHighestActivityUnassignedVariable() {
@@ -250,6 +286,7 @@ BooleanVariable SolverState::CreateNewVariable() {
   propagator_pseudo_boolean_.constraint_database_.watch_list_.Grow();
 //  propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
   propagator_cardinality_.cardinality_database_.watch_list_true.Grow();
+  propagator_cardinality_.cardinality_database_.watch_list_sum_true.Grow();
 
   return new_variable;
 }
@@ -349,6 +386,19 @@ void SolverState::MakeAssignment(BooleanLiteral literal, PropagatorGeneric *resp
     trail_.insert(trail_delimiter_[decisionLevel], literal);
   }
 }
+
+void SolverState::MakeAssignment(BooleanLiteral literal,
+                                 PropagatorGeneric *responsible_propagator,
+                                 uint64_t code, TrailList<BooleanLiteral>::Iterator location) {
+  assert(literal.IsUndefined() == false);
+  assert(assignments_.IsAssigned(literal) == false);
+  int decisionLevel = assignments_.GetAssignmentLevel(location.GetData().Variable());
+  assignments_.MakeAssignment(literal.Variable(), literal.IsPositive(),
+                              decisionLevel, responsible_propagator,
+                              code, trail_.size());
+  trail_.insert(location, literal);
+
+}
 void SolverState::MakeAssignment(BooleanLiteral literal,
                                  PropagatorGeneric *responsible_propagator,
                                  uint64_t code) {
@@ -360,10 +410,8 @@ void SolverState::MakeAssignment(BooleanLiteral literal,
                               code, trail_.size());
 
   trail_.push_back(literal);
-
-
-
 }
+
 void SolverState::AddCardinality(CardinalityConstraint &constraint) {
   propagator_cardinality_.cardinality_database_.AddPermanentConstraint(constraint, *this);
 }
@@ -379,6 +427,7 @@ void SolverState::FullReset() {
   propagator_cardinality_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.ResetCounts();
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
+  propagator_sum_.SetTrailIterator(trail_.begin());
 }
 void SolverState::ResetPropagatorsToLevel() {
   TrailList<BooleanLiteral>::Iterator update = trail_.begin();
@@ -389,6 +438,7 @@ void SolverState::ResetPropagatorsToLevel() {
   propagator_clausal_.SetTrailIterator(update);
   propagator_pseudo_boolean_.SetTrailIterator(update);
   propagator_cardinality_.SetTrailIterator(update);
+  propagator_sum_.SetTrailIterator(update);
 }
 
 } // namespace Pumpkin

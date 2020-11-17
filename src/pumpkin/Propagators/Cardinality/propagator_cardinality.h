@@ -56,6 +56,12 @@ public:
   BooleanLiteral last_propagated_;
   size_t last_index_;
 
+  struct SpecialTrailPosition {
+    SpecialTrailPosition(BooleanLiteral l, TrailList<BooleanLiteral>::Iterator location, int decision_level) : l(l), location(location), decision_level(decision_level) {};
+    BooleanLiteral l;
+    TrailList<BooleanLiteral>::Iterator location;
+    int decision_level;
+  };
 
   /// Add the encoding to the clause database.
   /// \param state
@@ -64,15 +70,18 @@ public:
                    WatchedCardinalityConstraint *constraint);
   struct PropagtionElement {
     PropagtionElement(BooleanLiteral lit, int level,
-                      PropagatorGeneric *propagator, uint64_t code)
-        : lit(lit), level(level), propagator(propagator), code(code){};
+                      PropagatorGeneric *propagator, uint64_t code, int trail_position)
+        : lit(lit), level(level), propagator(propagator), code(code), trail_position(trail_position){};
 
     BooleanLiteral lit;
     int level;
     uint64_t code;
     PropagatorGeneric *propagator;
+    int trail_position;
 
     bool operator<(const PropagtionElement o) const {
+      if (this->level == o.level)
+        return this->trail_position < o.trail_position;
       return this->level < o.level;
     }
 
@@ -85,7 +94,7 @@ public:
       std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                           std::greater<PropagtionElement>>
           queue,
-      SolverState &state, int min_var_index);
+      SolverState &state, int min_var_index, int special_min, int special_max, std::queue<SpecialTrailPosition> special_queue);
   /// propagate the true_literal using the clause database, enques values that can be propagated to the queue. Thus they are not yet added to the state.
   bool ClausualPropagateLiteral(
       BooleanLiteral true_literal, SolverState &state,
@@ -103,7 +112,7 @@ public:
   void UpdatePropagation(SolverState &state,
       std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                           std::greater<PropagtionElement>>
-          queue, int min_var_index);
+          queue, int min_var_index, int special_min, int special_max, std::queue<SpecialTrailPosition> special_queue);
   void RepairTrailPositions(SolverState &state);
 };
 } // namespace Pumpkin

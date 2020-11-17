@@ -53,9 +53,10 @@ namespace simple_sat_solver::cardinality_benchmark {
 int main() {
   std::string x = std::to_string(1);
   std::string y = "t";
-  for (int i = 2; i <= 20; i++) {
+  for (int i = 3; i <= 20; i++) {
     simple_sat_solver::cardinality_benchmark::TestFile(
         "/home/jens/Downloads/cc." + x +"/cnf." + std::to_string(i) + "." +y +"." + x, i);
+    return 0;
   }
 //  for (int i = 3; i <= 20; i++) {
 //    simple_sat_solver::cardinality_benchmark::TestFile(

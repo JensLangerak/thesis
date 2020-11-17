@@ -11,6 +11,7 @@ IEncoder::Encode(SolverState &state, std::vector<BooleanLiteral> lits) {
     return Encode(state);
 }
 bool IEncoder::IsAdded(BooleanLiteral l) { return EncodingAdded();}
+void IEncoder::RepairReasons(SolverState &state) {}
 IEncoder *IEncoder::IFactory::Create(WatchedCardinalityConstraint &constraint) {
   return Create(constraint.literals_, constraint.min_, constraint.max_);
 }

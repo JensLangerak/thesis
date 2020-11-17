@@ -22,7 +22,7 @@ public:
   std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propagated_values) override;
   bool IsAdded(BooleanLiteral lit) override;
   bool EncodingAdded() override { return false;};
-
+  void RepairReasons(SolverState &state) override;
 
 
   IncrementalSequentialEncoder(std::vector<BooleanLiteral> variables, int min, int max);
@@ -42,6 +42,8 @@ public:
   std::vector<BooleanLiteral> previous_added_lits_;
 //  std::vector<std::vector<BooleanLiteral>> added_clauses_;
   int max_;
+  int last_hist_size = -1;
+  int last_add_clauses_index;
 
   void PrintState(SolverState &state);
 };

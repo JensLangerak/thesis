@@ -60,7 +60,18 @@ bool IncrementalSequentialEncoder::AddLiteral(
       previous_added_lits_.push_back(li);
     }
     hist.push_back(previous_added_lits_);
+    for (BooleanLiteral l : variables_) {
+      state.propagator_cardinality_.cardinality_database_.watch_list_sum_true.Add(l, cardinality_constraint_);
+    }
   }
+  if (last_hist_size == -1) {
+    last_hist_size = hist.size();
+    last_add_clauses_index = state.propagator_clausal_.clause_database_.permanent_clauses_.size();
+  }
+  state.propagator_cardinality_.cardinality_database_.watch_list_sum_true.Remove(l, cardinality_constraint_);
+
+
+  //TODO debug code; remove
   std::vector<std::vector<bool>> hist_assigned;
   std::vector<std::vector<bool>> hist_value;
   for (auto s : hist) {
@@ -88,9 +99,6 @@ bool IncrementalSequentialEncoder::AddLiteral(
     current_added_lits.push_back(li);
   }
 
-  if (hist.size() == 12)
-    PrintState(state);
-  added_clauses.push_back({previous_added_lits_[0], ~l});
 
   //  if (!added_lits_.empty()) {
   assert(previous_added_lits_.size() == current_added_lits.size());
@@ -99,6 +107,7 @@ bool IncrementalSequentialEncoder::AddLiteral(
     added_clauses.push_back({~current_added_lits[i], previous_added_lits_[i]});
   }
 
+  added_clauses.push_back({previous_added_lits_[0], ~l});
   for (int i = 0; i < max_ - 1; ++i) {
     added_clauses.push_back(
         {~current_added_lits[i], previous_added_lits_[i + 1], ~l});
@@ -162,7 +171,7 @@ void IncrementalSequentialEncoder::PrintInfo() {
             << this->variables_.size() << std::endl;
 }
 void IncrementalSequentialEncoder::PrintState(SolverState &state) {
-  return;
+//  return;
   std::cout << "max: " << max_ << std::endl;
   for (int i = 0; i < hist.size(); ++i) {
     std::cout << i << ": " ;
@@ -203,6 +212,83 @@ void IncrementalSequentialEncoder::PrintState(SolverState &state) {
       }
     }
   }
+}
+void IncrementalSequentialEncoder::RepairReasons(SolverState &state) {
+  if (last_hist_size == -1)
+    return;
+  int watched_index = last_hist_size - 1;
+  assert(hist.size() > last_hist_size);
+  std::vector<BooleanLiteral> &watched_lits = hist[watched_index];
+  std::vector<BooleanLiteral> &connected_lits = hist[last_hist_size];
+  BooleanLiteral input_literal = added_lits_[watched_index];
+  for (int i = 0; i < watched_lits.size(); ++i) {
+    BooleanLiteral l = watched_lits[i];
+    if (state.assignments_.IsAssigned(l.Variable()) &&
+        state.assignments_.GetAssignmentPropagator(l.Variable()) == &state.propagator_sum_) {
+      assert(state.assignments_.IsAssignedTrue(l.Variable()));
+      bool previous_i =
+          state.assignments_.IsAssignedTrue(connected_lits[i]);
+      TwoWatchedClause *c;
+      if (previous_i) {
+        c = state.propagator_clausal_.clause_database_.permanent_clauses_[last_add_clauses_index + i];
+        assert(c->literals_.size_ == 2);
+        assert(c->literals_[0] == l || c->literals_[1] == l);
+        assert(c->literals_[0] == ~connected_lits[i] ||
+            c->literals_[1] == ~connected_lits[i]);
+        assert(state.assignments_.GetTrailPosition(connected_lits[i].Variable()) < state.assignments_.GetTrailPosition(l.Variable()));
+      } else {
+
+        assert(state.assignments_.IsAssignedTrue(input_literal));
+
+        c = state.propagator_clausal_.clause_database_
+            .permanent_clauses_[max_ + i + last_add_clauses_index];
+        if (i > 0) {
+          BooleanLiteral prev_state_lit = connected_lits[i - 1];
+          assert(
+              state.assignments_.IsAssignedTrue(prev_state_lit));
+
+          assert(c->literals_.size_ == 3);
+          assert(c->literals_[0] == ~prev_state_lit || c->literals_[1] == ~prev_state_lit ||
+              c->literals_[2] == ~prev_state_lit);
+          assert(c->literals_[0] == l || c->literals_[1] == l ||
+              c->literals_[2] == l);
+          assert(c->literals_[0] == ~input_literal ||
+              c->literals_[1] == ~input_literal ||
+              c->literals_[2] == ~input_literal);
+
+          assert(state.assignments_.GetTrailPosition(prev_state_lit.Variable()) < state.assignments_.GetTrailPosition(l.Variable()));
+          assert(state.assignments_.GetTrailPosition(input_literal.Variable()) < state.assignments_.GetTrailPosition(l.Variable()));
+        } else {
+
+          assert(c->literals_.size_ == 2);
+          assert(c->literals_[0] == l || c->literals_[1] == l);
+          assert(c->literals_[0] == ~input_literal ||
+              c->literals_[1] == ~input_literal);
+
+          assert(state.assignments_.GetTrailPosition(input_literal.Variable()) < state.assignments_.GetTrailPosition(l.Variable()));
+        }
+      }
+      int level = 0;
+      for (int i = 0; i < c->literals_.size_; i++) {
+        if (c->literals_[i] == l)
+          continue;
+        assert(state.assignments_.IsAssignedFalse(c->literals_[i]));
+        level = std::max(
+            state.assignments_.GetAssignmentLevel(c->literals_[i].Variable()),
+            level);
+      }
+      assert(level = state.assignments_.info_[l.VariableIndex()].decision_level);
+
+//      state.UndoAssignment(l);
+      //TODO unasign?
+      state.assignments_.info_[l.VariableIndex()].responsible_propagator =
+          &state.propagator_clausal_;
+      state.assignments_.info_[l.VariableIndex()].code =
+          reinterpret_cast<uint64_t>(c);
+    }
+  }
+  last_hist_size = -1;
+
 }
 
 } // namespace Pumpkin

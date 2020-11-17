@@ -24,6 +24,7 @@ public:
                               SolverState &state);
 
   WatchListCardinality watch_list_true;
+  WatchListCardinality watch_list_sum_true;
 //  WatchListCardinality watch_list_false;
   std::vector<WatchedCardinalityConstraint*> permanent_constraints_;
 
