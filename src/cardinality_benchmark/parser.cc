@@ -6,12 +6,14 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include "../sat/constraints/cardinality_constraint.h"
+
 namespace simple_sat_solver::cardinality_benchmark {
 using namespace sat;
-SatProblem Parser::Parse(std::string path, int max) {
-  SatProblem problem(0);
-  ReadSat(problem, path + "/mobsfile");
-  ReadCardinality(problem, path + "/faultfile", max);
+SatProblem* Parser::Parse(std::string path, int max) {
+  SatProblem* problem = new SatProblem(0);
+  ReadSat(*problem, path + "/mobsfile");
+  ReadCardinality(*problem, path + "/faultfile", max);
   return problem;
 }
 void Parser::ReadSat(SatProblem &problem, std::string path) {
@@ -65,7 +67,7 @@ void Parser::ReadCardinality(SatProblem &problem, std::string path, int max) {
     }
     clause.push_back(l);
   }
-  problem.AddCardinalityConstraint(clause, 0, max);
+  problem.AddConstraint(new CardinalityConstraint(clause,0,max));
 }
 
 }

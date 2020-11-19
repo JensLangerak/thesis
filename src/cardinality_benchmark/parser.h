@@ -11,7 +11,7 @@ namespace simple_sat_solver::cardinality_benchmark {
 class Parser {
 public:
   Parser() {};
-  sat::SatProblem Parse(std::string path, int max);
+  sat::SatProblem *Parse(std::string path, int max);
 
 private:
   void ReadSat(sat::SatProblem &problem, std::string path);

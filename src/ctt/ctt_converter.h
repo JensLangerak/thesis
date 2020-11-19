@@ -27,6 +27,7 @@ private:
 
   int CourseRoomScheduleIndex(int course_index, int room_index, int time_index);
   int CourseScheduleIndex(int course_index, int time_index);
+  int CourseDayIndex(int course_index, int day_index);
   int course_schedule_start_index;
   int TimeIndex(int day, int period);
   const int total_timeslots_;
@@ -42,6 +43,8 @@ private:
   void Schedule(std::vector<std::vector<bool>> &schedule, int id, int time,
                 std::string error);
   int course_schedule_end_index;
+  int course_days_start_index;
+  void ProjectOnCourseDayVars(Course course);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_CTT_CTT_CONVERTER_H_

@@ -3,16 +3,24 @@
 //
 
 #include "simple_solver.h"
+#include "../sat/constraints/cardinality_constraint.h"
 #include "../sat/encoders/totaliser_encoder.h"
 #include "../solver/solver.h"
+#include <cassert>
 
 namespace simple_sat_solver::solver_wrappers {
 
 bool SimpleSolver::Solve(const sat::SatProblem &p2) {
   solved_ = false;
   sat::SatProblem p = p2;
-  for (sat::CardinalityConstraint c : p.GetConstraints()) {
-    sat::TotaliserEncoder::Encode(p, c.lits, c.min, c.max);
+  for (sat::IConstraint * c : p.GetConstraints()) {
+    if (sat::CardinalityConstraint * car = dynamic_cast<sat::CardinalityConstraint*>(c)) {
+
+      sat::TotaliserEncoder::Encode(p, car->lits, car->min, car->max);
+    } else {
+      assert(false); //Not implemented;
+    }
+
   }
   solver::Solver s;
   for (int i = 0; i < p.GetNrVars(); i++)

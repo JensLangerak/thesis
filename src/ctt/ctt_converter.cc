@@ -16,11 +16,13 @@ CttConverter::CttConverter(Ctt problem)
   course_schedule_start_index =
       sat_problem_.AddNewVars(ctt_problem_.nr_courses * total_timeslots_);
   course_schedule_end_index = sat_problem_.GetNrVars();
+  course_days_start_index =
+      sat_problem_.AddNewVars(ctt_problem_.nr_courses * ctt_problem_.nr_days);
   AddScheduleLecturesConstraints();
-    AddRoomOccupancy();
-    CurriculumConflicts();
-    TeacherConflicts();
-    AddUnavailabiltyConstraints();
+  AddRoomOccupancy();
+  CurriculumConflicts();
+  TeacherConflicts();
+  AddUnavailabiltyConstraints();
 }
 int CttConverter::CourseRoomScheduleIndex(int course_index, int room_index,
                                           int time_index) {
@@ -35,6 +37,7 @@ void CttConverter::AddScheduleLecturesConstraints() {
   for (Course c : ctt_problem_.courses) {
     ScheduleOncePerTime(c);
     ProjectOnCourseTimeVars(c);
+    ProjectOnCourseDayVars(c);
     ScheduleAllLectures(c);
   }
 }
@@ -53,16 +56,15 @@ void CttConverter::ScheduleAllLectures(Course course) {
   for (int t = 0; t < total_timeslots_; ++t) {
     literals_for_c.push_back(Lit(CourseScheduleIndex(course.index, t)));
   }
-  std::cout << course.index << " - " << literals_for_c[0].x << "  -  " << course.nr_lectures << std::endl;
+  std::cout << course.index << " - " << literals_for_c[0].x << "  -  "
+            << course.nr_lectures << std::endl;
 
+  // TODO fix bugs
+  //    sat::TotaliserEncoder::Encode(sat_problem_, literals_for_c,
+  //                                  course.nr_lectures, course.nr_lectures);
 
-
-    // TODO fix bugs
-//    sat::TotaliserEncoder::Encode(sat_problem_, literals_for_c,
-//                                  course.nr_lectures, course.nr_lectures);
-
-    sat_problem_.AddCardinalityConstraint(literals_for_c, course.nr_lectures,
-                                          course.nr_lectures);
+  sat_problem_.AddCardinalityConstraint(literals_for_c, course.nr_lectures,
+                                        course.nr_lectures);
 }
 void CttConverter::AddRoomOccupancy() {
   for (Room r : ctt_problem_.rooms) {
@@ -86,6 +88,12 @@ void CttConverter::CurriculumConflicts() {
     }
   }
 }
+
+int CttConverter::CourseDayIndex(int course_index, int day_index) {
+  return course_days_start_index + course_index * ctt_problem_.nr_days +
+         day_index;
+}
+
 int CttConverter::CourseScheduleIndex(int course_index, int time_index) {
   return course_schedule_start_index + course_index * total_timeslots_ +
          time_index;
@@ -277,5 +285,18 @@ void CttConverter::Schedule(std::vector<std::vector<bool>> &schedule, int id,
   if (schedule[id][time])
     throw error;
   schedule[id][time] = true;
+}
+void CttConverter::ProjectOnCourseDayVars(Course course) {
+  for (int d = 0; d < ctt_problem_.nr_days; ++d) {
+    std::vector<Lit> literals;
+    Lit l_d = Lit(CourseDayIndex(course.index, d));
+    for (int t =0; t < ctt_problem_.nr_periods_per_day; ++ t) {
+      Lit l_t = Lit(CourseScheduleIndex(course.index, TimeIndex(d, t)));
+      literals.push_back(l_t);
+      sat_problem_.AddClause({~l_t, l_d});
+    }
+    literals.push_back(~l_d);
+    sat_problem_.AddClause(literals);//TODO not needed?
+  }
 }
 } // namespace simple_sat_solver::ctt

@@ -13,6 +13,7 @@
 #include "../pumpkin/Propagators/Cardinality/Encoders/propagator_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/totaliser_encoder.h"
+#include "../sat/constraints/cardinality_constraint.h"
 #include "../sat/encoders/totaliser_encoder.h"
 namespace simple_sat_solver::solver_wrappers {
 using namespace Pumpkin;
@@ -100,30 +101,36 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
     problem.AddClause(clause);
   }
 
-  for (sat::CardinalityConstraint c : p.GetConstraints()) {
+  for (sat::IConstraint * c : p.GetConstraints()) {
     std::vector<::Pumpkin::BooleanLiteral> lits;
-    for (sat::Lit l : c.lits) {
-      ::Pumpkin::BooleanLiteral lit =
-          ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
-      lits.push_back(lit);
-    }
-    //    if (!add_encodings_) {
-//    if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
-//        nullptr)
-//      problem.propagator_cardinality_constraints_.push_back(
-//          ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
-//                                           encoder_factory_));
-//    else
+    if (sat::CardinalityConstraint *car =
+            dynamic_cast<sat::CardinalityConstraint *>(c)) {
+      for (sat::Lit l : car->lits) {
+        ::Pumpkin::BooleanLiteral lit =
+            ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
+        lits.push_back(lit);
+      }
+//          if (!add_encodings_) {
+//          if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
+//              nullptr)
+//            problem.propagator_cardinality_constraints_.push_back(
+//                ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
+//                                                 encoder_factory_));
+//          else
       problem.dynamic_cardinality_constraints_.push_back(
-          ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
+          ::Pumpkin::CardinalityConstraint(lits, car->min, car->max,
                                            encoder_factory_));
-    //    }
-  }
-  for (auto l : p.GetMinimizeLit()) {
-    problem.objective_literals_.push_back(WeightedLiteral(
-        ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), true), 1));
-  }
+      //    }
+    } else {
+      assert(false);
+    }
 
+    //TODO
+    for (auto l : p.GetMinimizeLit()) {
+      problem.objective_literals_.push_back(WeightedLiteral(
+          ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), true), 1));
+    }
+  }
   return problem;
 }
 } // namespace simple_sat_solver::solver_wrappers

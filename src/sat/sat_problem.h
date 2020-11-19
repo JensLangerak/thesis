@@ -7,6 +7,7 @@
 
 #include "types.h"
 #include <vector>
+#include "constraints/i_constraint.h"
 
 namespace simple_sat_solver::sat {
 // TODO allow perhaps arbitrary id types
@@ -38,7 +39,8 @@ public:
   /// \param k the max number of lits that is allowed to be true.
   /// \param lits
   void AtMostK(int k, const std::vector<Lit> &lits);
-  void AddCardinalityConstraint(const std::vector<Lit> &lits, int min, int max);
+//  void AddCardinalityConstraint(const std::vector<Lit> &lits, int min, int max);
+  void AddConstraint(IConstraint* constraint);
 
   /// Add a constraint the exactly one of the given lits must be true.
   /// \param lits
@@ -70,11 +72,14 @@ public:
 
   int AddNewVars(int nr_vars);
 
-  std::vector<CardinalityConstraint> GetConstraints() const;
+  std::vector<IConstraint*> GetConstraints() const;
 
   inline void AddToMinimize(Lit l) {minimize_.push_back(l);};
 
   std::vector<Lit> GetMinimizeLit();
+  ~SatProblem();
+
+  SatProblem(const SatProblem & problem);
 
 private:
   // TODO move to types
@@ -84,7 +89,7 @@ private:
 
   int nr_vars_;
   std::vector<std::vector<Lit>> clauses_;
-  std::vector<CardinalityConstraint> constraints;
+  std::vector<IConstraint*> constraints;
   std::vector<Lit> minimize_; //TODO different optimize functions
 };
 } // namespace simple_sat_solver::sat
