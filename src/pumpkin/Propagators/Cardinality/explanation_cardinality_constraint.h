@@ -21,9 +21,10 @@ public:
   BooleanLiteral operator[](int index) const override;
   virtual BooleanLiteral operator[](size_t index) const;
   virtual size_t Size() const;
+  ~ExplanationCardinalityConstraint() {};
 
 private:
   std::vector<BooleanLiteral> lits_;
 };
 }
-#endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_EXPLANATION_CARDINALITY_CONSTRAINT_H_
+#endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_SUM_EXPLANATION_SUM_CONSTRAINT_H_

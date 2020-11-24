@@ -88,8 +88,6 @@ bool IncrementalSequentialEncoder::AddLiteral(
     current_added_lits.push_back(li);
   }
 
-  if (hist.size() == 12)
-    PrintState(state);
   added_clauses.push_back({previous_added_lits_[0], ~l});
 
   //  if (!added_lits_.empty()) {
@@ -203,6 +201,13 @@ void IncrementalSequentialEncoder::PrintState(SolverState &state) {
       }
     }
   }
+}
+void IncrementalSequentialEncoder::SetSumLiterals(std::vector<BooleanLiteral> sum_lits) {
+  if (!previous_added_lits_.empty())
+    throw "sums already set";
+  assert(sum_lits.size() == max_);
+  previous_added_lits_ = sum_lits;
+  hist.push_back(previous_added_lits_);
 }
 
 } // namespace Pumpkin

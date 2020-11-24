@@ -3,6 +3,7 @@
 //
 
 #include "b2b_converter.h"
+#include "../sat/constraints/cardinality_constraint.h"
 namespace simple_sat_solver::b2b {
 
 using sat::Lit;
@@ -83,7 +84,7 @@ void B2bConverter::AddMaxMeetings() {
     for (int m = 0; m < nr_meetings_; m++) {
       at_most_k.emplace_back(GetMeetingTimeslotIndex(m, t));
     }
-    sat_problem_.AddCardinalityConstraint(at_most_k, 0, nr_locations_);
+    sat_problem_.AddConstraint(new ::simple_sat_solver::sat::CardinalityConstraint(at_most_k, 0, nr_locations_));
   }
 }
 std::vector<int> B2bConverter::DecodeSolution(std::vector<bool> solution) {

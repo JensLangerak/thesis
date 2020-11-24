@@ -36,6 +36,13 @@ struct CardinalityConstraint
   IEncoder::IFactory *encoder_factory;
 };
 
+struct SumConstraint {
+  SumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<BooleanLiteral> & outputs, IEncoder::IFactory *encoder_factory) : input_literals(inputs), output_literals(outputs), encoder_factory(encoder_factory) {};
+  std::vector<BooleanLiteral> input_literals;
+  std::vector<BooleanLiteral> output_literals;
+  IEncoder::IFactory *encoder_factory;
+};
+
 class ProblemSpecification
 {
 public:
@@ -51,8 +58,8 @@ public:
 	std::vector<BooleanLiteral> unit_clauses_;
 	std::vector<std::vector<BooleanLiteral> > clauses_;
 	std::vector<PseudoBooleanConstraint> pseudo_boolean_constraints_;
-  std::vector<CardinalityConstraint> dynamic_cardinality_constraints_;
-  std::vector<CardinalityConstraint> propagator_cardinality_constraints_;
+  std::vector<CardinalityConstraint> cardinality_constraints_;
+  std::vector<SumConstraint> sum_constraints_;
 
   //objective function
 	std::vector<WeightedLiteral> objective_literals_;

@@ -20,7 +20,13 @@ IEncoder *IEncoder::IFactory::Create(CardinalityConstraint &constraint) {
 IEncoder *IEncoder::IFactory::Create(std::vector<BooleanLiteral> variables,
                                      int min, int max) {
   IEncoder * encoder = CallConstructor(variables, min, max);
-  encoder->add_dynamic_ = add_dynamic_;
+  encoder->add_dynamic_ = this->add_dynamic_;
+  encoder->add_incremental = this->add_incremetal_;
+  return encoder;
+}
+IEncoder *IEncoder::IFactory::Create(SumConstraint &constraint) {
+  IEncoder * encoder = Create(constraint.input_literals, 0, constraint.output_literals.size());
+  encoder->SetSumLiterals(constraint.output_literals);
   return encoder;
 }
 }

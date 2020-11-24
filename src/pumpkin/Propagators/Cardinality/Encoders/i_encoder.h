@@ -13,6 +13,7 @@ namespace Pumpkin {
 class SolverState;
 class WatchedCardinalityConstraint;
 class CardinalityConstraint;
+class SumConstraint;
 class IEncoder {
 public:
   virtual void PrintInfo() { };
@@ -24,17 +25,22 @@ public:
 
   virtual ~IEncoder();
   virtual bool SupportsIncremental() { return false; };
+  bool add_incremental;
+
   bool AddEncodingDynamic() { return add_dynamic_; };
   virtual bool EncodingAdded() { return encoding_added_;};
   virtual bool IsAdded(BooleanLiteral l);
+  virtual void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) {assert(true);};
   class IFactory {
   public:
     IEncoder *Create(std::vector<BooleanLiteral> variables, int min, int max);
     IEncoder *Create(WatchedCardinalityConstraint &constraint);
     IEncoder *Create(CardinalityConstraint &constraint);
+    IEncoder *Create(SumConstraint & constraint); //TODO restucutre
     virtual ~IFactory();
 
     bool add_dynamic_ = true;
+    bool add_incremetal_ = false;
 
   protected:
     virtual IEncoder *CallConstructor(std::vector<BooleanLiteral> variables,

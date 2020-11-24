@@ -14,6 +14,7 @@
 #include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/totaliser_encoder.h"
 #include "../sat/constraints/cardinality_constraint.h"
+#include "../sat/constraints/sum_constraint.h"
 #include "../sat/encoders/totaliser_encoder.h"
 namespace simple_sat_solver::solver_wrappers {
 using namespace Pumpkin;
@@ -56,7 +57,8 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
   SolverParameters params;
   params.bump_decision_variables = true;
   ConstraintOptimisationSolver solver(problem, params);
-  SolverOutput solver_output = solver.Solve(std::numeric_limits<double>::max());
+//  SolverOutput solver_output = solver.Solve(std::numeric_limits<double>::max());
+  SolverOutput solver_output = solver.Solve(60);
   solved_ = solver_output.HasSolution();
 
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());
@@ -66,6 +68,12 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
       solution_.push_back(solver_output.solution[i]);
   }
 
+//  if (solver.constrained_satisfaction_solver_.state_.propagator_sum_
+//      .trigger_count_ != 0)
+//    std::cout << "countsum: "
+//              << solver.constrained_satisfaction_solver_.state_
+//                  .propagator_sum_.trigger_count_
+//              << std::endl;
   if (solver.constrained_satisfaction_solver_.state_.propagator_cardinality_
           .trigger_count_ != 0)
     std::cout << "count: "
@@ -102,34 +110,52 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
   }
 
   for (sat::IConstraint * c : p.GetConstraints()) {
-    std::vector<::Pumpkin::BooleanLiteral> lits;
     if (sat::CardinalityConstraint *car =
             dynamic_cast<sat::CardinalityConstraint *>(c)) {
+      std::vector<::Pumpkin::BooleanLiteral> lits;
       for (sat::Lit l : car->lits) {
         ::Pumpkin::BooleanLiteral lit =
             ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
         lits.push_back(lit);
       }
-//          if (!add_encodings_) {
-//          if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
-//              nullptr)
-//            problem.propagator_cardinality_constraints_.push_back(
-//                ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
-//                                                 encoder_factory_));
-//          else
-      problem.dynamic_cardinality_constraints_.push_back(
+      //          if (!add_encodings_) {
+      //          if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
+      //              nullptr)
+      //            problem.propagator_cardinality_constraints_.push_back(
+      //                ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
+      //                                                 encoder_factory_));
+      //          else
+      problem.cardinality_constraints_.push_back(
           ::Pumpkin::CardinalityConstraint(lits, car->min, car->max,
                                            encoder_factory_));
       //    }
+    } else if (sat::SumConstraint *car =
+                   dynamic_cast<sat::SumConstraint *>(c)) {
+      std::vector<::Pumpkin::BooleanLiteral> inputs;
+      for (sat::Lit l : car->input_lits_) {
+        ::Pumpkin::BooleanLiteral lit =
+            ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
+        inputs.push_back(lit);
+      }
+      std::vector<::Pumpkin::BooleanLiteral> outputs;
+      for (sat::Lit l : car->output_lits_) {
+        ::Pumpkin::BooleanLiteral lit =
+            ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
+        outputs.push_back(lit);
+      }
+
+      problem.sum_constraints_.push_back(
+          ::Pumpkin::SumConstraint(inputs, outputs, encoder_factory_));
     } else {
       assert(false);
     }
-
+  }
     //TODO
+    auto t = p.GetMinimizeLit();
+    int tes2 = t.size();
     for (auto l : p.GetMinimizeLit()) {
       problem.objective_literals_.push_back(WeightedLiteral(
           ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), true), 1));
-    }
   }
   return problem;
 }

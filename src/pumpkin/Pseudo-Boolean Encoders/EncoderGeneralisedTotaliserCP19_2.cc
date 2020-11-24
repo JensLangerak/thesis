@@ -1,9 +1,12 @@
 ﻿#include "EncoderGeneralisedTotaliserCP19_2.h"
 #include "../Basic Data Structures/runtime_assert.h"
+#include "../Propagators/Cardinality/Encoders/incremental_sequential_encoder.h"
+#include "../Propagators/Cardinality/Encoders/propagator_encoder.h"
+#include "../Propagators/Cardinality/Encoders/propagator_encoder.h"
 
+#include <iostream>
 #include <set>
 #include <time.h>
-#include <iostream>
 
 namespace Pumpkin
 {
@@ -28,12 +31,25 @@ bool GeneralisedTotaliserCP192::ReduceRightHandSide(int64_t new_rhs)
 		std::vector<BooleanLiteral> lits;
 		std::vector<uint64_t> weights;
 
+                int t2 = objective_literals.size();
 		for (WeightedLiteral& b : objective_literals)
 		{
 			lits.push_back(b.literal);
 			weights.push_back(b.weight);
 		}
+                int ts = lits.size();
 		partial_sum_literals = encode(_hax_state, lits, weights, new_rhs);
+//                std::vector<BooleanLiteral> sum;
+//                for (int i = 0; i < new_rhs; ++i) {
+//                  BooleanLiteral l = BooleanLiteral(_hax_state->CreateNewVariable(), true);
+//                  sum.push_back(l);
+//                  partial_sum_literals.push_back(WeightedLiteral(l, 1));
+//                }
+
+//          CardinalityConstraint c(lits, 0, new_rhs ,  new Pumpkin::IncrementalSequentialEncoder::Factory());
+//          CardinalityConstraint c(lits, 0, new_rhs,  new Pumpkin::PropagatorEncoder::Factory());
+//          c.encoder_factory->add_dynamic_ = true;
+//                this->_hax_state->AddCardinality(c);
 		has_encoded = true;		
 		return true;
 	}
@@ -41,6 +57,9 @@ bool GeneralisedTotaliserCP192::ReduceRightHandSide(int64_t new_rhs)
 	{
 		//encoding exists, just need to add clauses reduce the right hand side
 		vector<BooleanLiteral> unit_clauses = update(partial_sum_literals, new_rhs);
+//                vector<BooleanLiteral> unit_clauses;
+//                for (int i = new_rhs; i < partial_sum_literals.size(); ++i)
+//                  unit_clauses.push_back(~partial_sum_literals[i].literal);
 		for (BooleanLiteral unit : unit_clauses)
 		{
 			bool ok = _hax_state->AddUnitClauseDuringSearch(unit);

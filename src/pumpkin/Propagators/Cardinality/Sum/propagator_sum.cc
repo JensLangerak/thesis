@@ -2,23 +2,23 @@
 // Created by jens on 16-10-20.
 //
 
-#include "propagator_cardinality.h"
-#include "../../Engine/solver_state.h"
-#include "Encoders/incremental_sequential_encoder.h"
-#include "Encoders/totaliser_encoder.h"
-#include "reason_cardinality_constraint.h"
-#include "watch_list_cardinality.h"
+#include "propagator_sum.h"
+#include "../../../Engine/solver_state.h"
+#include "../Encoders/incremental_sequential_encoder.h"
+#include "../Encoders/totaliser_encoder.h"
+#include "reason_sum_constraint.h"
+#include "watch_list_sum.h"
 #include <iostream>
 namespace Pumpkin {
 
-PropagatorCardinality::PropagatorCardinality(int64_t num_variables)
-    : PropagatorGeneric(), cardinality_database_(num_variables), last_index_(0),
+PropagatorSum::PropagatorSum(int64_t num_variables)
+    : PropagatorGeneric(), sum_database_(num_variables), last_index_(0),
       last_propagated_(BooleanLiteral()) {}
-bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
+bool PropagatorSum::PropagateLiteral(BooleanLiteral true_literal,
                                              SolverState &state) {
   assert(state.assignments_.IsAssignedTrue(true_literal));
-  WatchListCardinality &watch_list_true = cardinality_database_.watch_list_true;
-  std::vector<WatcherCardinalityConstraint> &watchers_true =
+  WatchListSum &watch_list_true = sum_database_.watch_list_true;
+  std::vector<WatcherSumConstraint> &watchers_true =
       watch_list_true[true_literal];
   size_t end_position = 0;
   size_t current_index = 0;
@@ -34,7 +34,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
   assert(CheckCounts(state));
   // update all constraints that watch the literal
   for (; current_index < watchers_true.size(); ++current_index) {
-    WatchedCardinalityConstraint *constraint =
+    WatchedSumConstraint *constraint =
         watchers_true[current_index].constraint_;
     // if the encoding is added, no need to keep track of it anymore
     if (constraint->encoder_->EncodingAdded())
@@ -43,26 +43,30 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
     // //TODO not sure if the check is still needed
     if (last_index_ != current_index || (!already_partly_done)) {
       constraint->true_count_++;
+      constraint->true_order_.push_back(true_literal);
     }
     already_partly_done = false;
     last_index_ = current_index;
     int true_count = 0;
     int false_count = 0;
-//    for (BooleanLiteral l : constraint->literals_) {
-//      if (state.assignments_.IsAssignedTrue(l) &&
-//          state.assignments_.GetTrailPosition(l.Variable()) <=
-//              state.assignments_.GetTrailPosition(true_literal.Variable()))
-//        true_count++;
-//    }
+    for (BooleanLiteral l : constraint->inputs_) {
+      if (state.assignments_.IsAssignedTrue(l) &&
+          state.assignments_.GetTrailPosition(l.Variable()) <=
+              state.assignments_.GetTrailPosition(true_literal.Variable()))
+        true_count++;
+    }
 //        assert(true_count == constraint->true_count_);
-//    constraint->true_count_ = true_count;
+    constraint->true_count_ = true_count;
     true_count = constraint->true_count_;
 
     watchers_true[end_position] = watchers_true[current_index];
     ++end_position;
+    if (true_count > constraint->outputs_.size())
+      continue;
+    bool success = state.EnqueuePropagatedLiteral(constraint->outputs_[true_count - 1], this, reinterpret_cast<uint64_t>(constraint));
+
     // conflict
-    if (true_count > constraint->max_ ||
-        false_count > constraint->literals_.size() - constraint->min_) {
+    if (!success) {
       // restore remaining watchers
       for (size_t k = current_index + 1; k < watchers_true.size(); ++k) {
         watchers_true[end_position] = watchers_true[current_index];
@@ -78,38 +82,12 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
         //        state.FullReset();
         return res;
       } else {
+        auto test1 = state.assignments_.IsAssigned(constraint->outputs_[true_count - 1]);
+        auto test2 = state.assignments_.IsAssignedTrue(constraint->outputs_[true_count - 1]);
         return false;
       }
     }
 
-    // can propagate
-    if (true_count == constraint->max_ ||
-        false_count == constraint->literals_.size() - constraint->min_) {
-      constraint->trigger_count_++;
-      trigger_count_++;
-      if (constraint->encoder_->AddEncodingDynamic() &&
-          constraint->encoder_->SupportsIncremental()) {
-        bool res = PropagateIncremental(state, constraint);
-        if (res)
-        return true;
-      } else {
-        for (BooleanLiteral l : constraint->literals_) {
-          if (!state.assignments_.IsAssigned(l)) {
-            if (constraint->encoder_->AddEncodingDynamic()) {
-              assert(!constraint->encoder_->SupportsIncremental());
-              bool res = AddEncoding(state, constraint);
-              assert(res);
-              return true;
-            } else {
-              // TODO false count
-              state.EnqueuePropagatedLiteral(
-                  ~l, this, reinterpret_cast<uint64_t>(constraint));
-            }
-            //          return true;
-          }
-        }
-      }
-    }
   }
 
   watchers_true.resize(end_position);
@@ -118,48 +96,50 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
   //  assert(CheckCounts(state));
   return true;
 }
-ReasonGeneric *PropagatorCardinality::ReasonFailure(SolverState &state) {
-  return new ReasonCardinalityConstraint(failure_constraint_, state);
+ReasonGeneric *PropagatorSum::ReasonFailure(SolverState &state) {
+  return new ReasonSumConstraint(failure_constraint_, state);
 }
-ReasonGeneric *PropagatorCardinality::ReasonLiteralPropagation(
+ReasonGeneric *PropagatorSum::ReasonLiteralPropagation(
     BooleanLiteral propagated_literal, SolverState &state) {
   assert(state.assignments_.GetAssignmentPropagator(
              propagated_literal.Variable()) == this);
   uint64_t code =
       state.assignments_.GetAssignmentCode(propagated_literal.Variable());
-  WatchedCardinalityConstraint *propagating_constraint =
-      reinterpret_cast<WatchedCardinalityConstraint *>(code);
+  WatchedSumConstraint *propagating_constraint =
+      reinterpret_cast<WatchedSumConstraint *>(code);
   // TODO check if encoding should be added (if called it is not yet added)
-  return new ReasonCardinalityConstraint(propagating_constraint,
+  return new ReasonSumConstraint(propagating_constraint,
                                          propagated_literal, state);
 }
-ExplanationGeneric *PropagatorCardinality::ExplainFailure(SolverState &state) {
+ExplanationGeneric *PropagatorSum::ExplainFailure(SolverState &state) {
   return failure_constraint_->ExplainFailure(state);
 }
-ExplanationGeneric *PropagatorCardinality::ExplainLiteralPropagation(
+ExplanationGeneric *PropagatorSum::ExplainLiteralPropagation(
     BooleanLiteral propagated_literal, SolverState &state) {
   assert(state.assignments_.GetAssignmentPropagator(
              propagated_literal.Variable()) == this);
   uint64_t code =
       state.assignments_.GetAssignmentCode(propagated_literal.Variable());
-  WatchedCardinalityConstraint *propagating_constraint =
-      reinterpret_cast<WatchedCardinalityConstraint *>(code);
+  WatchedSumConstraint *propagating_constraint =
+      reinterpret_cast<WatchedSumConstraint *>(code);
   // TODO check if encoding should be added (if called it is not yet added)
   return propagating_constraint->ExplainLiteralPropagation(propagated_literal,
                                                            state);
 }
 
-void PropagatorCardinality::Synchronise(SolverState &state) {
+void PropagatorSum::Synchronise(SolverState &state) {
 
   // current literal is partly propagated, reduce the counts of the updated
   // constraints.
-  if ((!last_propagated_.IsUndefined()) && !next_position_on_trail_to_propagate_it.GetData().IsUndefined() &&
+  if ((!last_propagated_.IsUndefined()) &&
       last_propagated_ == next_position_on_trail_to_propagate_it.GetData()) {
     BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-    if (!cardinality_database_.watch_list_true[l].empty()) {
-      assert(last_index_ < cardinality_database_.watch_list_true[l].size());
+    if (!sum_database_.watch_list_true[l].empty()) {
+      assert(last_index_ < sum_database_.watch_list_true[l].size());
       for (int i = 0; i <= last_index_; ++i) {
-        cardinality_database_.watch_list_true[l][i].constraint_->true_count_--;
+        sum_database_.watch_list_true[l][i].constraint_->true_count_--;
+
+        sum_database_.watch_list_true[l][i].constraint_->true_order_.pop_back();
       }
       last_index_ = 0;
       // TODO roll back false
@@ -171,8 +151,9 @@ void PropagatorCardinality::Synchronise(SolverState &state) {
     while (next_position_on_trail_to_propagate_it != state.GetTrailEnd()) {
       next_position_on_trail_to_propagate_it.Previous();
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-      for (auto wc : cardinality_database_.watch_list_true[l]) {
+      for (auto wc : sum_database_.watch_list_true[l]) {
         wc.constraint_->true_count_--;
+        wc.constraint_->true_order_.pop_back();
       }
     }
     assert(next_position_on_trail_to_propagate_it == state.GetTrailEnd());
@@ -182,7 +163,7 @@ void PropagatorCardinality::Synchronise(SolverState &state) {
   last_index_ = 0;
 }
 
-bool PropagatorCardinality::PropagateOneLiteral(SolverState &state) {
+bool PropagatorSum::PropagateOneLiteral(SolverState &state) {
   if (IsPropagationComplete(state) == false) {
 
     BooleanLiteral propagation_literal =
@@ -193,8 +174,8 @@ bool PropagatorCardinality::PropagateOneLiteral(SolverState &state) {
   return true; // no conflicts occurred during propagation
 }
 
-bool PropagatorCardinality::AddEncoding(
-    SolverState &state, WatchedCardinalityConstraint *constraint) {
+bool PropagatorSum::AddEncoding(
+    SolverState &state, WatchedSumConstraint *constraint) {
   int clause_index =
       state.propagator_clausal_.clause_database_.permanent_clauses_.size();
   int unit_index =
@@ -202,21 +183,22 @@ bool PropagatorCardinality::AddEncoding(
   int var_index = state.assignments_.GetNumberOfVariables() + 1;
   std::vector<std::vector<BooleanLiteral>> clauses =
       AddEncodingClauses(state, constraint);
-  std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
-                      std::greater<PropagtionElement>>
-      propagation_queue =
-          InitPropagationQueue(state, clauses, unit_index, clause_index);
-  UpdatePropagation(state, propagation_queue, var_index);
-//    state.FullReset();
+//  std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
+//                      std::greater<PropagtionElement>>
+//      propagation_queue =
+//          InitPropagationQueue(state, clauses, unit_index, clause_index);
+//  UpdatePropagation(state, propagation_queue, var_index);
+    state.FullReset();
   return true;
 }
-void PropagatorCardinality::ResetCounts() {
-  for (auto c : cardinality_database_.permanent_constraints_) {
+void PropagatorSum::ResetCounts() {
+  for (auto c : sum_database_.permanent_constraints_) {
     c->true_count_ = 0;
+    c->true_order_.clear();
     c->false_count_ = 0;
   }
 }
-bool PropagatorCardinality::ClausualPropagateLiteral(
+bool PropagatorSum::ClausualPropagateLiteral(
     BooleanLiteral true_literal, SolverState &state,
     std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                         std::greater<PropagtionElement>> &queue,
@@ -293,22 +275,22 @@ bool PropagatorCardinality::ClausualPropagateLiteral(
           swap_index = i;
         }
       }
-//      std::vector<bool> assigned;
-//      std::vector<bool> assigned_value;
-//      std::vector<int> assigned_level;
-//      for (int i = 0; i < watched_clause->literals_.size_; ++i) {
-//        BooleanLiteral l = watched_clause->literals_[i];
-//        if (state.assignments_.IsAssigned(l.Variable())) {
-//          assigned.push_back(true);
-//          assigned_value.push_back(state.assignments_.IsAssignedTrue(l));
-//          assigned_level.push_back(
-//              state.assignments_.GetAssignmentLevel(l.Variable()));
-//        } else {
-//          assigned.push_back(false);
-//          assigned_value.push_back(false);
-//          assigned_level.push_back(-1);
-//        }
-//      }
+      std::vector<bool> assigned;
+      std::vector<bool> assigned_value;
+      std::vector<int> assigned_level;
+      for (int i = 0; i < watched_clause->literals_.size_; ++i) {
+        BooleanLiteral l = watched_clause->literals_[i];
+        if (state.assignments_.IsAssigned(l.Variable())) {
+          assigned.push_back(true);
+          assigned_value.push_back(state.assignments_.IsAssignedTrue(l));
+          assigned_level.push_back(
+              state.assignments_.GetAssignmentLevel(l.Variable()));
+        } else {
+          assigned.push_back(false);
+          assigned_value.push_back(false);
+          assigned_level.push_back(-1);
+        }
+      }
       if (swap_index != 1) {
         std::swap(watched_clause->literals_[1],
                   watched_clause
@@ -320,7 +302,7 @@ bool PropagatorCardinality::ClausualPropagateLiteral(
         watches[end_position] = watches[current_index]; // keep the watch
         end_position++;
       }
-      if (decision_level < decision_level_true && decision_level > -1)
+      if (decision_level < decision_level_true)
         queue.push(PropagtionElement(watched_clause->literals_[0], decision_level, &state.propagator_clausal_, reinterpret_cast<uint64_t>(watched_clause)));
       continue;
     }
@@ -425,7 +407,7 @@ bool PropagatorCardinality::ClausualPropagateLiteral(
   return true_literal.VariableIndex() >= min_var;
 }
 
-int PropagatorCardinality::PropagateLiterals(
+int PropagatorSum::PropagateLiterals(
     std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                         std::greater<PropagtionElement>>
         queue,
@@ -491,17 +473,17 @@ int PropagatorCardinality::PropagateLiterals(
       //      if (p.lit.Variable().index_ >= min_var_index) {
       state.InsertPropagatedLiteral(p.lit, p.propagator, p.code, p.level);
       bool res = ClausualPropagateLiteral(p.lit, state, queue, min_var_index);
-      if (!cardinality_database_.watch_list_true[p.lit].empty()) {
+      if (!sum_database_.watch_list_true[p.lit].empty()) {
         reset_level = std::min(reset_level, p.level);
       }
-      //      assert(cardinality_database_.watch_list_true[p.lit].empty());
+      //      assert(sum_database_.watch_list_true[p.lit].empty());
       assert(queue.top().level >= p.level);
     }
   }
   // TODO update trail positions
   return reset_level;
 }
-void PropagatorCardinality::SetTrailIterator(
+void PropagatorSum::SetTrailIterator(
     TrailList<BooleanLiteral>::Iterator iterator) {
   // set the trail iterator and make sure the the counts stay correct.
   if (iterator.IsFirst()) {
@@ -511,15 +493,17 @@ void PropagatorCardinality::SetTrailIterator(
 
     if (!next_position_on_trail_to_propagate_it.IsPastTrail()) {
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-      for (auto wc : cardinality_database_.watch_list_true[l]) {
+      for (auto wc : sum_database_.watch_list_true[l]) {
         wc.constraint_->true_count_--;
+        wc.constraint_->true_order_.pop_back();
       }
     }
     while (next_position_on_trail_to_propagate_it != iterator) {
       next_position_on_trail_to_propagate_it.Previous();
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-      for (auto wc : cardinality_database_.watch_list_true[l]) {
+      for (auto wc : sum_database_.watch_list_true[l]) {
         wc.constraint_->true_count_--;
+        wc.constraint_->true_order_.pop_back();
       }
     }
   }
@@ -527,16 +511,16 @@ void PropagatorCardinality::SetTrailIterator(
   last_propagated_ = BooleanLiteral();
   last_index_ = 0;
 }
-bool PropagatorCardinality::CheckCounts(SolverState &state) {
+bool PropagatorSum::CheckCounts(SolverState &state) {
   return true;
   TrailList<BooleanLiteral>::Iterator counter_it = state.GetTrailBegin();
-  for (auto c : cardinality_database_.permanent_constraints_) {
+  for (auto c : sum_database_.permanent_constraints_) {
     c->true_count_debug_ = 0;
     //    c->true_log_debug.clear();
   }
   while (counter_it != next_position_on_trail_to_propagate_it) {
     BooleanLiteral l = counter_it.GetData();
-    for (auto c : cardinality_database_.watch_list_true[l]) {
+    for (auto c : sum_database_.watch_list_true[l]) {
       c.constraint_->true_count_debug_++;
       //      c.constraint_->true_log_debug.emplace_back(c.constraint_->true_count_debug_,
       //      l);
@@ -546,7 +530,7 @@ bool PropagatorCardinality::CheckCounts(SolverState &state) {
   int miscount = 0;
   int l = 0;
   int g = 0;
-  for (auto c : cardinality_database_.permanent_constraints_) {
+  for (auto c : sum_database_.permanent_constraints_) {
     //    assert(c->true_count_debug_ == c->true_count_);
     if (c->true_count_debug_ != c->true_count_) {
       miscount++;
@@ -560,8 +544,8 @@ bool PropagatorCardinality::CheckCounts(SolverState &state) {
   assert(miscount == 0);
   return true;
 }
-bool PropagatorCardinality::PropagateIncremental(
-    SolverState &state, WatchedCardinalityConstraint *constraint) {
+bool PropagatorSum::PropagateIncremental(
+    SolverState &state, WatchedSumConstraint *constraint) {
 
   int clause_index =
       state.propagator_clausal_.clause_database_.permanent_clauses_.size();
@@ -571,8 +555,8 @@ bool PropagatorCardinality::PropagateIncremental(
 
   std::vector<BooleanLiteral> reason;
   std::vector<BooleanLiteral> propagate;
-  for (int i = 0; i < constraint->literals_.size(); ++i) {
-    BooleanLiteral l = constraint->literals_[i];
+  for (int i = 0; i < constraint->inputs_.size(); ++i) {
+    BooleanLiteral l = constraint->inputs_[i];
     if ((!state.assignments_.IsAssigned(
             l.Variable()))) // && (!constraint->encoder_->IsAdded(l)))
       propagate.push_back(l);
@@ -614,13 +598,13 @@ bool PropagatorCardinality::PropagateIncremental(
 }
 
 std::vector<std::vector<BooleanLiteral>>
-PropagatorCardinality::AddEncodingClauses(
-    SolverState &state, WatchedCardinalityConstraint *constraint) {
+PropagatorSum::AddEncodingClauses(
+    SolverState &state, WatchedSumConstraint *constraint) {
   std::vector<std::vector<BooleanLiteral>> clauses;
   if (constraint->encoder_->SupportsIncremental()) {
     std::vector<BooleanLiteral> cause;
     int level_count = 0;
-    for (BooleanLiteral l : constraint->literals_) {
+    for (BooleanLiteral l : constraint->inputs_) {
       if (state.assignments_.IsAssignedTrue(l)) {
         cause.push_back(l);
         if (state.assignments_.GetAssignmentLevel(l.Variable()) ==
@@ -628,11 +612,7 @@ PropagatorCardinality::AddEncodingClauses(
           level_count++;
       }
     }
-    if (cause.size() >= constraint->max_)
-      assert(level_count >= 1);
-    else
-      assert(false);
-    assert(cause.size() >= constraint->max_);
+
     clauses = constraint->encoder_->Encode(state, cause);
   } else {
     assert(constraint->encoder_->EncodingAdded() == false);
@@ -640,10 +620,10 @@ PropagatorCardinality::AddEncodingClauses(
   }
   return clauses;
 }
-std::priority_queue<PropagatorCardinality::PropagtionElement,
-                    std::vector<PropagatorCardinality::PropagtionElement>,
-                    std::greater<PropagatorCardinality::PropagtionElement>>
-PropagatorCardinality::InitPropagationQueue(
+std::priority_queue<PropagatorSum::PropagtionElement,
+                    std::vector<PropagatorSum::PropagtionElement>,
+                    std::greater<PropagatorSum::PropagtionElement>>
+PropagatorSum::InitPropagationQueue(
     SolverState &state, std::vector<std::vector<BooleanLiteral>> clauses,
     int unit_start_index, int clause_start_index) {
   std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
@@ -701,7 +681,7 @@ PropagatorCardinality::InitPropagationQueue(
 
   return propagation_queue;
 }
-void PropagatorCardinality::UpdatePropagation(
+void PropagatorSum::UpdatePropagation(
     SolverState &state,
     std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
                         std::greater<PropagtionElement>>
@@ -745,7 +725,7 @@ void PropagatorCardinality::UpdatePropagation(
 
 
 }
-void PropagatorCardinality::RepairTrailPositions(SolverState &state) {
+void PropagatorSum::RepairTrailPositions(SolverState &state) {
   auto it = state.GetTrailBegin();
   int position = 0;
   int decisionlevel = 0;

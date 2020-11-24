@@ -26,8 +26,10 @@ private:
   SatProblem sat_problem_;
 
   int CourseRoomScheduleIndex(int course_index, int room_index, int time_index);
+  int CourseRoomIndex(int course_index, int room_index);
   int CourseScheduleIndex(int course_index, int time_index);
   int CourseDayIndex(int course_index, int day_index);
+  int CurriculumTimeIndex(int curriculum_index, int time_index);
   int course_schedule_start_index;
   int TimeIndex(int day, int period);
   const int total_timeslots_;
@@ -44,7 +46,16 @@ private:
                 std::string error);
   int course_schedule_end_index;
   int course_days_start_index;
+  int curriculum_time_start_index;
+  int course_room_start_index;
   void ProjectOnCourseDayVars(Course course);
+
+  std::vector<Lit> penalties_;
+  void AddMinWorkingDayConstraints();
+  void AddCompactnessConstraints();
+  void AddRoomCapacityConstraints();
+  void AddRoomStability();
+  void AddPenalty();
 };
 }
 #endif // SIMPLESATSOLVER_SRC_CTT_CTT_CONVERTER_H_

@@ -14,6 +14,7 @@ class ExplanationGeneric
 public:
 	virtual BooleanLiteral operator[](int index) const = 0;
 	virtual size_t Size() const = 0;
+        virtual ~ExplanationGeneric() {};
 };
 
 } //end Pumpkin namespace

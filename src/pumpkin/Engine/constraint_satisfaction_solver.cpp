@@ -22,7 +22,8 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification&
 {
 	for (BooleanLiteral unit_literal : problem_specification.unit_clauses_) { state_.AddUnitClause(unit_literal); }
         for (auto& clause : problem_specification.clauses_) { state_.AddClause(clause); }
-  for (auto& constraint : problem_specification.dynamic_cardinality_constraints_) { state_.AddCardinality(constraint); }
+  for (auto& constraint : problem_specification.cardinality_constraints_) { state_.AddCardinality(constraint); }
+  for (auto & constraint : problem_specification.sum_constraints_) { state_.AddSumConstraint(constraint);}
 	if (!problem_specification.pseudo_boolean_constraints_.empty()) { std::cout << "TODO: add pseudo-Boolean constraints!\n"; }
 
 }

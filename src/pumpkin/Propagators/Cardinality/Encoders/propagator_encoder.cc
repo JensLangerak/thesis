@@ -10,4 +10,10 @@ std::vector<std::vector<BooleanLiteral>>
 PropagatorEncoder::Encode(SolverState &state) {
   return std::vector<std::vector<BooleanLiteral>>();
 }
+PropagatorEncoder::~PropagatorEncoder() {}
+std::vector<std::vector<BooleanLiteral>>
+PropagatorEncoder::Encode(SolverState &state,
+                          std::vector<BooleanLiteral> lits) {
+  return Encode(state);
+}
 }

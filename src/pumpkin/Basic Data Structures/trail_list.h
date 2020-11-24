@@ -17,6 +17,9 @@ private:
 
     Node(T data, Node *previous, Node *next)
         : data(data), next(next), previous(previous), valid_data(true){};
+    ~Node() {
+
+    }
   };
 public:
   struct Iterator {

@@ -13,11 +13,10 @@ namespace Pumpkin {
 class PropagatorEncoder : public IEncoder {
 public:
   std::vector<std::vector<BooleanLiteral>> Encode(SolverState &state) override;
+  std::vector<std::vector<BooleanLiteral>> Encode(SolverState &state, std::vector<BooleanLiteral> lits) override;
+  PropagatorEncoder() : IEncoder() {};
 
-  PropagatorEncoder(){};
-
-  ~PropagatorEncoder() override{};
-
+  ~PropagatorEncoder() override;
   class Factory : public IEncoder::IFactory {
     IEncoder *CallConstructor(std::vector<BooleanLiteral> literals, int min,
                               int max) override {

@@ -58,6 +58,7 @@ bool ConstraintOptimisationSolver::StrengthenUpperBoundConstraints()
 {
 	constrained_satisfaction_solver_.state_.Reset(); //for now we restart each time a solution has been found as is usual in MaxSAT. In the future, test NOT restarting but simply continuing by supplying a conflict clause (should be better), possibly setting the restart mechanisms to a fresh start
 	if (lower_bound_ == upper_bound_) { return false; }
+//        upper_bound_ = upper_bound_ > 500 ? 500 : upper_bound_;
 	bool success = encoder_->ReduceRightHandSide(upper_bound_ - 1);
 
 	//if the encoding added new variables, we set their polarities to zero. Likely this is not an issue since most encodings only add variables the first time the encoding is generated, but this might change in the future

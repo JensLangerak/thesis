@@ -23,12 +23,13 @@ public:
   bool IsAdded(BooleanLiteral lit) override;
   bool EncodingAdded() override { return false;};
 
+  void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) override;
 
 
   IncrementalSequentialEncoder(std::vector<BooleanLiteral> variables, int min, int max);
 
   ~IncrementalSequentialEncoder() override;
-  bool SupportsIncremental() override { return true;} ;
+  bool SupportsIncremental() override { return add_incremental;} ;
 
   class Factory : public IEncoder::IFactory {
     IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new IncrementalSequentialEncoder(literals, min, max);};

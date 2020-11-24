@@ -65,6 +65,7 @@ public:
 	bool IsClauseProperlyWatched(const TwoWatchedClause * const, const SolverState&) const;
 
 	void RecomputeAndPrintClauseLengthStatsForPermanentClauses();
+        ~ClauseDatabase();
 
 private:
 	void RescaleClauseActivities(); //divides all activities with a large number when the maximum activity becomes too large

@@ -21,7 +21,7 @@ public:
   /// \param state
   /// \return the constructed constraint.
   WatchedCardinalityConstraint* AddPermanentConstraint(CardinalityConstraint &constraint,
-                              SolverState &state);
+                                                       SolverState &state);
 
   WatchListCardinality watch_list_true;
 //  WatchListCardinality watch_list_false;

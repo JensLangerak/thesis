@@ -21,6 +21,7 @@ public:
 
   ~TotaliserEncoder() ;
 
+  void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) override;
   class Factory : public IEncoder::IFactory {
     IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new TotaliserEncoder(literals, min, max);};
   };
@@ -36,11 +37,13 @@ public:
   };
 
   Node *CreateTree(std::vector<BooleanLiteral> variables);
+  Node *CreateTree(std::vector<BooleanLiteral> variables, bool use_set_sum_lits);
 
 
   SolverState *solver_state_;
   std::vector<BooleanLiteral> variables_;
   std::vector<std::vector<BooleanLiteral>> added_clauses_;
+  std::vector<BooleanLiteral> potential_sum_literals_;
   int min_;
   int max_;
   Node *root_;
