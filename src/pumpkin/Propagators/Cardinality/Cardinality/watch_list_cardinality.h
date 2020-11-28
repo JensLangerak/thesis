@@ -5,7 +5,7 @@
 #ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCH_LIST_CARDINALITY_H_
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCH_LIST_CARDINALITY_H_
 
-#include "../../Basic Data Structures/boolean_literal.h"
+#include "../../../Basic Data Structures/boolean_literal.h"
 #include "watched_cardinality_constraint.h"
 #include "watcher_cardinality_constraint.h"
 #include <vector>

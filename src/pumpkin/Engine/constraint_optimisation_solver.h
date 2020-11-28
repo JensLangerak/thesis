@@ -16,6 +16,7 @@ class ConstraintOptimisationSolver
 {
 public:
 	ConstraintOptimisationSolver(ProblemSpecification& problem_specification, SolverParameters& parameters);
+        ~ConstraintOptimisationSolver() ;
 	SolverOutput Solve(double time_limit_in_seconds = std::numeric_limits<double>::max());
 
 	void PrintStats();

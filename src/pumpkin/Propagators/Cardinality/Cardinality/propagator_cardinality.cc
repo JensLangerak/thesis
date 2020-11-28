@@ -2,23 +2,23 @@
 // Created by jens on 16-10-20.
 //
 
-#include "propagator_sum.h"
+#include "propagator_cardinality.h"
 #include "../../../Engine/solver_state.h"
 #include "../Encoders/incremental_sequential_encoder.h"
 #include "../Encoders/totaliser_encoder.h"
-#include "reason_sum_constraint.h"
-#include "watch_list_sum.h"
+#include "reason_cardinality_constraint.h"
+#include "watch_list_cardinality.h"
 #include <iostream>
 namespace Pumpkin {
 
-PropagatorSum::PropagatorSum(int64_t num_variables)
-    : PropagatorDynamic<WatchedSumConstraint>(), sum_database_(num_variables), last_index_(0),
+PropagatorCardinality::PropagatorCardinality(int64_t num_variables)
+    : PropagatorDynamic(), cardinality_database_(num_variables), last_index_(0),
       last_propagated_(BooleanLiteral()) {}
-bool PropagatorSum::PropagateLiteral(BooleanLiteral true_literal,
+bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
                                              SolverState &state) {
   assert(state.assignments_.IsAssignedTrue(true_literal));
-  WatchListSum &watch_list_true = sum_database_.watch_list_true;
-  std::vector<WatcherSumConstraint> &watchers_true =
+  WatchListCardinality &watch_list_true = cardinality_database_.watch_list_true;
+  std::vector<WatcherCardinalityConstraint> &watchers_true =
       watch_list_true[true_literal];
   size_t end_position = 0;
   size_t current_index = 0;
@@ -34,7 +34,7 @@ bool PropagatorSum::PropagateLiteral(BooleanLiteral true_literal,
   assert(CheckCounts(state));
   // update all constraints that watch the literal
   for (; current_index < watchers_true.size(); ++current_index) {
-    WatchedSumConstraint *constraint =
+    WatchedCardinalityConstraint *constraint =
         watchers_true[current_index].constraint_;
     // if the encoding is added, no need to keep track of it anymore
     if (constraint->encoder_->EncodingAdded())
@@ -43,30 +43,26 @@ bool PropagatorSum::PropagateLiteral(BooleanLiteral true_literal,
     // //TODO not sure if the check is still needed
     if (last_index_ != current_index || (!already_partly_done)) {
       constraint->true_count_++;
-      constraint->true_order_.push_back(true_literal);
     }
     already_partly_done = false;
     last_index_ = current_index;
     int true_count = 0;
     int false_count = 0;
-    for (BooleanLiteral l : constraint->inputs_) {
-      if (state.assignments_.IsAssignedTrue(l) &&
-          state.assignments_.GetTrailPosition(l.Variable()) <=
-              state.assignments_.GetTrailPosition(true_literal.Variable()))
-        true_count++;
-    }
+//    for (BooleanLiteral l : constraint->literals_) {
+//      if (state.assignments_.IsAssignedTrue(l) &&
+//          state.assignments_.GetTrailPosition(l.Variable()) <=
+//              state.assignments_.GetTrailPosition(true_literal.Variable()))
+//        true_count++;
+//    }
 //        assert(true_count == constraint->true_count_);
-    constraint->true_count_ = true_count;
+//    constraint->true_count_ = true_count;
     true_count = constraint->true_count_;
 
     watchers_true[end_position] = watchers_true[current_index];
     ++end_position;
-    if (true_count > constraint->outputs_.size())
-      continue;
-    bool success = state.EnqueuePropagatedLiteral(constraint->outputs_[true_count - 1], this, reinterpret_cast<uint64_t>(constraint));
-
     // conflict
-    if (!success) {
+    if (true_count > constraint->max_ ||
+        false_count > constraint->literals_.size() - constraint->min_) {
       // restore remaining watchers
       for (size_t k = current_index + 1; k < watchers_true.size(); ++k) {
         watchers_true[end_position] = watchers_true[current_index];
@@ -82,12 +78,38 @@ bool PropagatorSum::PropagateLiteral(BooleanLiteral true_literal,
         //        state.FullReset();
         return res;
       } else {
-        auto test1 = state.assignments_.IsAssigned(constraint->outputs_[true_count - 1]);
-        auto test2 = state.assignments_.IsAssignedTrue(constraint->outputs_[true_count - 1]);
         return false;
       }
     }
 
+    // can propagate
+    if (true_count == constraint->max_ ||
+        false_count == constraint->literals_.size() - constraint->min_) {
+      constraint->trigger_count_++;
+      trigger_count_++;
+      if (constraint->encoder_->AddEncodingDynamic() &&
+          constraint->encoder_->SupportsIncremental()) {
+        bool res = PropagateIncremental(state, constraint);
+        if (res)
+        return true;
+      } else {
+        for (BooleanLiteral l : constraint->literals_) {
+          if (!state.assignments_.IsAssigned(l)) {
+            if (constraint->encoder_->AddEncodingDynamic()) {
+              assert(!constraint->encoder_->SupportsIncremental());
+              bool res = AddEncoding(state, constraint);
+              assert(res);
+              return true;
+            } else {
+              // TODO false count
+              state.EnqueuePropagatedLiteral(
+                  ~l, this, reinterpret_cast<uint64_t>(constraint));
+            }
+            //          return true;
+          }
+        }
+      }
+    }
   }
 
   watchers_true.resize(end_position);
@@ -96,50 +118,48 @@ bool PropagatorSum::PropagateLiteral(BooleanLiteral true_literal,
   //  assert(CheckCounts(state));
   return true;
 }
-ReasonGeneric *PropagatorSum::ReasonFailure(SolverState &state) {
-  return new ReasonSumConstraint(failure_constraint_, state);
+ReasonGeneric *PropagatorCardinality::ReasonFailure(SolverState &state) {
+  return new ReasonCardinalityConstraint(failure_constraint_, state);
 }
-ReasonGeneric *PropagatorSum::ReasonLiteralPropagation(
+ReasonGeneric *PropagatorCardinality::ReasonLiteralPropagation(
     BooleanLiteral propagated_literal, SolverState &state) {
   assert(state.assignments_.GetAssignmentPropagator(
              propagated_literal.Variable()) == this);
   uint64_t code =
       state.assignments_.GetAssignmentCode(propagated_literal.Variable());
-  WatchedSumConstraint *propagating_constraint =
-      reinterpret_cast<WatchedSumConstraint *>(code);
+  WatchedCardinalityConstraint *propagating_constraint =
+      reinterpret_cast<WatchedCardinalityConstraint *>(code);
   // TODO check if encoding should be added (if called it is not yet added)
-  return new ReasonSumConstraint(propagating_constraint,
+  return new ReasonCardinalityConstraint(propagating_constraint,
                                          propagated_literal, state);
 }
-ExplanationGeneric *PropagatorSum::ExplainFailure(SolverState &state) {
+ExplanationGeneric *PropagatorCardinality::ExplainFailure(SolverState &state) {
   return failure_constraint_->ExplainFailure(state);
 }
-ExplanationGeneric *PropagatorSum::ExplainLiteralPropagation(
+ExplanationGeneric *PropagatorCardinality::ExplainLiteralPropagation(
     BooleanLiteral propagated_literal, SolverState &state) {
   assert(state.assignments_.GetAssignmentPropagator(
              propagated_literal.Variable()) == this);
   uint64_t code =
       state.assignments_.GetAssignmentCode(propagated_literal.Variable());
-  WatchedSumConstraint *propagating_constraint =
-      reinterpret_cast<WatchedSumConstraint *>(code);
+  WatchedCardinalityConstraint *propagating_constraint =
+      reinterpret_cast<WatchedCardinalityConstraint *>(code);
   // TODO check if encoding should be added (if called it is not yet added)
   return propagating_constraint->ExplainLiteralPropagation(propagated_literal,
                                                            state);
 }
 
-void PropagatorSum::Synchronise(SolverState &state) {
+void PropagatorCardinality::Synchronise(SolverState &state) {
 
   // current literal is partly propagated, reduce the counts of the updated
   // constraints.
-  if ((!last_propagated_.IsUndefined()) &&
+  if ((!last_propagated_.IsUndefined()) && !next_position_on_trail_to_propagate_it.GetData().IsUndefined() &&
       last_propagated_ == next_position_on_trail_to_propagate_it.GetData()) {
     BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-    if (!sum_database_.watch_list_true[l].empty()) {
-      assert(last_index_ < sum_database_.watch_list_true[l].size());
+    if (!cardinality_database_.watch_list_true[l].empty()) {
+      assert(last_index_ < cardinality_database_.watch_list_true[l].size());
       for (int i = 0; i <= last_index_; ++i) {
-        sum_database_.watch_list_true[l][i].constraint_->true_count_--;
-
-        sum_database_.watch_list_true[l][i].constraint_->true_order_.pop_back();
+        cardinality_database_.watch_list_true[l][i].constraint_->true_count_--;
       }
       last_index_ = 0;
       // TODO roll back false
@@ -151,9 +171,8 @@ void PropagatorSum::Synchronise(SolverState &state) {
     while (next_position_on_trail_to_propagate_it != state.GetTrailEnd()) {
       next_position_on_trail_to_propagate_it.Previous();
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-      for (auto wc : sum_database_.watch_list_true[l]) {
+      for (auto wc : cardinality_database_.watch_list_true[l]) {
         wc.constraint_->true_count_--;
-        wc.constraint_->true_order_.pop_back();
       }
     }
     assert(next_position_on_trail_to_propagate_it == state.GetTrailEnd());
@@ -163,7 +182,7 @@ void PropagatorSum::Synchronise(SolverState &state) {
   last_index_ = 0;
 }
 
-bool PropagatorSum::PropagateOneLiteral(SolverState &state) {
+bool PropagatorCardinality::PropagateOneLiteral(SolverState &state) {
   if (IsPropagationComplete(state) == false) {
 
     BooleanLiteral propagation_literal =
@@ -174,15 +193,16 @@ bool PropagatorSum::PropagateOneLiteral(SolverState &state) {
   return true; // no conflicts occurred during propagation
 }
 
-void PropagatorSum::ResetCounts() {
-  for (auto c : sum_database_.permanent_constraints_) {
+
+void PropagatorCardinality::ResetCounts() {
+  for (auto c : cardinality_database_.permanent_constraints_) {
     c->true_count_ = 0;
-    c->true_order_.clear();
     c->false_count_ = 0;
   }
 }
 
-void PropagatorSum::SetTrailIterator(
+
+void PropagatorCardinality::SetTrailIterator(
     TrailList<BooleanLiteral>::Iterator iterator) {
   // set the trail iterator and make sure the the counts stay correct.
   if (iterator.IsFirst()) {
@@ -192,17 +212,15 @@ void PropagatorSum::SetTrailIterator(
 
     if (!next_position_on_trail_to_propagate_it.IsPastTrail()) {
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-      for (auto wc : sum_database_.watch_list_true[l]) {
+      for (auto wc : cardinality_database_.watch_list_true[l]) {
         wc.constraint_->true_count_--;
-        wc.constraint_->true_order_.pop_back();
       }
     }
     while (next_position_on_trail_to_propagate_it != iterator) {
       next_position_on_trail_to_propagate_it.Previous();
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
-      for (auto wc : sum_database_.watch_list_true[l]) {
+      for (auto wc : cardinality_database_.watch_list_true[l]) {
         wc.constraint_->true_count_--;
-        wc.constraint_->true_order_.pop_back();
       }
     }
   }
@@ -210,16 +228,16 @@ void PropagatorSum::SetTrailIterator(
   last_propagated_ = BooleanLiteral();
   last_index_ = 0;
 }
-bool PropagatorSum::CheckCounts(SolverState &state) {
+bool PropagatorCardinality::CheckCounts(SolverState &state) {
   return true;
   TrailList<BooleanLiteral>::Iterator counter_it = state.GetTrailBegin();
-  for (auto c : sum_database_.permanent_constraints_) {
+  for (auto c : cardinality_database_.permanent_constraints_) {
     c->true_count_debug_ = 0;
     //    c->true_log_debug.clear();
   }
   while (counter_it != next_position_on_trail_to_propagate_it) {
     BooleanLiteral l = counter_it.GetData();
-    for (auto c : sum_database_.watch_list_true[l]) {
+    for (auto c : cardinality_database_.watch_list_true[l]) {
       c.constraint_->true_count_debug_++;
       //      c.constraint_->true_log_debug.emplace_back(c.constraint_->true_count_debug_,
       //      l);
@@ -229,7 +247,7 @@ bool PropagatorSum::CheckCounts(SolverState &state) {
   int miscount = 0;
   int l = 0;
   int g = 0;
-  for (auto c : sum_database_.permanent_constraints_) {
+  for (auto c : cardinality_database_.permanent_constraints_) {
     //    assert(c->true_count_debug_ == c->true_count_);
     if (c->true_count_debug_ != c->true_count_) {
       miscount++;
@@ -244,12 +262,11 @@ bool PropagatorSum::CheckCounts(SolverState &state) {
   return true;
 }
 
-
-void PropagatorSum::PropagateIncremental2(SolverState &state, WatchedSumConstraint * constraint, std::vector<BooleanLiteral> &reason, std::vector<BooleanLiteral> &propagate) {
+void PropagatorCardinality::PropagateIncremental2(SolverState &state, WatchedCardinalityConstraint * constraint, std::vector<BooleanLiteral> &reason, std::vector<BooleanLiteral> &propagate) {
   assert(constraint != NULL);
 
-  for (int i = 0; i < constraint->inputs_.size(); ++i) {
-    BooleanLiteral l = constraint->inputs_[i];
+  for (int i = 0; i < constraint->literals_.size(); ++i) {
+    BooleanLiteral l = constraint->literals_[i];
     if ((!state.assignments_.IsAssigned(
             l.Variable()))) // && (!constraint->encoder_->IsAdded(l)))
       propagate.push_back(l);
@@ -259,10 +276,11 @@ void PropagatorSum::PropagateIncremental2(SolverState &state, WatchedSumConstrai
 }
 
 std::vector<BooleanLiteral>
-PropagatorSum::GetEncodingCause(SolverState &state, WatchedSumConstraint *constraint) {
+PropagatorCardinality::GetEncodingCause(SolverState &state, WatchedCardinalityConstraint *constraint) {
+  assert(constraint != NULL);
     std::vector<BooleanLiteral> cause;
     int level_count = 0;
-    for (BooleanLiteral l : constraint->inputs_) {
+    for (BooleanLiteral l : constraint->literals_) {
       if (state.assignments_.IsAssignedTrue(l)) {
         cause.push_back(l);
         if (state.assignments_.GetAssignmentLevel(l.Variable()) ==
@@ -270,7 +288,11 @@ PropagatorSum::GetEncodingCause(SolverState &state, WatchedSumConstraint *constr
           level_count++;
       }
     }
-  return cause;
+    if (cause.size() >= constraint->max_)
+      assert(level_count >= 1);
+    else
+      assert(false);
+    assert(cause.size() >= constraint->max_);
+    return cause;
 }
-
 } // namespace Pumpkin

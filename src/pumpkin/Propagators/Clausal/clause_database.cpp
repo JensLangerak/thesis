@@ -361,8 +361,8 @@ bool ClauseDatabase::IsLiteralProperlyWatched(BooleanLiteral literal, const Solv
 ClauseDatabase::~ClauseDatabase() {
   for (auto c : temporary_clauses_)
     delete  c;
-//  for (auto  c : permanent_clauses_)
-//    delete  c;
+  for (auto  c : permanent_clauses_)
+    delete  c;
 }
 
 } //end Pumpkin namespace

@@ -38,6 +38,7 @@ namespace simple_sat_solver::ctt {
       outfile.close();
       std::cout << "Penalty: " << converter.ValidateSolution(sol);
     }
+    delete solver;
   }
 }
 

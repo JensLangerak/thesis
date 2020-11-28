@@ -32,6 +32,7 @@ public:
   bool SupportsIncremental() override { return add_incremental;} ;
 
   class Factory : public IEncoder::IFactory {
+    ~Factory() override = default;
     IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new IncrementalSequentialEncoder(literals, min, max);};
   };
 

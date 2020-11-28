@@ -3,8 +3,8 @@
 //
 
 #include "watched_cardinality_constraint.h"
+#include "../../../Engine/solver_state.h"
 #include "explanation_cardinality_constraint.h"
-#include "../../Engine/solver_state.h"
 namespace Pumpkin {
 
 WatchedCardinalityConstraint::WatchedCardinalityConstraint(

@@ -5,8 +5,8 @@
 #ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_EXPLANATION_CARDINALITY_CONSTRAINT_H_
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_EXPLANATION_CARDINALITY_CONSTRAINT_H_
 
-#include "../../Engine/solver_state.h"
-#include "../explanation_generic.h"
+#include "../../../Engine/solver_state.h"
+#include "../../explanation_generic.h"
 #include "watched_cardinality_constraint.h"
 namespace Pumpkin {
 class ExplanationCardinalityConstraint : public ExplanationGeneric {

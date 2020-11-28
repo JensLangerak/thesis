@@ -9,7 +9,7 @@
 #include "../Basic Data Structures/small_helper_structures.h"
 #include "../Basic Data Structures/solver_parameters.h"
 #include "../Basic Data Structures/trail_list.h"
-#include "../Propagators/Cardinality/propagator_cardinality.h"
+#include "../Propagators/Cardinality/Cardinality/propagator_cardinality.h"
 #include "../Propagators/Cardinality/Sum/propagator_sum.h"
 #include "../Propagators/Clausal/propagator_clausal.h"
 #include "../Propagators/Pseudo-Boolean/propagator_pseudo_boolean_constraints.h"

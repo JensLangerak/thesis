@@ -5,8 +5,8 @@
 #ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_
 
-#include "../../Basic Data Structures/boolean_literal.h"
-#include "Encoders/i_encoder.h"
+#include "../../../Basic Data Structures/boolean_literal.h"
+#include "../Encoders/i_encoder.h"
 #include <vector>
 namespace Pumpkin {
 class ExplanationCardinalityConstraint;

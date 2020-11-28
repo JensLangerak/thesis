@@ -20,7 +20,7 @@ public:
   bool Optimize(const sat::SatProblem &p) override;
   ::Pumpkin::ProblemSpecification ConvertProblem(sat::SatProblem &p);
   std::vector<bool> GetSolution() const override;
-  ~Pumpkin() {
+  ~Pumpkin() override {
     delete encoder_factory_;
   }
 

@@ -117,5 +117,9 @@ bool ConstraintOptimisationSolver::IsLiteralTrue(BooleanLiteral literal, const s
 {
 	return literal.IsPositive() && solution[literal.VariableIndex()] || literal.IsNegative() && !solution[literal.VariableIndex()];
 }
+ConstraintOptimisationSolver::~ConstraintOptimisationSolver() {
+  delete encoder_;
+}
+
 
 }//end Pumpkin namespace

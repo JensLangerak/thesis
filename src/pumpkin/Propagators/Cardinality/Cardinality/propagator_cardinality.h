@@ -2,23 +2,22 @@
 // Created by jens on 16-10-20.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_SUM_PROPAGATOR_SUM_H_
-#define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_SUM_PROPAGATOR_SUM_H_
+#ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_CARDINALITY_H_
+#define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_CARDINALITY_H_
 
 #include "../../propagator_generic.h"
-#include "database_sum.h"
-#include "watched_sum_constraint.h"
-#include <queue>
+#include "database_cardinality.h"
+#include "watched_cardinality_constraint.h"
 #include "../propagator_dynamic.h"
-
+#include <queue>
 namespace Pumpkin {
 
 class SolverState;
 
-class PropagatorSum :  public PropagatorDynamic<WatchedSumConstraint> {
+class PropagatorCardinality : public PropagatorDynamic<WatchedCardinalityConstraint> {
 public:
-  explicit PropagatorSum(int64_t num_variables);
-  ~PropagatorSum() override = default;
+  explicit PropagatorCardinality(int64_t num_variables);
+  ~PropagatorCardinality() override = default;
 
   ExplanationGeneric *ExplainLiteralPropagation(BooleanLiteral literal,
                                                 SolverState &state)
@@ -36,7 +35,7 @@ public:
                 // method which will internally set the pointer of the trail to
                 // the new correct position
 
-  DatabaseSum sum_database_;
+  DatabaseCardinality cardinality_database_;
 
   void SetTrailIterator(TrailList<BooleanLiteral>::Iterator iterator)override;
   bool PropagateOneLiteral(SolverState &state) override;
@@ -55,16 +54,17 @@ public:
   bool PropagateLiteral(BooleanLiteral true_literal,
                         SolverState &state) override;
 
-  WatchedSumConstraint *failure_constraint_;
+  WatchedCardinalityConstraint *failure_constraint_;
   BooleanLiteral last_propagated_;
   size_t last_index_;
 
+
   std::vector<BooleanLiteral>
-  GetEncodingCause(SolverState &state, WatchedSumConstraint *constraint) override;
+  GetEncodingCause(SolverState &state, WatchedCardinalityConstraint *constraint) override;
 
-  void PropagateIncremental2(SolverState &state, WatchedSumConstraint *constraint, std::vector<BooleanLiteral> &reason, std::vector<BooleanLiteral> &propagate) override;
+  void PropagateIncremental2(SolverState &state, WatchedCardinalityConstraint *constraint, std::vector<BooleanLiteral> &reason, std::vector<BooleanLiteral> &propagate) override;
 
-  IEncoder * GetEncoder(WatchedSumConstraint * constraint) override { return constraint->encoder_;};
+  IEncoder * GetEncoder(WatchedCardinalityConstraint * constraint) override { return constraint->encoder_;};
 };
 } // namespace Pumpkin
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_CARDINALITY_H_

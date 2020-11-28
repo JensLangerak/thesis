@@ -5,9 +5,9 @@
 #ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_DATABASE_CARDINALITY_H_
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_DATABASE_CARDINALITY_H_
 
+#include "../../../Basic Data Structures/problem_specification.h"
 #include "watch_list_cardinality.h"
 #include "watched_cardinality_constraint.h"
-#include "../../Basic Data Structures/problem_specification.h"
 #include <stdint-gcc.h>
 #include <vector>
 namespace Pumpkin {

@@ -22,7 +22,7 @@ public:
   /// \return the solution found by solve.
   virtual std::vector<bool> GetSolution() const = 0;
 
-  virtual ~ISolver() = 0;
+  virtual ~ISolver();
 
 protected:
   ISolver(){};

@@ -15,6 +15,7 @@ class PropagatorGeneric
 {
 public:
 	PropagatorGeneric();
+        virtual ~PropagatorGeneric() = default;
 
 	bool Propagate(SolverState &state); //does full propagation, i.e. until there is nothing else left to propagate
 	virtual bool PropagateOneLiteral(SolverState &state); //does only a single literal propagation, which is useful since it allows us to then ask simpler propagators to propagate with respect to the new enqueued literal before going further with this propagator

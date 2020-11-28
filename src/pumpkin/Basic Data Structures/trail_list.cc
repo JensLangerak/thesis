@@ -55,7 +55,7 @@ template <typename T> TrailList<T>::~TrailList() {
   while (next != nullptr) {
     current = next;
     next = next->next;
-//    delete current;
+    delete current;
   }
   next = removed_nodes_;
 
