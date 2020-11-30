@@ -5,4 +5,4 @@ add_library(engine
         constraint_optimisation_solver.h    solver_state.cpp                    value_selector.h
         )
 
-target_link_libraries(engine basic_data_structures propagators pseudo_boolean_encoders)
+target_link_libraries(engine basic_data_structures propagators pseudo_boolean_encoders logger)

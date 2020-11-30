@@ -14,6 +14,8 @@ class PropagatorEncoder : public IEncoder {
 public:
   std::vector<std::vector<BooleanLiteral>> Encode(SolverState &state) override;
   std::vector<std::vector<BooleanLiteral>> Encode(SolverState &state, std::vector<BooleanLiteral> lits) override;
+
+  bool EncodingAddAtStart() override{ return false; };
   PropagatorEncoder() : IEncoder() {};
 
   ~PropagatorEncoder() override;

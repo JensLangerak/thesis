@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "../../logger/logger.h"
 #include "../Propagators/Cardinality/Encoders/totaliser_encoder.h"
 namespace Pumpkin
 {
@@ -22,7 +23,10 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification&
 {
 	for (BooleanLiteral unit_literal : problem_specification.unit_clauses_) { state_.AddUnitClause(unit_literal); }
         for (auto& clause : problem_specification.clauses_) { state_.AddClause(clause); }
+
+  simple_sat_solver::logger::Logger::Log2("Before cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
   for (auto& constraint : problem_specification.cardinality_constraints_) { state_.AddCardinality(constraint); }
+  simple_sat_solver::logger::Logger::Log2("After cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
   for (auto & constraint : problem_specification.sum_constraints_) { state_.AddSumConstraint(constraint);}
 	if (!problem_specification.pseudo_boolean_constraints_.empty()) { std::cout << "TODO: add pseudo-Boolean constraints!\n"; }
 

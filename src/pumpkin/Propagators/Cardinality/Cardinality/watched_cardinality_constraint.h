@@ -32,6 +32,8 @@ public:
   int false_count_;
   int trigger_count_ = 0;
   IEncoder *encoder_;
+  int log_id_;
+  static int next_log_id_;
 };
 } // namespace Pumpkin
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_

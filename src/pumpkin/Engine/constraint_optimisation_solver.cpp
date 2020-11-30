@@ -3,7 +3,7 @@
 #include "../Basic Data Structures/runtime_assert.h"
 
 #include <iostream>
-
+#include "../../logger/logger.h"
 namespace Pumpkin
 {
 
@@ -39,9 +39,11 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 			if (!success) { lower_bound_ = upper_bound_; break; }
 
 			constrained_satisfaction_solver_.state_.value_selector_.PredetermineValues(best_solution_);
+
 		}
 		else if (output.ProvenInfeasible())
 		{
+                        simple_sat_solver::logger::Logger::Log2("New lowerboud: " + std::to_string(lower_bound_));
 			lower_bound_ = upper_bound_;
 		}
 	}
@@ -58,7 +60,6 @@ bool ConstraintOptimisationSolver::StrengthenUpperBoundConstraints()
 {
 	constrained_satisfaction_solver_.state_.Reset(); //for now we restart each time a solution has been found as is usual in MaxSAT. In the future, test NOT restarting but simply continuing by supplying a conflict clause (should be better), possibly setting the restart mechanisms to a fresh start
 	if (lower_bound_ == upper_bound_) { return false; }
-//        upper_bound_ = upper_bound_ > 500 ? 500 : upper_bound_;
 	bool success = encoder_->ReduceRightHandSide(upper_bound_ - 1);
 
 	//if the encoding added new variables, we set their polarities to zero. Likely this is not an issue since most encodings only add variables the first time the encoding is generated, but this might change in the future
@@ -70,6 +71,7 @@ bool ConstraintOptimisationSolver::StrengthenUpperBoundConstraints()
 void ConstraintOptimisationSolver::UpdateBestSolution(const std::vector<bool>& solution)
 {
 	int64_t new_upper_bound = ComputeSolutionCost(solution);
+        simple_sat_solver::logger::Logger::Log2("New solution found: " + std::to_string(new_upper_bound));
 	runtime_assert(new_upper_bound < upper_bound_);
 
 	upper_bound_ = new_upper_bound;

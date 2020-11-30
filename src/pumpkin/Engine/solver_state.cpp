@@ -1,4 +1,5 @@
 #include "solver_state.h"
+#include "../../logger/logger.h"
 #include "../Basic Data Structures/runtime_assert.h"
 
 #include <algorithm>

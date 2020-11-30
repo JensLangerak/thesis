@@ -13,6 +13,7 @@ namespace simple_sat_solver::ctt {
 CttConverter::CttConverter(Ctt problem)
     : ctt_problem_(problem), sat_problem_(0),
       total_timeslots_(problem.nr_periods_per_day * problem.nr_days) {
+  course_room_schedule_start_index = sat_problem_.GetNrVars();
   sat_problem_.AddNewVars(ctt_problem_.nr_courses * ctt_problem_.nr_rooms *
                           total_timeslots_);
   course_schedule_start_index =
@@ -41,7 +42,7 @@ int CttConverter::CourseRoomScheduleIndex(int course_index, int room_index,
 
   return ((course_index * ctt_problem_.nr_rooms) + room_index) *
              total_timeslots_ +
-         time_index;
+         time_index + course_room_schedule_start_index;
 }
 int CttConverter::TimeIndex(int day, int period) {
   assert(day < ctt_problem_.nr_days);
@@ -74,8 +75,8 @@ void CttConverter::ScheduleAllLectures(Course course) {
     literals_for_c.push_back(Lit(CourseScheduleIndex(course.index, t)));
     false_lits.push_back(~Lit(CourseScheduleIndex(course.index, t)));
   }
-  std::cout << course.index << " - " << literals_for_c[0].x << "  -  "
-            << course.nr_lectures << std::endl;
+//  std::cout << course.index << " - " << literals_for_c[0].x << "  -  "
+//            << course.nr_lectures << std::endl;
 
   // TODO fix bugs
   //    sat::TotaliserEncoder::Encode(sat_problem_, literals_for_c,
@@ -259,12 +260,16 @@ int CttConverter::ValidateSolution(std::vector<CttAssignment> solution) {
   }
 
   int penalty = 0;
+  int p_old = 0;
   for (CttAssignment a : solution) {
     int nr_students = ctt_problem_.courses[a.course_index].nr_students;
     int max_in_room = ctt_problem_.rooms[a.room_index].max_capactity;
     int score = (nr_students > max_in_room) ? nr_students - max_in_room : 0;
-    penalty += score;
+//    penalty += score;
+    penalty += (nr_students > max_in_room) ? 1 : 0;
   }
+//  std::cout << "P Room " << penalty - p_old<< std::endl;
+  p_old = penalty;
 
   for (Course c : ctt_problem_.courses) {
     int work_days = 0;
@@ -279,6 +284,9 @@ int CttConverter::ValidateSolution(std::vector<CttAssignment> solution) {
     if (work_days < c.min_working_days)
       penalty += 1 * (c.min_working_days - work_days); //5
   }
+
+//  std::cout << "P workdays " << penalty - p_old<< std::endl;
+  p_old = penalty;
 
   int isolated_lectures = 0;
   for (Curriculum c : ctt_problem_.curricula) {
@@ -300,6 +308,8 @@ int CttConverter::ValidateSolution(std::vector<CttAssignment> solution) {
   }
 
   penalty += 1 * isolated_lectures; //2
+//  std::cout << "P iso " << penalty - p_old<< std::endl;
+  p_old = penalty;
 
   int room_stability = 0;
   for (Course c : ctt_problem_.courses) {
@@ -312,6 +322,8 @@ int CttConverter::ValidateSolution(std::vector<CttAssignment> solution) {
       room_stability += rooms - 1;
   }
   penalty += room_stability;
+//  std::cout << "P room stab " << penalty - p_old<< std::endl;
+
   return penalty;
 }
 

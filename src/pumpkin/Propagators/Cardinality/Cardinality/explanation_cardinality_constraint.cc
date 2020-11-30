@@ -3,6 +3,7 @@
 //
 
 #include "explanation_cardinality_constraint.h"
+#include "../../../../logger/logger.h"
 namespace Pumpkin {
 
 BooleanLiteral ExplanationCardinalityConstraint::operator[](int index) const {
@@ -19,6 +20,7 @@ ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
   assert(constraint->true_count_ > constraint->max_ ||
          constraint->false_count_ >
              constraint->literals_.size() - constraint->min_);
+  simple_sat_solver::logger::Logger::Log2("Explain Conflict: " + std::to_string(constraint->log_id_));
   lits_ = std::vector<BooleanLiteral>();
   // Check if the min or max constraint is violated
   bool select_value = constraint->true_count_ > constraint->max_;
@@ -38,6 +40,7 @@ ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
     BooleanLiteral propagated_literal) {
   assert(constraint!= nullptr);
   assert(state.assignments_.IsAssignedTrue(propagated_literal));
+  simple_sat_solver::logger::Logger::Log2("Explain propagation: " + std::to_string(constraint->log_id_));
   // check if true for the minimum value is propagated or false for the upper bound.
   bool propagated_value = true;
   for (BooleanLiteral l : constraint->literals_) {

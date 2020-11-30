@@ -9,4 +9,4 @@ add_library(encoders i_encoder.cc
         totaliser_encoder.cc
         totaliser_encoder.h
         )
-target_link_libraries(encoders propagator_generic)
+target_link_libraries(encoders propagator_generic logger)

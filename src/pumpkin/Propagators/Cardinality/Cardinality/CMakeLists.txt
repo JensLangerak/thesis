@@ -14,4 +14,4 @@ add_library(cardinality_propagator
         watch_list_cardinality.cc
         watch_list_cardinality.h
         )
-target_link_libraries(cardinality_propagator propagator_generic encoders propagator_dynamic)
+target_link_libraries(cardinality_propagator propagator_generic encoders propagator_dynamic logger)

@@ -3,6 +3,6 @@ target_link_libraries(ctt sat solvers)
 
 
 add_executable(ctt_benchmark main.cc)
-target_link_libraries(ctt_benchmark ctt)
+target_link_libraries(ctt_benchmark ctt logger)
 
 add_executable(ctt_validator validator.cc)

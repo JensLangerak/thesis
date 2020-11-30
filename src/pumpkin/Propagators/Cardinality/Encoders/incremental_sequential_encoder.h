@@ -8,6 +8,7 @@
 #include "../../../Basic Data Structures/boolean_literal.h"
 #include "i_encoder.h"
 #include <cassert>
+#include <unordered_map>
 #include <vector>
 namespace Pumpkin {
 class IncrementalSequentialEncoder : public IEncoder {
@@ -21,7 +22,7 @@ public:
 
   std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propagated_values) override;
   bool IsAdded(BooleanLiteral lit) override;
-  bool EncodingAdded() override { return false;};
+  bool EncodingAdded() override { return encoding_added_;};
 
   void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) override;
 
@@ -36,11 +37,12 @@ public:
     IEncoder * CallConstructor(std::vector<BooleanLiteral> literals, int min, int max) override {return new IncrementalSequentialEncoder(literals, min, max);};
   };
 
-  std::vector<std::vector<BooleanLiteral>> hist;
+//  std::vector<std::vector<BooleanLiteral>> hist;
 //private:
   bool AddLiteral(SolverState &state, BooleanLiteral l, std::vector<std::vector<BooleanLiteral>> &added_clauses);
   std::vector<BooleanLiteral> variables_;
-  std::vector<BooleanLiteral> added_lits_;
+  std::unordered_map<int, bool> added_lits_;
+  std::vector<BooleanLiteral> added_lit_hist_;
   std::vector<BooleanLiteral> previous_added_lits_;
 //  std::vector<std::vector<BooleanLiteral>> added_clauses_;
   int max_;

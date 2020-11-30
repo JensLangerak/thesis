@@ -3,6 +3,7 @@
 //
 
 #include "propagator_cardinality.h"
+#include "../../../../logger/logger.h"
 #include "../../../Engine/solver_state.h"
 #include "../Encoders/incremental_sequential_encoder.h"
 #include "../Encoders/totaliser_encoder.h"
@@ -63,6 +64,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
     // conflict
     if (true_count > constraint->max_ ||
         false_count > constraint->literals_.size() - constraint->min_) {
+
       // restore remaining watchers
       for (size_t k = current_index + 1; k < watchers_true.size(); ++k) {
         watchers_true[end_position] = watchers_true[current_index];
@@ -73,6 +75,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
       //      return false;
       constraint->trigger_count_++;
       trigger_count_++;
+      simple_sat_solver::logger::Logger::Log2("Conflict ID " + std::to_string(constraint->log_id_) + " counts " + std::to_string(constraint->true_count_) + " " + std::to_string(trigger_count_));
       if (constraint->encoder_->AddEncodingDynamic()) {
         bool res = AddEncoding(state, constraint);
         //        state.FullReset();
@@ -87,6 +90,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
         false_count == constraint->literals_.size() - constraint->min_) {
       constraint->trigger_count_++;
       trigger_count_++;
+      simple_sat_solver::logger::Logger::Log2("Propagate ID " + std::to_string(constraint->log_id_) + " counts " + std::to_string(constraint->true_count_) + " " + std::to_string(trigger_count_));
       if (constraint->encoder_->AddEncodingDynamic() &&
           constraint->encoder_->SupportsIncremental()) {
         bool res = PropagateIncremental(state, constraint);

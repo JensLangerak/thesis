@@ -58,7 +58,7 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
   params.bump_decision_variables = true;
   ConstraintOptimisationSolver solver(problem, params);
 //  SolverOutput solver_output = solver.Solve(std::numeric_limits<double>::max());
-  SolverOutput solver_output = solver.Solve(60);
+  SolverOutput solver_output = solver.Solve(3600);
   solved_ = solver_output.HasSolution();
 
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());

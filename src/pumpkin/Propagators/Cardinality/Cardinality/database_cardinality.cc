@@ -11,7 +11,7 @@ DatabaseCardinality::DatabaseCardinality(uint64_t num_vars)
 
 WatchedCardinalityConstraint* DatabaseCardinality::AddPermanentConstraint(CardinalityConstraint &constraint, SolverState & state) {
     WatchedCardinalityConstraint * watched = new WatchedCardinalityConstraint(constraint.literals, constraint.min, constraint.max, constraint.encoder_factory->Create(constraint));
-    if (!watched->encoder_->AddEncodingDynamic()) {
+    if (watched->encoder_->EncodingAddAtStart()) {
       auto res = watched->encoder_->Encode(state);
     }
     permanent_constraints_.push_back(watched);

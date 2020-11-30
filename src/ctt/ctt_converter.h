@@ -56,6 +56,7 @@ private:
   void AddRoomCapacityConstraints();
   void AddRoomStability();
   void AddPenalty();
+  int course_room_schedule_start_index;
 };
 }
 #endif // SIMPLESATSOLVER_SRC_CTT_CTT_CONVERTER_H_

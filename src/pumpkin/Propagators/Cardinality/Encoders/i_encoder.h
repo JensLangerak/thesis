@@ -28,6 +28,7 @@ public:
   bool add_incremental;
 
   bool AddEncodingDynamic() { return add_dynamic_; };
+  virtual bool EncodingAddAtStart() { return !add_dynamic_; };
   virtual bool EncodingAdded() { return encoding_added_;};
   virtual bool IsAdded(BooleanLiteral l);
   virtual void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) {assert(true);};
@@ -47,6 +48,7 @@ public:
                                       int min, int max) = 0;
   };
 
+  int log_id_;
 protected:
   IEncoder(){};
   bool add_dynamic_ = false;
