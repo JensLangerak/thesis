@@ -14,7 +14,7 @@ namespace simple_sat_solver::solver_wrappers {
 class Pumpkin : public ISolver {
 public:
   enum class CardinalityOption{ Totolizer, Sequential, Propagator};
-  inline Pumpkin(::Pumpkin::IEncoder::IFactory * encoder_factory) : encoder_factory_(encoder_factory), solved_(false) {};
+  inline Pumpkin(::Pumpkin::IEncoder::IFactory * encoder_factory, int start_upperbound) : encoder_factory_(encoder_factory), solved_(false), start_uppberboud_(start_upperbound) {};
 
   bool Solve(const sat::SatProblem &p) override;
   bool Optimize(const sat::SatProblem &p) override;
@@ -24,6 +24,7 @@ public:
     delete encoder_factory_;
   }
 
+  int start_uppberboud_ = -1;
 private:
   std::vector<bool> solution_;
   bool solved_;

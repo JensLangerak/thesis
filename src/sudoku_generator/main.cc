@@ -5,7 +5,7 @@
 #include "generator.h"
 #include <iostream>
 
-#include "../solver_wrappers/crypto_mini_sat.h"
+//#include "../solver_wrappers/crypto_mini_sat.h"
 #include "../solver_wrappers/i_solver.h"
 #include "../solver_wrappers/simple_solver.h"
 #include "../sudoku/encoder.h"
@@ -28,7 +28,7 @@ void TestGeneratorV2() {
 
  // solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
 
-  solver_wrappers::ISolver *solver = new solver_wrappers::CryptoMiniSat();
+  solver_wrappers::ISolver *solver = new solver_wrappers::SimpleSolver();
   GeneratorV2 g(solver, 3);
   auto res = g.Generate(27);
   PrintSudoku(res);

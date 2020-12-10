@@ -65,6 +65,8 @@ public:
   void PropagateIncremental2(SolverState &state, WatchedCardinalityConstraint *constraint, std::vector<BooleanLiteral> &reason, std::vector<BooleanLiteral> &propagate) override;
 
   IEncoder * GetEncoder(WatchedCardinalityConstraint * constraint) override { return constraint->encoder_;};
+  std::queue<WatchedCardinalityConstraint *> add_constraints_;
+  void AddScheduledEncodings(SolverState &state);
 };
 } // namespace Pumpkin
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_CARDINALITY_H_

@@ -15,7 +15,7 @@ BooleanLiteral ExplanationCardinalityConstraint::operator[](size_t index) const 
   return lits_[index];
 }
 ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
-    const WatchedCardinalityConstraint *constraint, SolverState &state) {
+    WatchedCardinalityConstraint *constraint, SolverState &state) {
   assert(constraint!= nullptr);
   assert(constraint->true_count_ > constraint->max_ ||
          constraint->false_count_ >
@@ -30,13 +30,16 @@ ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
       lits_.push_back(l);
   }
 
+  constraint->UpdateCounts(lits_, state);
+
+
   int test = lits_.size();
   // TODO not sure if >= should be possible or that is should be ==
   assert(select_value && lits_.size() >= constraint->true_count_ ||
          (!select_value) && lits_.size() >= constraint->false_count_);
 }
 ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
-    const WatchedCardinalityConstraint *constraint, SolverState &state,
+    WatchedCardinalityConstraint *constraint, SolverState &state,
     BooleanLiteral propagated_literal) {
   assert(constraint!= nullptr);
   assert(state.assignments_.IsAssignedTrue(propagated_literal));
@@ -62,6 +65,7 @@ ExplanationCardinalityConstraint::ExplanationCardinalityConstraint(
         state.assignments_.GetAssignment(l) == cause_value)
       lits_.push_back(l);
   }
+  constraint->UpdateCounts(lits_, state);
   // TODO trim lits if to many
 }
 size_t ExplanationCardinalityConstraint::Size() const { return lits_.size(); }

@@ -25,7 +25,7 @@ public:
 
 	ClauseDatabase clause_database_;
 
-private:
+//private:
 	//this is the main propagation method. Note that it will change watch lists of true_literal and some other literals and enqueue assignments
 	bool PropagateLiteral(BooleanLiteral true_literal, SolverState &state);
 

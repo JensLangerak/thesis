@@ -10,8 +10,7 @@ namespace Pumpkin {
 
 SolverState::SolverState(int64_t num_Boolean_variables,
                          SolverParameters &params)
-    : trail_(),
-      variable_selector_(num_Boolean_variables),
+    : trail_(), variable_selector_(num_Boolean_variables),
       value_selector_(num_Boolean_variables),
       assignments_(
           num_Boolean_variables), // note that the 0th position is not used
@@ -19,31 +18,35 @@ SolverState::SolverState(int64_t num_Boolean_variables,
                           params.learned_clause_decay_factor),
       propagator_pseudo_boolean_(num_Boolean_variables),
       propagator_cardinality_(num_Boolean_variables),
-//      propagator_sum_(num_Boolean_variables),
+      //      propagator_sum_(num_Boolean_variables),
       decision_level_(0),
       simple_moving_average_lbd(params.glucose_queue_lbd_limit),
       simple_moving_average_block(params.glucose_queue_reset_limit) {
   propagator_clausal_.SetTrailIterator(trail_.begin());
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.SetTrailIterator(trail_.begin());
-//  propagator_sum_.SetTrailIterator(trail_.begin());
-
+  //  propagator_sum_.SetTrailIterator(trail_.begin());
 }
 
 void SolverState::EnqueueDecisionLiteral(BooleanLiteral decision_literal) {
   MakeAssignment(decision_literal, NULL, NULL);
 }
 
-bool SolverState::InsertPropagatedLiteral(BooleanLiteral propagated_literal, PropagatorGeneric *responsible_propagator, uint64_t code, int decision_level) {
+bool SolverState::InsertPropagatedLiteral(
+    BooleanLiteral propagated_literal,
+    PropagatorGeneric *responsible_propagator, uint64_t code,
+    int decision_level) {
   if (assignments_.IsAssigned(propagated_literal)) {
     assert(assignments_.GetAssignment(propagated_literal) == true);
 
   } else {
-    MakeAssignment(propagated_literal, responsible_propagator, code, decision_level);
-    assert(propagator_cardinality_.cardinality_database_.watch_list_true[propagated_literal].empty());
+    MakeAssignment(propagated_literal, responsible_propagator, code,
+                   decision_level);
+    assert(propagator_cardinality_.cardinality_database_
+               .watch_list_true[propagated_literal]
+               .empty());
   }
   return true;
-
 }
 
 bool SolverState::EnqueuePropagatedLiteral(
@@ -69,7 +72,7 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
   while (propagator_clausal_.IsPropagationComplete(*this) == false ||
          propagator_pseudo_boolean_.IsPropagationComplete(*this) == false ||
          propagator_cardinality_.IsPropagationComplete(*this) == false) {
-//         propagator_sum_.IsPropagationComplete(*this) == false) {
+    //         propagator_sum_.IsPropagationComplete(*this) == false) {
     if (!propagator_clausal_.Propagate(*this)) {
       return &propagator_clausal_;
     }
@@ -82,12 +85,9 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
       return &propagator_cardinality_;
     }
     assert(propagator_cardinality_.CheckCounts(*this));
-//    if (!propagator_sum_.PropagateOneLiteral(*this)) {
-//      return &propagator_sum_;
-//    }
-
-
-
+    //    if (!propagator_sum_.PropagateOneLiteral(*this)) {
+    //      return &propagator_sum_;
+    //    }
   }
   return NULL;
 }
@@ -96,7 +96,7 @@ void SolverState::IncreaseDecisionLevel() {
   decision_level_++;
   trail_delimiter_.push_back(trail_.end());
 
-//  trail_delimiter_.push_back(int(trail_.size()));
+  //  trail_delimiter_.push_back(int(trail_.size()));
 }
 
 void SolverState::Backtrack(int backtrack_level) {
@@ -109,32 +109,35 @@ void SolverState::Backtrack(int backtrack_level) {
   propagator_clausal_.Synchronise(*this);
   propagator_pseudo_boolean_.Synchronise(*this);
   propagator_cardinality_.Synchronise(*this);
-//  propagator_sum_.Synchronise(*this);
+  //  propagator_sum_.Synchronise(*this);
 }
 
 void SolverState::Reset() {
-  //TODO fix bug
+  // TODO fix bug
   propagator_cardinality_.SetTrailIterator(trail_.begin());
-//  propagator_sum_.SetTrailIterator(trail_.begin());
+  //  propagator_sum_.SetTrailIterator(trail_.begin());
   if (GetCurrentDecisionLevel() != 0)
     Backtrack(0);
 }
 
 void SolverState::BacktrackOneLevel() {
-//  int num_assignments_for_removal =
-//      int(trail_.size() - trail_delimiter_.back());
-//  assert(num_assignments_for_removal >= 0);
-//  for (int i = 0; i < num_assignments_for_removal; i++) {
-    while(trail_.back() != *trail_delimiter_.back()) {
-      assert(assignments_.GetAssignmentLevel(trail_.back().Variable()) == decision_level_);
+  //  int num_assignments_for_removal =
+  //      int(trail_.size() - trail_delimiter_.back());
+  //  assert(num_assignments_for_removal >= 0);
+  //  for (int i = 0; i < num_assignments_for_removal; i++) {
+  while (trail_.back() != *trail_delimiter_.back()) {
+    assert(assignments_.GetAssignmentLevel(trail_.back().Variable()) ==
+           decision_level_);
     UndoLastAssignment();
   }
-  assert(assignments_.GetAssignmentLevel(trail_.back().Variable()) == decision_level_);
+  assert(assignments_.GetAssignmentLevel(trail_.back().Variable()) ==
+         decision_level_);
   UndoLastAssignment();
   trail_delimiter_.pop_back();
   decision_level_--;
-  assert(trail_.size() == 0 || assignments_.GetAssignmentLevel(trail_.back().Variable()) == decision_level_);
-
+  assert(trail_.size() == 0 ||
+         assignments_.GetAssignmentLevel(trail_.back().Variable()) ==
+             decision_level_);
 }
 
 void SolverState::UndoLastAssignment() {
@@ -144,8 +147,8 @@ void SolverState::UndoLastAssignment() {
       last_assigned_variable,
       assignments_.IsAssignedTrue(last_assigned_variable));
   assignments_.UnassignVariable(last_assigned_variable);
-//  if (*trail_delimiter_.back() == trail_.back())
-//    trail_delimiter_.pop_back();
+  //  if (*trail_delimiter_.back() == trail_.back())
+  //    trail_delimiter_.pop_back();
   trail_.pop_back();
 }
 
@@ -180,7 +183,7 @@ SolverState::GetDecisionLiteralForLevel(int decision_level) const {
   } // return undefined literal when there are no decisions on the trail
 
   BooleanLiteral decision_literal = *trail_delimiter_[decision_level - 1];
-//      trail_[trail_delimiter_[decision_level - 1]];
+  //      trail_[trail_delimiter_[decision_level - 1]];
 
   assert(assignments_.GetAssignmentPropagator(decision_literal.Variable()) ==
          NULL);
@@ -225,7 +228,7 @@ SolverState::GetLiteralFromTheBackOfTheTrail(size_t index) const {
   for (int i = 0; i < index; ++i)
     it.Previous();
   return *it;
-//  return trail_[trail_.size() - index - 1];
+  //  return trail_[trail_.size() - index - 1];
 }
 
 std::vector<bool> SolverState::GetOutputAssignment() const {
@@ -259,9 +262,9 @@ BooleanVariable SolverState::CreateNewVariable() {
   assignments_.Grow();
   propagator_clausal_.clause_database_.watch_list_.Grow();
   propagator_pseudo_boolean_.constraint_database_.watch_list_.Grow();
-//  propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
+  //  propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
   propagator_cardinality_.cardinality_database_.watch_list_true.Grow();
-//  propagator_sum_.sum_database_.watch_list_true.Grow();
+  //  propagator_sum_.sum_database_.watch_list_true.Grow();
 
   return new_variable;
 }
@@ -348,13 +351,15 @@ void SolverState::UpdateMovingAveragesForRestarts(int learned_clause_lbd) {
   simple_moving_average_block.AddTerm(GetNumberOfAssignedVariables());
 }
 
-void SolverState::MakeAssignment(BooleanLiteral literal, PropagatorGeneric *responsible_propagator, uint64_t code, int decisionLevel) {
+void SolverState::MakeAssignment(BooleanLiteral literal,
+                                 PropagatorGeneric *responsible_propagator,
+                                 uint64_t code, int decisionLevel) {
   assert(literal.IsUndefined() == false);
   assert(assignments_.IsAssigned(literal) == false);
 
   assignments_.MakeAssignment(literal.Variable(), literal.IsPositive(),
-                              decisionLevel, responsible_propagator,
-                              code, trail_.size());
+                              decisionLevel, responsible_propagator, code,
+                              trail_.size());
   if (decisionLevel == decision_level_) {
     trail_.push_back(literal);
   } else {
@@ -372,20 +377,19 @@ void SolverState::MakeAssignment(BooleanLiteral literal,
                               code, trail_.size());
 
   trail_.push_back(literal);
-
-
-
 }
 void SolverState::AddSumConstraint(SumConstraint &constraint) {
-  //TODO
-//  propagator_sum_.sum_database_.AddPermanentConstraint(constraint, *this);
+  // TODO
+  //  propagator_sum_.sum_database_.AddPermanentConstraint(constraint, *this);
 }
 void SolverState::AddCardinality(CardinalityConstraint &constraint) {
-  propagator_cardinality_.cardinality_database_.AddPermanentConstraint(constraint, *this);
+  propagator_cardinality_.cardinality_database_.AddPermanentConstraint(
+      constraint, *this);
 }
 
-
-TrailList<BooleanLiteral>::Iterator SolverState::GetTrailEnd() { return trail_.end();}
+TrailList<BooleanLiteral>::Iterator SolverState::GetTrailEnd() {
+  return trail_.end();
+}
 TrailList<BooleanLiteral>::Iterator SolverState::GetTrailBegin() {
   return trail_.begin();
 }
@@ -394,8 +398,8 @@ void SolverState::FullReset() {
   propagator_clausal_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.ResetCounts();
-//  propagator_sum_.SetTrailIterator(trail_.begin());
-//  propagator_sum_.ResetCounts();
+  //  propagator_sum_.SetTrailIterator(trail_.begin());
+  //  propagator_sum_.ResetCounts();
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
 }
 void SolverState::ResetPropagatorsToLevel() {
@@ -407,7 +411,42 @@ void SolverState::ResetPropagatorsToLevel() {
   propagator_clausal_.SetTrailIterator(update);
   propagator_pseudo_boolean_.SetTrailIterator(update);
   propagator_cardinality_.SetTrailIterator(update);
-//  propagator_sum_.SetTrailIterator(update);
+  //  propagator_sum_.SetTrailIterator(update);
+}
+
+enum class LitValue { True, False, Unknown };
+void SolverState::CheckClasualTrailState() {
+  int t_size = trail_.size();
+  auto stop = propagator_clausal_.next_position_on_trail_to_propagate_it;
+  propagator_clausal_.next_position_on_trail_to_propagate_it = trail_.begin();
+  while (propagator_clausal_.next_position_on_trail_to_propagate_it != stop) {
+    bool res = propagator_clausal_.PropagateOneLiteral(*this);
+    if (!res) {
+      auto failed = propagator_clausal_.failure_clause_;
+      std::vector<BooleanLiteral> lits;
+      for (int i = 0; i < failed->literals_.size_; ++i)
+        lits.push_back(failed->literals_[i]);
+      std::vector<LitValue> values;
+      std::vector<PropagatorGeneric *> propagator;
+      for (BooleanLiteral l : lits) {
+        if (assignments_.IsAssignedTrue(l))
+          values.push_back(LitValue::True);
+        else if (assignments_.IsAssignedFalse(l))
+          values.push_back(LitValue::False);
+        else
+          values.push_back(LitValue::Unknown);
+        if (assignments_.IsAssigned(l.Variable()))
+          propagator.push_back(
+              assignments_.GetAssignmentPropagator(l.Variable()));
+        else
+          propagator.push_back(nullptr);
+      }
+
+      assert(false);
+    }
+  }
+  int t_size2 = trail_.size();
+  assert(t_size == t_size2);
 }
 
 } // namespace Pumpkin

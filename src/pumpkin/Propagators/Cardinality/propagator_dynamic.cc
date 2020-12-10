@@ -347,7 +347,7 @@ PropagatorDynamic<T>::InitPropagationQueue(SolverState &state,
     BooleanLiteral l1 = c->literals_[0];
     BooleanLiteral l2 = c->literals_[1];
     // make sure that l1 is unassigned or true, or both are false.
-    if (state.assignments_.IsAssignedFalse(l1)) {
+    if (state.assignments_.IsAssignedFalse(l1) && (!state.assignments_.IsAssignedFalse(l2))) {
       l1 = c->literals_[1];
       l2 = c->literals_[0];
     }
@@ -358,6 +358,8 @@ PropagatorDynamic<T>::InitPropagationQueue(SolverState &state,
     if ((!state.assignments_.IsAssignedTrue(l1)) &&
         state.assignments_.IsAssignedFalse(l2)) {
       int max_level = state.assignments_.GetAssignmentLevel(l2.Variable());
+      if (state.assignments_.IsAssigned(l1))
+      assert(max_level <= state.assignments_.GetAssignmentLevel(l1.Variable()));
       propagation_queue.push(PropagtionElement(l1, max_level,
                                                &state.propagator_clausal_,
                                                reinterpret_cast<uint64_t>(c)));
@@ -461,7 +463,10 @@ bool PropagatorDynamic<T>::PropagateIncremental(
   std::vector<std::vector<BooleanLiteral>> clauses =
       AddEncodingClauses(state, constraint);
   if (clauses.empty()) {
-    assert(!constraint->encoder_->IsAdded(propagate[0]));
+    if (constraint->encoder_->IsAdded(propagate[0])) {
+//      constraint->encoder_->DebugInfo(state);
+      assert(!constraint->encoder_->IsAdded(propagate[0]));
+    }
     std::vector<std::vector<BooleanLiteral>> propagate_clauses =
         //      constraint->encoder_->Encode(state, {propagate[0]});
         GetEncoder(constraint)->Propagate(state, reason, propagate);
@@ -470,7 +475,7 @@ bool PropagatorDynamic<T>::PropagateIncremental(
     //    return true;
   }
 
-  PropagateAddedClauses(state, unit_index, clause_index, var_index);
+  PropagateAddedClauses(state, unit_index, clause_index , var_index);
   return true;
 }
 template <class T>

@@ -11,6 +11,8 @@ IEncoder::Encode(SolverState &state, std::vector<BooleanLiteral> lits) {
     return Encode(state);
 }
 bool IEncoder::IsAdded(BooleanLiteral l) { return EncodingAdded();}
+void IEncoder::DebugInfo(SolverState &state) {}
+
 IEncoder *IEncoder::IFactory::Create(WatchedCardinalityConstraint &constraint) {
   return Create(constraint.literals_, constraint.min_, constraint.max_);
 }
@@ -22,6 +24,7 @@ IEncoder *IEncoder::IFactory::Create(std::vector<BooleanLiteral> variables,
   IEncoder * encoder = CallConstructor(variables, min, max);
   encoder->add_dynamic_ = this->add_dynamic_;
   encoder->add_incremental = this->add_incremetal_;
+  encoder->add_delay = this->add_delay_;
   return encoder;
 }
 IEncoder *IEncoder::IFactory::Create(SumConstraint &constraint) {

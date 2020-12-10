@@ -37,7 +37,6 @@ bool GeneralisedTotaliserCP192::ReduceRightHandSide(int64_t new_rhs)
 			lits.push_back(b.literal);
 			weights.push_back(b.weight);
 		}
-                int ts = lits.size();
 		partial_sum_literals = encode(_hax_state, lits, weights, new_rhs);
 //                std::vector<BooleanLiteral> sum;
 //                for (int i = 0; i < new_rhs; ++i) {

@@ -2,6 +2,7 @@
 // Created by jens on 28-10-20.
 //
 
+#include "../logger/logger.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/incremental_sequential_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/propagator_encoder.h"
 #include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
@@ -9,6 +10,7 @@
 #include "../solver_wrappers/simple_solver.h"
 #include "parser.h"
 #include <cassert>
+#include <chrono>
 #include <ctime>
 #include <iostream>
 namespace simple_sat_solver::cardinality_benchmark {
@@ -16,7 +18,7 @@ namespace simple_sat_solver::cardinality_benchmark {
     Parser parser;
     assert(encoder_factory != nullptr);
     sat::SatProblem* problem = parser.Parse(path, max);
-    solver_wrappers::Pumpkin solver(encoder_factory);
+    solver_wrappers::Pumpkin solver(encoder_factory, 1000);
     std::clock_t start = std::clock();
     bool res = solver.Solve(*problem);
     double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
@@ -51,15 +53,83 @@ namespace simple_sat_solver::cardinality_benchmark {
     TestCardinalityOption(path, max, encoder_factory);
 
   }
+
+void Test(std::string test_file_path, std::string test_file, std::string log_dir, ::Pumpkin::IEncoder::IFactory * encoder, std::string encoder_message, int start_penalty) {
+  simple_sat_solver::logger::Logger::StartNewLog(log_dir,test_file);
+  simple_sat_solver::logger::Logger::Log2("File: " + test_file_path);
+  simple_sat_solver::logger::Logger::Log2("Encoder: " + encoder_message);
+  std::string t = "T";
+  std::string f = "F";
+  simple_sat_solver::logger::Logger::Log2("Dynamic: " + (encoder->add_dynamic_ ? t : f));
+  simple_sat_solver::logger::Logger::Log2("Incremental: " + (encoder->add_incremetal_ ? t : f));
+
+  solver_wrappers::ISolver * solver = new solver_wrappers::Pumpkin(encoder, start_penalty);
+
+  Parser parser;
+  sat::SatProblem* problem = parser.Parse(test_file_path, -1);
+  std::clock_t start = std::clock();
+  bool res = solver->Optimize(*problem);
+  double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout << "time: " << duration <<std::endl;
+  simple_sat_solver::logger::Logger::Log2("Time: " + std::to_string(duration));
+//    assert(res);
+
+  delete problem;
+  delete solver;
+  simple_sat_solver::logger::Logger::End();
+}
+}
+
+void test_setting(std::string test_file_path, std::string test_file, std::string log_dir,
+                  Pumpkin::IEncoder::IFactory *encoder_factory,
+                  std::string encoder_string, bool add_dynamic,
+                  bool add_incremental, int start_penalty) {
+  std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+  std::cout << "start computation at " << std::ctime(&end_time) << std::endl;
+  encoder_factory->add_dynamic_ = add_dynamic;
+  encoder_factory->add_incremetal_ = add_incremental;
+  simple_sat_solver::cardinality_benchmark::Test(test_file_path, test_file, log_dir , encoder_factory, encoder_string, start_penalty);
+}
+
+
+void test_file(std::string file, std::string simple_file, int start_penalty) {
+  std::cout << "test file: " << file << std::endl;
+  std::string log_dir = "../../../data/cardinality/logs2";
+  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, false, start_penalty);
+  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, true, start_penalty);
+  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::PropagatorEncoder::Factory(), "Propagator", false, false, start_penalty);
+  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", false, false, start_penalty);
 }
 
 int main() {
-  std::string x = std::to_string(1);
-  std::string y = "t";
-  for (int i = 2; i <= 20; i++) {
-    simple_sat_solver::cardinality_benchmark::TestFile(
-        "/home/jens/Downloads/cc." + x +"/cnf." + std::to_string(i) + "." +y +"." + x, i);
-    return 0;
+  for (int j = 1; j <=10; ++j) {
+    std::string x = std::to_string(1);
+    std::string y = "d";
+//    for (int i = 2; i <= 20; i++) {
+////      simple_sat_solver::cardinality_benchmark::TestFile(
+//  test_file(
+//          "/home/jens/Downloads/cc." + x + "/cnf." + std::to_string(i) + "." +
+//              y + "." + x,  "/cnf." + std::to_string(i) + "." + y + "." + x,
+//          200);
+//    }
+//    y = "t";
+//    for (int i = 2; i <= 20; i++) {
+////      simple_sat_solver::cardinality_benchmark::TestFile(
+//test_file(
+//          "/home/jens/Downloads/cc." + x + "/cnf." + std::to_string(i) + "." +
+//              y + "." + x, "/cnf." + std::to_string(i) + "." + y + "." + x,
+//          200);
+//    }
+    y = "p";
+    for (int i = 4; i <= 20; i++) {
+//      simple_sat_solver::cardinality_benchmark::TestFile(
+
+      test_file(
+          "/home/jens/Downloads/cc." + x + "/cnf." + std::to_string(i) + "." +
+              y + "." + x,"/cnf." + std::to_string(i) + "." + y + "." + x,
+          200);
+    }
   }
 //  for (int i = 3; i <= 20; i++) {
 //    simple_sat_solver::cardinality_benchmark::TestFile(

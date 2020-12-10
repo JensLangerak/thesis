@@ -25,6 +25,7 @@ IncrementalSequentialEncoder::Encode(SolverState &state) {
 std::vector<std::vector<BooleanLiteral>>
 IncrementalSequentialEncoder::Encode(SolverState &state,
                                      std::vector<BooleanLiteral> lits) {
+  partial_added_ = true;
   std::vector<std::vector<BooleanLiteral>> added_clauses;
   bool res = false;
   int current_lits = added_lits_.size();
@@ -65,7 +66,8 @@ bool IncrementalSequentialEncoder::AddLiteral(
       BooleanLiteral li(v, true);
       previous_added_lits_.push_back(li);
     }
-//    hist.push_back(previous_added_lits_);
+    sum_lits = previous_added_lits_;
+    hist.push_back(previous_added_lits_);
   }
 
   std::vector<BooleanLiteral> current_added_lits;
@@ -92,7 +94,7 @@ bool IncrementalSequentialEncoder::AddLiteral(
   //  }
 
   previous_added_lits_ = current_added_lits;
-//  hist.push_back(current_added_lits);
+  hist.push_back(current_added_lits);
   added_lits_[l.ToPositiveInteger()] = true;
   added_lit_hist_.push_back(l);
   return true;
@@ -174,7 +176,86 @@ void IncrementalSequentialEncoder::SetSumLiterals(std::vector<BooleanLiteral> su
     throw "sums already set";
   assert(sum_lits.size() == max_);
   previous_added_lits_ = sum_lits;
-//  hist.push_back(previous_added_lits_);
+  sum_lits = sum_lits;
+  hist.push_back(previous_added_lits_);
+}
+enum class LitValue {True, False, Unknown};
+void IncrementalSequentialEncoder::DebugInfo(SolverState &state) {
+  std::vector<LitValue> var_values;
+  for (BooleanLiteral l : added_lit_hist_) {
+    if (state.assignments_.IsAssignedTrue(l))
+      var_values.push_back(LitValue::True);
+    else if(state.assignments_.IsAssignedFalse(l))
+      var_values.push_back(LitValue::False);
+    else
+      var_values.push_back(LitValue::Unknown);
+  }
+
+  std::vector<std::vector<LitValue>> hist_values;
+  for (auto h : hist) {
+    std::vector<LitValue> h_v;
+    for (BooleanLiteral l : h) {
+      if (state.assignments_.IsAssignedTrue(l))
+        h_v.push_back(LitValue::True);
+      else if(state.assignments_.IsAssignedFalse(l))
+        h_v.push_back(LitValue::False);
+      else
+        h_v.push_back(LitValue::Unknown);
+    }
+    hist_values.push_back(h_v);
+  }
+  int t_size = state.trail_.size();
+  auto t = state.trail_;
+  auto stop = state.propagator_clausal_.next_position_on_trail_to_propagate_it;
+  state.propagator_clausal_.next_position_on_trail_to_propagate_it = state.trail_.begin();
+  while (state.propagator_clausal_.next_position_on_trail_to_propagate_it != stop) {
+    bool res =state.propagator_clausal_.PropagateOneLiteral(state);
+    if (!res ){
+      int shit = 1;
+    }
+  }
+  int t_size2 =state.trail_.size();
+  auto it = state.trail_.begin();
+  auto i2 = state.trail_.end();
+
+  std::vector<LitValue> var_values2;
+  for (BooleanLiteral l : added_lit_hist_) {
+    if (state.assignments_.IsAssignedTrue(l))
+      var_values2.push_back(LitValue::True);
+    else if(state.assignments_.IsAssignedFalse(l))
+      var_values2.push_back(LitValue::False);
+    else
+      var_values2.push_back(LitValue::Unknown);
+  }
+
+  std::vector<std::vector<LitValue>> hist_values2;
+  for (auto h : hist) {
+    std::vector<LitValue> h_v;
+    for (BooleanLiteral l : h) {
+      if (state.assignments_.IsAssignedTrue(l))
+        h_v.push_back(LitValue::True);
+      else if(state.assignments_.IsAssignedFalse(l))
+        h_v.push_back(LitValue::False);
+      else
+        h_v.push_back(LitValue::Unknown);
+    }
+    hist_values2.push_back(h_v);
+  }
+
+  int bet = 3;
+}
+bool IncrementalSequentialEncoder::UpdateMax(int max, SolverState &state) {
+  assert(max < max_);
+  if (sum_lits.empty()) {
+    max_ = max;
+  } else {
+    for (int i = max; i < sum_lits.size(); ++i) {
+      bool res = state.AddUnitClauseDuringSearch(~sum_lits[i]);
+      if (!res)
+        return res;
+    }
+  }
+  return true;
 }
 
 } // namespace Pumpkin

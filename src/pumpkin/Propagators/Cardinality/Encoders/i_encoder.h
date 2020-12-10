@@ -22,14 +22,18 @@ public:
   virtual std::vector<std::vector<BooleanLiteral>>
   Encode(SolverState &state, std::vector<BooleanLiteral> lits);
   virtual std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propage_values) { assert(false);};
+  virtual void DebugInfo(SolverState & state);
 
   virtual ~IEncoder();
   virtual bool SupportsIncremental() { return false; };
   bool add_incremental;
+  double add_delay = 1;
 
-  bool AddEncodingDynamic() { return add_dynamic_; };
+  virtual bool AddOnRestart() { return false;};
+  virtual bool AddEncodingDynamic() { return add_dynamic_; };
   virtual bool EncodingAddAtStart() { return !add_dynamic_; };
   virtual bool EncodingAdded() { return encoding_added_;};
+  virtual bool EncodingPartialAdded() { return partial_added_;};
   virtual bool IsAdded(BooleanLiteral l);
   virtual void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) {assert(true);};
   class IFactory {
@@ -42,17 +46,20 @@ public:
 
     bool add_dynamic_ = true;
     bool add_incremetal_ = false;
-
+    double add_delay_ =1.0;
   protected:
     virtual IEncoder *CallConstructor(std::vector<BooleanLiteral> variables,
                                       int min, int max) = 0;
   };
 
   int log_id_;
+  virtual bool UpdateMax(int max, SolverState &state) {return true;};
+
 protected:
   IEncoder(){};
   bool add_dynamic_ = false;
   bool encoding_added_ = false;
+  bool partial_added_ = false;
 };
 } // namespace Pumpkin
 

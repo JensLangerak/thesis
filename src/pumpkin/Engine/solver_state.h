@@ -171,6 +171,7 @@ public:
         std::vector<TrailList<BooleanLiteral>::Iterator> trail_delimiter_;
 
 	int decision_level_;
+        void CheckClasualTrailState();
 };
 
 } //end Pumpkin namespace

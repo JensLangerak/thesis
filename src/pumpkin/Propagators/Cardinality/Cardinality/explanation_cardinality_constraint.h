@@ -14,9 +14,9 @@ public:
   /// Get the explanation for the conflict
   /// \param constraint
   /// \param state
-  ExplanationCardinalityConstraint(const WatchedCardinalityConstraint * constraint, SolverState &state);
+  ExplanationCardinalityConstraint(WatchedCardinalityConstraint * constraint, SolverState &state);
   /// Get the explanation for the propagated value.
-  ExplanationCardinalityConstraint(const WatchedCardinalityConstraint * constraint, SolverState &state, BooleanLiteral propagated_literal);
+  ExplanationCardinalityConstraint(WatchedCardinalityConstraint * constraint, SolverState &state, BooleanLiteral propagated_literal);
 
   BooleanLiteral operator[](int index) const override;
   virtual BooleanLiteral operator[](size_t index) const;

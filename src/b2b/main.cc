@@ -16,7 +16,7 @@
 namespace simple_sat_solver::b2b {
 
 solver_wrappers::ISolver * CreateSolver() {
-  return new solver_wrappers::Pumpkin(new Pumpkin::PropagatorEncoder::Factory());
+  return new solver_wrappers::Pumpkin(new Pumpkin::PropagatorEncoder::Factory(), 1000);
 }
 
 bool Test(std::string path, solver_wrappers::ISolver * solver) {
@@ -37,7 +37,7 @@ bool TestFile(std::string path) {
 
   ::Pumpkin::IEncoder::IFactory * encoder_factory = new ::Pumpkin::TotaliserEncoder::Factory();
   encoder_factory->add_dynamic_ = false;
-  solver_wrappers::ISolver * solver = new solver_wrappers::Pumpkin(encoder_factory);
+  solver_wrappers::ISolver * solver = new solver_wrappers::Pumpkin(encoder_factory, 1000);
   Test(path, solver);
   double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"Encoding: "<< duration <<'\n';
@@ -56,7 +56,7 @@ bool TestFile(std::string path) {
   start = std::clock();
   encoder_factory = new ::Pumpkin::TotaliserEncoder::Factory();
   encoder_factory->add_dynamic_ = true;
-  solver = new solver_wrappers::Pumpkin(encoder_factory);
+  solver = new solver_wrappers::Pumpkin(encoder_factory, 1000);
   Test(path, solver);
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"Dynamic: "<< duration <<'\n';

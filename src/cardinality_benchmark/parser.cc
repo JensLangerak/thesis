@@ -65,9 +65,11 @@ void Parser::ReadCardinality(SatProblem &problem, std::string path, int max) {
     if (l.x >= problem.GetNrVars()) {
         throw "Error";
     }
-    clause.push_back(l);
+//    clause.push_back(l);
+    problem.AddToMinimize(l);
   }
-  problem.AddConstraint(new CardinalityConstraint(clause,0,max));
+//  problem.AddConstraint(new CardinalityConstraint(clause,0,max));
+
 }
 
 }

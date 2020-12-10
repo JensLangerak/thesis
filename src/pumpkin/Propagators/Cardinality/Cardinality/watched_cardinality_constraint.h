@@ -7,6 +7,7 @@
 
 #include "../../../Basic Data Structures/boolean_literal.h"
 #include "../Encoders/i_encoder.h"
+#include <unordered_map>
 #include <vector>
 namespace Pumpkin {
 class ExplanationCardinalityConstraint;
@@ -18,10 +19,10 @@ public:
   ~WatchedCardinalityConstraint() ;
   ExplanationCardinalityConstraint *
   ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state)
-      const; // returns the conjunction that forces the assignment of input
+      ; // returns the conjunction that forces the assignment of input
              // literal to true. Assumes the input literal is not undefined.
   ExplanationCardinalityConstraint *ExplainFailure(SolverState &state)
-      const; // returns the conjunction that leads to failure
+      ; // returns the conjunction that leads to failure
 
   std::vector<BooleanLiteral> literals_;
   int min_;
@@ -34,6 +35,10 @@ public:
   IEncoder *encoder_;
   int log_id_;
   static int next_log_id_;
+  std::unordered_map<int, int> lit_count_;
+  int propagate_count =0;
+  std::vector<BooleanLiteral> add_next_literals_;
+  void UpdateCounts(std::vector<BooleanLiteral> &lits, SolverState &state);
 };
 } // namespace Pumpkin
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_WATCHED_CARDINALITY_CONSTRAINT_H_

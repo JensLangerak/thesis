@@ -345,6 +345,8 @@ void ConstraintSatisfactionSolver::PerformRestart()
 
 	counters_.restarts++;
 	counters_.conflicts_until_restart = parameters_.num_min_conflicts_per_restart;
+
+        state_.propagator_cardinality_.AddScheduledEncodings(state_);
 }
 
 void ConstraintSatisfactionSolver::UpdateConflictCounters()

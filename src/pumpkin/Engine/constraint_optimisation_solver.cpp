@@ -2,8 +2,9 @@
 #include "../Pseudo-Boolean Encoders/EncoderGeneralisedTotaliserCP19_2.h"
 #include "../Basic Data Structures/runtime_assert.h"
 
-#include <iostream>
 #include "../../logger/logger.h"
+#include "../Propagators/Cardinality/Encoders/propagator_encoder.h"
+#include <iostream>
 namespace Pumpkin
 {
 
@@ -12,11 +13,11 @@ ConstraintOptimisationSolver::ConstraintOptimisationSolver(ProblemSpecification&
 	lower_bound_(0),
 	upper_bound_(INT64_MAX),
 	objective_literals_(problem_specification.objective_literals_),
-	encoder_(new GeneralisedTotaliserCP192()),
+//	encoder_(new GeneralisedTotaliserCP192()),
 	activated_(false)
 {
-	encoder_->_hax_state = &constrained_satisfaction_solver_.state_;
-	encoder_->objective_literals = objective_literals_;
+//	encoder_->_hax_state = &constrained_satisfaction_solver_.state_;
+//	encoder_->objective_literals = objective_literals_;
 }
 
 SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
@@ -43,8 +44,8 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 		}
 		else if (output.ProvenInfeasible())
 		{
-                        simple_sat_solver::logger::Logger::Log2("New lowerboud: " + std::to_string(lower_bound_));
-			lower_bound_ = upper_bound_;
+                  lower_bound_ = upper_bound_;
+                  simple_sat_solver::logger::Logger::Log2("New lowerbound: " + std::to_string(lower_bound_));
 		}
 	}
         std::cout << upper_bound_ << std::endl;
@@ -60,8 +61,8 @@ bool ConstraintOptimisationSolver::StrengthenUpperBoundConstraints()
 {
 	constrained_satisfaction_solver_.state_.Reset(); //for now we restart each time a solution has been found as is usual in MaxSAT. In the future, test NOT restarting but simply continuing by supplying a conflict clause (should be better), possibly setting the restart mechanisms to a fresh start
 	if (lower_bound_ == upper_bound_) { return false; }
-	bool success = encoder_->ReduceRightHandSide(upper_bound_ - 1);
-
+//	bool success = encoder_->ReduceRightHandSide(upper_bound_ - 1);
+        bool success = UpdateBestSolutionConstraint(upper_bound_ - 1);
 	//if the encoding added new variables, we set their polarities to zero. Likely this is not an issue since most encodings only add variables the first time the encoding is generated, but this might change in the future
 	while (best_solution_.size() <= constrained_satisfaction_solver_.state_.GetNumberOfVariables()) { best_solution_.push_back(false); }
 
@@ -72,6 +73,8 @@ void ConstraintOptimisationSolver::UpdateBestSolution(const std::vector<bool>& s
 {
 	int64_t new_upper_bound = ComputeSolutionCost(solution);
         simple_sat_solver::logger::Logger::Log2("New solution found: " + std::to_string(new_upper_bound));
+        if (new_upper_bound > start_upper_bound_)
+          new_upper_bound = start_upper_bound_;
 	runtime_assert(new_upper_bound < upper_bound_);
 
 	upper_bound_ = new_upper_bound;
@@ -120,8 +123,27 @@ bool ConstraintOptimisationSolver::IsLiteralTrue(BooleanLiteral literal, const s
 	return literal.IsPositive() && solution[literal.VariableIndex()] || literal.IsNegative() && !solution[literal.VariableIndex()];
 }
 ConstraintOptimisationSolver::~ConstraintOptimisationSolver() {
-  delete encoder_;
+//  delete encoder_;
+//    if (optimise_constraint != nullptr)
+//      delete optimise_constraint;
+//    optimise_constraint = nullptr;
 }
-
+bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost) {
+  if (optimise_constraint == nullptr) {
+    std::vector<BooleanLiteral> objective;
+    for (auto w : objective_literals_) {
+      assert(w.weight == 1);
+      objective.push_back(w.literal);
+    }
+    CardinalityConstraint c(objective, 0, max_cost, optimisation_encoding_factory);
+    constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
+    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_.back();
+  } else {
+    assert(optimise_constraint->max_ > max_cost);
+    optimise_constraint->max_ = max_cost;
+    return optimise_constraint->encoder_->UpdateMax(max_cost, constrained_satisfaction_solver_.state_);
+  }
+  return true;
+}
 
 }//end Pumpkin namespace

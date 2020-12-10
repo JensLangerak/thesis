@@ -93,6 +93,7 @@ bool PropagatorCardinality::PropagateLiteral(BooleanLiteral true_literal,
       simple_sat_solver::logger::Logger::Log2("Propagate ID " + std::to_string(constraint->log_id_) + " counts " + std::to_string(constraint->true_count_) + " " + std::to_string(trigger_count_));
       if (constraint->encoder_->AddEncodingDynamic() &&
           constraint->encoder_->SupportsIncremental()) {
+
         bool res = PropagateIncremental(state, constraint);
         if (res)
         return true;
@@ -298,5 +299,20 @@ PropagatorCardinality::GetEncodingCause(SolverState &state, WatchedCardinalityCo
       assert(false);
     assert(cause.size() >= constraint->max_);
     return cause;
+}
+void PropagatorCardinality::AddScheduledEncodings(SolverState &state) {
+  while(!add_constraints_.empty()) {
+    WatchedCardinalityConstraint * constraint = add_constraints_.front();
+    add_constraints_.pop();
+    if (!constraint->encoder_->EncodingAdded()) {
+      if (constraint->encoder_->SupportsIncremental()) {
+        constraint->encoder_->Encode(state, constraint->add_next_literals_);
+        constraint->add_next_literals_.clear();
+      } else {
+        constraint->encoder_->Encode(state);
+      }
+    }
+
+  }
 }
 } // namespace Pumpkin
