@@ -9,8 +9,9 @@
 #include "../Basic Data Structures/small_helper_structures.h"
 #include "../Basic Data Structures/solver_parameters.h"
 #include "../Basic Data Structures/trail_list.h"
-#include "../Propagators/Cardinality/Cardinality/propagator_cardinality.h"
-#include "../Propagators/Cardinality/Sum/propagator_sum.h"
+#include "../Propagators/Dynamic/Cardinality/propagator_cardinality.h"
+#include "../Propagators/Dynamic/Sum/propagator_sum.h"
+#include "../Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean.h"
 #include "../Propagators/Clausal/propagator_clausal.h"
 #include "../Propagators/Pseudo-Boolean/propagator_pseudo_boolean_constraints.h"
 #include "value_selector.h"
@@ -135,7 +136,8 @@ public:
 
 	//propagators
 	PropagatorClausal propagator_clausal_;
-	PropagatorPseudoBooleanConstraints propagator_pseudo_boolean_;
+  PropagatorPseudoBooleanConstraints propagator_pseudo_boolean_;
+  PropagatorPseudoBoolean2 propagator_pseudo_boolean_2_;
   PropagatorCardinality propagator_cardinality_;
 //  PropagatorSum propagator_sum_;
 //  PropagatorSum propagator_sum_;
@@ -146,6 +148,7 @@ public:
 
   void AddCardinality(Pumpkin::CardinalityConstraint &constraint);
   void AddSumConstraint(Pumpkin::SumConstraint &constraint);
+  void AddPseudoBoolean(Pumpkin::PseudoBooleanConstraint & constraint);
 
   TrailList<BooleanLiteral>::Iterator GetTrailEnd();
 

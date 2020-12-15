@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "../../logger/logger.h"
-#include "../Propagators/Cardinality/Encoders/totaliser_encoder.h"
 namespace Pumpkin
 {
 
@@ -25,6 +24,7 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification&
         for (auto& clause : problem_specification.clauses_) { state_.AddClause(clause); }
 
   simple_sat_solver::logger::Logger::Log2("Before cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
+  for (auto& constraint : problem_specification.pseudo_boolean_constraints_) { state_.AddPseudoBoolean(constraint); }
   for (auto& constraint : problem_specification.cardinality_constraints_) { state_.AddCardinality(constraint); }
   simple_sat_solver::logger::Logger::Log2("After cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
   for (auto & constraint : problem_specification.sum_constraints_) { state_.AddSumConstraint(constraint);}
@@ -42,16 +42,16 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
 
   Initialise(time_limit_in_seconds);
 	//check failure by unit propagation at root
-	if (SetUnitClauses() == false) { return SolverOutput(stopwatch_.TimeElapsedInSeconds(), false, std::vector<bool>()); } 
+	if (SetUnitClauses() == false) { return SolverOutput(stopwatch_.TimeElapsedInSeconds(), false, std::vector<bool>()); }
 
-	while (!state_.IsAssignmentBuilt() && stopwatch_.IsWithinTimeLimit())
+  while (!state_.IsAssignmentBuilt() && stopwatch_.IsWithinTimeLimit())
 	{
-		state_.IncreaseDecisionLevel();
+          state_.IncreaseDecisionLevel();
 
-		BooleanLiteral decision_literal = MakeDecision();
+          BooleanLiteral decision_literal = MakeDecision();
 		state_.EnqueueDecisionLiteral(decision_literal);
 
-		PropagatorGeneric* conflicting_propagator = state_.PropagateEnqueued();
+          PropagatorGeneric* conflicting_propagator = state_.PropagateEnqueued();
 
 		//check if a conflict has been encountered
 		if (conflicting_propagator != NULL)
@@ -60,8 +60,9 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
 			if (success == false) { break; } //UNSAT detected, terminate.
 			if (ShouldRestart()) { PerformRestart(); }
 		}
-	}
-	return GenerateOutput();
+
+        }
+  return GenerateOutput();
 }
 
 void ConstraintSatisfactionSolver::PrintStats()
@@ -335,7 +336,7 @@ void ConstraintSatisfactionSolver::PerformRestart()
 {
 	state_.Backtrack(0);
 
-	if (counters_.until_clause_cleanup <= 0)
+  if (counters_.until_clause_cleanup <= 0)
 	{
 		counters_.clause_cleanup++;
 		counters_.until_clause_cleanup = parameters_.num_min_conflicts_per_clause_cleanup;
@@ -347,6 +348,7 @@ void ConstraintSatisfactionSolver::PerformRestart()
 	counters_.conflicts_until_restart = parameters_.num_min_conflicts_per_restart;
 
         state_.propagator_cardinality_.AddScheduledEncodings(state_);
+        state_.propagator_pseudo_boolean_2_.AddScheduledEncodings(state_);
 }
 
 void ConstraintSatisfactionSolver::UpdateConflictCounters()

@@ -6,8 +6,8 @@
 #include <iostream>
 #include <string>
 
-#include "../pumpkin/Propagators/Cardinality/Encoders/propagator_encoder.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/totaliser_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/totaliser_encoder.h"
 #include "../solver_wrappers/pumpkin.h"
 #include "../solver_wrappers/simple_solver.h"
 #include "b2b_converter.h"
@@ -16,7 +16,7 @@
 namespace simple_sat_solver::b2b {
 
 solver_wrappers::ISolver * CreateSolver() {
-  return new solver_wrappers::Pumpkin(new Pumpkin::PropagatorEncoder::Factory(), 1000);
+  return new solver_wrappers::Pumpkin(new Pumpkin::PropagatorEncoder<Pumpkin::CardinalityConstraint>::Factory(), 1000);
 }
 
 bool Test(std::string path, solver_wrappers::ISolver * solver) {
@@ -35,7 +35,7 @@ bool TestFile(std::string path) {
   std::cout << "Test: " << path << std::endl;
   std::clock_t start = std::clock();
 
-  ::Pumpkin::IEncoder::IFactory * encoder_factory = new ::Pumpkin::TotaliserEncoder::Factory();
+  ::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory * encoder_factory = new ::Pumpkin::TotaliserEncoder::Factory();
   encoder_factory->add_dynamic_ = false;
   solver_wrappers::ISolver * solver = new solver_wrappers::Pumpkin(encoder_factory, 1000);
   Test(path, solver);

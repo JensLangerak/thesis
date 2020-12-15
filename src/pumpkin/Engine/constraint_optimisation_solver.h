@@ -22,7 +22,7 @@ public:
 	void PrintStats();
 
   ConstraintSatisfactionSolver constrained_satisfaction_solver_;
-  IEncoder::IFactory * optimisation_encoding_factory;
+  IEncoder<PseudoBooleanConstraint>::IFactory * optimisation_encoding_factory;
 private:
 	//adds a constraint to the constraint_satisfaction_solver forcing the objective to be better than the upper bound. 
 	//After the first call, it will create new variables and clauses since the constraint is encoded into CNF
@@ -40,7 +40,7 @@ private:
 
 //class variables------------------
 //	GeneralisedTotaliserCP192* encoder_; //this encoder needs to be redesigned/improved
-    WatchedCardinalityConstraint *optimise_constraint = nullptr;
+    WatchedPseudoBooleanConstraint2 *optimise_constraint = nullptr;
 	Stopwatch stopwatch_;
 	int64_t lower_bound_, upper_bound_;
 	TimeStamps solution_time_stamps_;

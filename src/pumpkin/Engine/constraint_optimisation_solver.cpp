@@ -3,7 +3,7 @@
 #include "../Basic Data Structures/runtime_assert.h"
 
 #include "../../logger/logger.h"
-#include "../Propagators/Cardinality/Encoders/propagator_encoder.h"
+#include "../Propagators/Dynamic/Encoders/propagator_encoder.h"
 #include <iostream>
 namespace Pumpkin
 {
@@ -31,7 +31,7 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 	while (!StoppingCriteriaMet())
 	{
 		SolverOutput output = constrained_satisfaction_solver_.Solve(stopwatch_.TimeLeftInSeconds());
-		
+
 		if (output.HasSolution())
 		{//strenthen the bound of the objective function in the solver
 			UpdateBestSolution(output.solution);
@@ -60,7 +60,8 @@ void ConstraintOptimisationSolver::PrintStats()
 bool ConstraintOptimisationSolver::StrengthenUpperBoundConstraints()
 {
 	constrained_satisfaction_solver_.state_.Reset(); //for now we restart each time a solution has been found as is usual in MaxSAT. In the future, test NOT restarting but simply continuing by supplying a conflict clause (should be better), possibly setting the restart mechanisms to a fresh start
-	if (lower_bound_ == upper_bound_) { return false; }
+
+  if (lower_bound_ == upper_bound_) { return false; }
 //	bool success = encoder_->ReduceRightHandSide(upper_bound_ - 1);
         bool success = UpdateBestSolutionConstraint(upper_bound_ - 1);
 	//if the encoding added new variables, we set their polarities to zero. Likely this is not an issue since most encodings only add variables the first time the encoding is generated, but this might change in the future
@@ -130,14 +131,16 @@ ConstraintOptimisationSolver::~ConstraintOptimisationSolver() {
 }
 bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost) {
   if (optimise_constraint == nullptr) {
-    std::vector<BooleanLiteral> objective;
+    std::vector<BooleanLiteral>lits;
+    std::vector<uint32_t> coefs;
     for (auto w : objective_literals_) {
-      assert(w.weight == 1);
-      objective.push_back(w.literal);
+      lits.push_back(w.literal);
+      coefs.push_back(w.weight);
     }
-    CardinalityConstraint c(objective, 0, max_cost, optimisation_encoding_factory);
-    constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
-    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_.back();
+    PseudoBooleanConstraint c(lits, coefs, max_cost, optimisation_encoding_factory);
+    constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
+    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_.back();
+//    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_.back();
   } else {
     assert(optimise_constraint->max_ > max_cost);
     optimise_constraint->max_ = max_cost;

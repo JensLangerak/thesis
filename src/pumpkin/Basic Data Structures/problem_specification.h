@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Propagators/Cardinality/Encoders/i_encoder.h"
+#include "../Propagators/Dynamic/Encoders/i_encoder.h"
 #include "boolean_literal.h"
 
 #include <string>
@@ -19,28 +19,34 @@ struct WeightedLiteral {
 
 struct PseudoBooleanConstraint {
   PseudoBooleanConstraint(std::vector<BooleanLiteral> &lits,
-                          std::vector<uint32_t> &coefs, int rhs)
-      : literals(lits), coefficients(coefs), right_hand_side(rhs) {}
+                          std::vector<uint32_t> &coefs, int rhs,
+                          IEncoder<PseudoBooleanConstraint>::IFactory *encoder_factory
+                          )
+      : literals(lits), coefficients(coefs), right_hand_side(rhs), encoder_factory(encoder_factory) {}
 
   std::vector<BooleanLiteral> literals;
   std::vector<uint32_t> coefficients;
   int right_hand_side;
+
+
+  IEncoder<PseudoBooleanConstraint>::IFactory *encoder_factory;
 };
+
 
 struct CardinalityConstraint
 {
-  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max, IEncoder::IFactory *encoder_factory) : encoder_factory(encoder_factory), literals(lits), min(min), max(max) {};
+  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max,  IEncoder<CardinalityConstraint>::IFactory *encoder_factory) : encoder_factory(encoder_factory), literals(lits), min(min), max(max) {};
   std::vector<BooleanLiteral> literals;
   int min;
   int max;
-  IEncoder::IFactory *encoder_factory;
+  IEncoder<CardinalityConstraint>::IFactory *encoder_factory;
 };
 
 struct SumConstraint {
-  SumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<BooleanLiteral> & outputs, IEncoder::IFactory *encoder_factory) : input_literals(inputs), output_literals(outputs), encoder_factory(encoder_factory) {};
+  SumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<BooleanLiteral> & outputs,  IEncoder<SumConstraint>::IFactory *encoder_factory) : input_literals(inputs), output_literals(outputs), encoder_factory(encoder_factory) {};
   std::vector<BooleanLiteral> input_literals;
   std::vector<BooleanLiteral> output_literals;
-  IEncoder::IFactory *encoder_factory;
+  IEncoder<SumConstraint>::IFactory *encoder_factory;
 };
 
 class ProblemSpecification

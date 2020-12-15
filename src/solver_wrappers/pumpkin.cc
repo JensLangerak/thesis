@@ -9,10 +9,10 @@
 #include "../pumpkin/Basic Data Structures/solver_parameters.h"
 #include "../pumpkin/Engine/constraint_optimisation_solver.h"
 
-#include "../pumpkin/Propagators/Cardinality/Encoders/incremental_sequential_encoder.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/propagator_encoder.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/totaliser_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/sequential_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/totaliser_encoder.h"
 #include "../sat/constraints/cardinality_constraint.h"
 #include "../sat/constraints/sum_constraint.h"
 #include "../sat/encoders/totaliser_encoder.h"
@@ -115,10 +115,12 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
     if (sat::CardinalityConstraint *car =
             dynamic_cast<sat::CardinalityConstraint *>(c)) {
       std::vector<::Pumpkin::BooleanLiteral> lits;
+      std::vector<uint32_t> weights;
       for (sat::Lit l : car->lits) {
         ::Pumpkin::BooleanLiteral lit =
             ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), !l.complement);
         lits.push_back(lit);
+        weights.push_back(1);
       }
       //          if (!add_encodings_) {
       //          if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
@@ -127,9 +129,11 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
       //                ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
       //                                                 encoder_factory_));
       //          else
-      problem.cardinality_constraints_.push_back(
-          ::Pumpkin::CardinalityConstraint(lits, car->min, car->max,
-                                           encoder_factory_));
+//      problem.cardinality_constraints_.push_back(
+//          ::Pumpkin::CardinalityConstraint(lits, car->min, car->max,
+//                                           encoder_factory_));
+      assert(car->min == 0);
+      problem.pseudo_boolean_constraints_.push_back(::Pumpkin::PseudoBooleanConstraint(lits,weights,car->max, encoder_factory_));
       //    }
     } else if (sat::SumConstraint *car =
                    dynamic_cast<sat::SumConstraint *>(c)) {
@@ -146,8 +150,10 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
         outputs.push_back(lit);
       }
 
-      problem.sum_constraints_.push_back(
-          ::Pumpkin::SumConstraint(inputs, outputs, encoder_factory_));
+      assert(false);
+      //TODO
+//      problem.sum_constraints_.push_back(
+//          ::Pumpkin::SumConstraint(inputs, outputs, encoder_factory_));
     } else {
       assert(false);
     }

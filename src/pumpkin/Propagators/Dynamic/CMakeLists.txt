@@ -1,0 +1,8 @@
+add_library(propagator_dynamic propagator_dynamic.cc propagator_dynamic.h)
+target_link_libraries(propagator_dynamic propagator_generic encoders)
+add_subdirectory(Cardinality)
+add_subdirectory(Sum)
+add_subdirectory(Encoders)
+add_subdirectory(PseudoBoolean)
+add_library(cardinality INTERFACE)
+target_link_libraries(cardinality INTERFACE pseudo_boolean_propagator cardinality_propagator sum_propagator encoders)

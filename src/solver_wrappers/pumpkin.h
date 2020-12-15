@@ -6,7 +6,8 @@
 #define SIMPLESATSOLVER_SRC_SOLVER_WRAPPERS_PUMPKIN_H_
 
 #include "i_solver.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/i_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/i_encoder.h"
+#include "../pumpkin/Basic Data Structures/problem_specification.h"
 namespace Pumpkin {
 class ProblemSpecification;
 }
@@ -14,7 +15,8 @@ namespace simple_sat_solver::solver_wrappers {
 class Pumpkin : public ISolver {
 public:
   enum class CardinalityOption{ Totolizer, Sequential, Propagator};
-  inline Pumpkin(::Pumpkin::IEncoder::IFactory * encoder_factory, int start_upperbound) : encoder_factory_(encoder_factory), solved_(false), start_uppberboud_(start_upperbound) {};
+  inline Pumpkin(::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * encoder_factory, int start_upperbound) : encoder_factory_(encoder_factory), solved_(false), start_uppberboud_(start_upperbound) {};
+  inline Pumpkin(::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory * encoder_factory, int start_upperbound) : encoder_factory_(nullptr), solved_(false), start_uppberboud_(start_upperbound) {assert(false);};
 
   bool Solve(const sat::SatProblem &p) override;
   bool Optimize(const sat::SatProblem &p) override;
@@ -28,7 +30,7 @@ public:
 private:
   std::vector<bool> solution_;
   bool solved_;
-  ::Pumpkin::IEncoder::IFactory *encoder_factory_;
+  ::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *encoder_factory_;
 
 };
 }

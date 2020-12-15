@@ -1,8 +1,8 @@
 ﻿#include "EncoderGeneralisedTotaliserCP19_2.h"
 #include "../Basic Data Structures/runtime_assert.h"
-#include "../Propagators/Cardinality/Encoders/incremental_sequential_encoder.h"
-#include "../Propagators/Cardinality/Encoders/propagator_encoder.h"
-#include "../Propagators/Cardinality/Encoders/propagator_encoder.h"
+#include "../Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
+#include "../Propagators/Dynamic/Encoders/propagator_encoder.h"
+#include "../Propagators/Dynamic/Encoders/propagator_encoder.h"
 
 #include <iostream>
 #include <set>

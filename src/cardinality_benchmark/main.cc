@@ -3,9 +3,9 @@
 //
 
 #include "../logger/logger.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/incremental_sequential_encoder.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/propagator_encoder.h"
-#include "../pumpkin/Propagators/Cardinality/Encoders/sequential_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/sequential_encoder.h"
 #include "../solver_wrappers/pumpkin.h"
 #include "../solver_wrappers/simple_solver.h"
 #include "parser.h"
@@ -14,7 +14,7 @@
 #include <ctime>
 #include <iostream>
 namespace simple_sat_solver::cardinality_benchmark {
-  void TestCardinalityOption(std::string path, int max, ::Pumpkin::IEncoder::IFactory * encoder_factory) {
+  void TestCardinalityOption(std::string path, int max, ::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory * encoder_factory) {
     Parser parser;
     assert(encoder_factory != nullptr);
     sat::SatProblem* problem = parser.Parse(path, max);
@@ -30,7 +30,7 @@ namespace simple_sat_solver::cardinality_benchmark {
   }
   void TestFile(std::string path, int max) {
     std::cout <<"-----TEST: " << path << "----------" << std::endl;
-    Pumpkin::IEncoder::IFactory * encoder_factory;
+    Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory * encoder_factory;
 //    std::cout<<"Encoding - Totalizer" <<std::endl;
 //    TestCardinalityOption(path, max, solver_wrappers::Pumpkin::CardinalityOption::Totolizer, true);
     std::cout<<"Encoding - Sequential" <<std::endl;
@@ -48,13 +48,13 @@ namespace simple_sat_solver::cardinality_benchmark {
     encoder_factory->add_dynamic_ = true;
     TestCardinalityOption(path, max, encoder_factory);
     std::cout<<"Propagator" <<std::endl;
-    encoder_factory = new Pumpkin::PropagatorEncoder::Factory();
+    encoder_factory = new Pumpkin::PropagatorEncoder<::Pumpkin::CardinalityConstraint>::Factory();
     encoder_factory->add_dynamic_ = false;
     TestCardinalityOption(path, max, encoder_factory);
 
   }
 
-void Test(std::string test_file_path, std::string test_file, std::string log_dir, ::Pumpkin::IEncoder::IFactory * encoder, std::string encoder_message, int start_penalty) {
+void Test(std::string test_file_path, std::string test_file, std::string log_dir, ::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * encoder, std::string encoder_message, int start_penalty) {
   simple_sat_solver::logger::Logger::StartNewLog(log_dir,test_file);
   simple_sat_solver::logger::Logger::Log2("File: " + test_file_path);
   simple_sat_solver::logger::Logger::Log2("Encoder: " + encoder_message);
@@ -81,7 +81,7 @@ void Test(std::string test_file_path, std::string test_file, std::string log_dir
 }
 
 void test_setting(std::string test_file_path, std::string test_file, std::string log_dir,
-                  Pumpkin::IEncoder::IFactory *encoder_factory,
+                  Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *encoder_factory,
                   std::string encoder_string, bool add_dynamic,
                   bool add_incremental, int start_penalty) {
   std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -96,23 +96,25 @@ void test_setting(std::string test_file_path, std::string test_file, std::string
 void test_file(std::string file, std::string simple_file, int start_penalty) {
   std::cout << "test file: " << file << std::endl;
   std::string log_dir = "../../../data/cardinality/logs2";
-  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, false, start_penalty);
-  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, true, start_penalty);
-  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::PropagatorEncoder::Factory(), "Propagator", false, false, start_penalty);
-  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", false, false, start_penalty);
+//  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, false, start_penalty);
+//  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, true, start_penalty);
+//  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::CardinalityConstraint>::Factory(), "Propagator", false, false, start_penalty);
+//  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", false, false, start_penalty);
+
+  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::PseudoBooleanConstraint>::Factory(), "Propagator", false, false, start_penalty);
 }
 
 int main() {
   for (int j = 1; j <=10; ++j) {
     std::string x = std::to_string(1);
     std::string y = "d";
-//    for (int i = 2; i <= 20; i++) {
-////      simple_sat_solver::cardinality_benchmark::TestFile(
-//  test_file(
-//          "/home/jens/Downloads/cc." + x + "/cnf." + std::to_string(i) + "." +
-//              y + "." + x,  "/cnf." + std::to_string(i) + "." + y + "." + x,
-//          200);
-//    }
+    for (int i = 2; i <= 20; i++) {
+//      simple_sat_solver::cardinality_benchmark::TestFile(
+  test_file(
+          "/home/jens/Downloads/cc." + x + "/cnf." + std::to_string(i) + "." +
+              y + "." + x,  "/cnf." + std::to_string(i) + "." + y + "." + x,
+          200);
+    }
 //    y = "t";
 //    for (int i = 2; i <= 20; i++) {
 ////      simple_sat_solver::cardinality_benchmark::TestFile(
