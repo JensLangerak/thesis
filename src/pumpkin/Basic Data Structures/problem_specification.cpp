@@ -59,7 +59,8 @@ ProblemSpecification ProblemSpecification::ReadMaxSATFormula(std::string file_lo
 	ProblemSpecification problem_specification;
 
 	std::ifstream input(file_location.c_str());
-	runtime_assert(input);
+
+  runtime_assert(input);
 	std::string s;
 	char c;
 	int64_t n;
@@ -78,7 +79,7 @@ ProblemSpecification ProblemSpecification::ReadMaxSATFormula(std::string file_lo
 	input >> problem_specification.num_Boolean_variables_ >> num_clauses >> infinite_weight;
 	BooleanLiteral hard_clause_indicator(BooleanVariable(infinite_weight), true);
 
-	//read the clauses 
+	//read the clauses
 	for (int i = 0; i < num_clauses; i++)
 	{
 		std::vector<BooleanLiteral> clause;

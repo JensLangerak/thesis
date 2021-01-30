@@ -35,10 +35,13 @@ public:
   IEncoder<PseudoBooleanConstraint> *encoder_;
   int log_id_;
   static int next_log_id_;
+  uint32_t max_weight_;
   std::unordered_map<int, int> lit_count_;
+  std::unordered_map<int, uint32_t> lit_weights_;
   int propagate_count =0;
   std::vector<BooleanLiteral> add_next_literals_;
   int true_count_debug_ = 0;
+  uint32_t lit_sum_ =0 ;
   void UpdateCounts(std::vector<BooleanLiteral> &lits, SolverState &state);
 };
 } // namespace Pumpkin

@@ -9,6 +9,8 @@
 #include "../pumpkin/Basic Data Structures/solver_parameters.h"
 #include "../pumpkin/Engine/constraint_optimisation_solver.h"
 
+#include "../logger/logger.h"
+#include "../pseudo_boolean/opb_parser.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/sequential_encoder.h"
@@ -27,10 +29,16 @@ bool Pumpkin::Solve(const sat::SatProblem &p2) {
   SolverParameters params;
   params.bump_decision_variables = true;
   ConstraintSatisfactionSolver solver(problem, params);
-  SolverOutput solver_output = solver.Solve(60);
+  SolverOutput solver_output = solver.Solve(90);
   std::cout << "Sol found: " << (solver_output.timeout_happened ? "F" : "T") <<std::endl;
   solved_ = solver_output.HasSolution();
-
+  if (solved_) {
+    simple_sat_solver::logger::Logger::Log2("SAT");
+  } else if(!solver_output.timeout_happened) {
+    simple_sat_solver::logger::Logger::Log2("UNSAT");
+  } else {
+    simple_sat_solver::logger::Logger::Log2("TIMEOUT");
+  }
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());
   if (solved_) {
     solution_ = std::vector<bool>();
@@ -57,10 +65,10 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
   SolverParameters params;
   params.bump_decision_variables = true;
   ConstraintOptimisationSolver solver(problem, params);
-  solver.optimisation_encoding_factory = encoder_factory_; // TODO
+  solver.optimisation_encoding_factory = optimisation_encoder_factory_; // TODO
 //  SolverOutput solver_output = solver.Solve(std::numeric_limits<double>::max());
   solver.start_upper_bound_ = start_uppberboud_;
-  SolverOutput solver_output = solver.Solve(300);
+  SolverOutput solver_output = solver.Solve(90);
   solved_ = solver_output.HasSolution();
 
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());
@@ -133,7 +141,7 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
 //          ::Pumpkin::CardinalityConstraint(lits, car->min, car->max,
 //                                           encoder_factory_));
       assert(car->min == 0);
-      problem.pseudo_boolean_constraints_.push_back(::Pumpkin::PseudoBooleanConstraint(lits,weights,car->max, encoder_factory_));
+      problem.pseudo_boolean_constraints_.push_back(::Pumpkin::PseudoBooleanConstraint(lits,weights,car->max, constraint_encoder_factory_));
       //    }
     } else if (sat::SumConstraint *car =
                    dynamic_cast<sat::SumConstraint *>(c)) {
@@ -151,19 +159,31 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
       }
 
       assert(false);
-      //TODO
-//      problem.sum_constraints_.push_back(
-//          ::Pumpkin::SumConstraint(inputs, outputs, encoder_factory_));
+      // TODO
+      //      problem.sum_constraints_.push_back(
+      //          ::Pumpkin::SumConstraint(inputs, outputs, encoder_factory_));
+    } else if (sat::PseudoBooleanConstraint *car =
+          dynamic_cast<sat::PseudoBooleanConstraint *>(c)) {
+      std::vector<::Pumpkin::BooleanLiteral> lits;
+      std::vector<uint32_t> weights;
+      for (sat::WeightedLit l : car->weighted_lits_) {
+        ::Pumpkin::BooleanLiteral lit =
+            ::Pumpkin::BooleanLiteral(BooleanVariable(l.l.x + 1), !l.l.complement);
+        lits.push_back(lit);
+        weights.push_back(l.w);
+      }
+
+      problem.pseudo_boolean_constraints_.push_back(::Pumpkin::PseudoBooleanConstraint(lits,weights,car->max_, constraint_encoder_factory_));
+
     } else {
       assert(false);
     }
   }
     //TODO
     auto t = p.GetMinimizeLit();
-    int tes2 = t.size();
     for (auto l : p.GetMinimizeLit()) {
       problem.objective_literals_.push_back(WeightedLiteral(
-          ::Pumpkin::BooleanLiteral(BooleanVariable(l.x + 1), true), 1));
+          ::Pumpkin::BooleanLiteral(BooleanVariable(l.l.x + 1), true), l.w));
   }
   return problem;
 }

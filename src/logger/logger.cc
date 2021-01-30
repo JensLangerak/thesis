@@ -5,6 +5,7 @@
 #include "logger.h"
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 namespace simple_sat_solver::logger {
 std::recursive_mutex Logger::mutex_;

@@ -28,7 +28,7 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification&
   for (auto& constraint : problem_specification.cardinality_constraints_) { state_.AddCardinality(constraint); }
   simple_sat_solver::logger::Logger::Log2("After cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
   for (auto & constraint : problem_specification.sum_constraints_) { state_.AddSumConstraint(constraint);}
-	if (!problem_specification.pseudo_boolean_constraints_.empty()) { std::cout << "TODO: add pseudo-Boolean constraints!\n"; }
+//	if (!problem_specification.pseudo_boolean_constraints_.empty()) { std::cout << "TODO: add pseudo-Boolean constraints!\n"; }
 
 }
 
@@ -325,7 +325,9 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 		state_.simple_moving_average_lbd.Reset();
 		counters_.conflicts_until_restart = parameters_.num_min_conflicts_per_restart;
 		return true;
-	}
+	} else if (!state_.propagator_pseudo_boolean_2_.add_constraints_.empty()) {
+          return true;
+        }
 	else
 	{
 		return false;

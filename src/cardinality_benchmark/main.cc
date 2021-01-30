@@ -3,6 +3,7 @@
 //
 
 #include "../logger/logger.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totaliser.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/sequential_encoder.h"
@@ -95,13 +96,14 @@ void test_setting(std::string test_file_path, std::string test_file, std::string
 
 void test_file(std::string file, std::string simple_file, int start_penalty) {
   std::cout << "test file: " << file << std::endl;
-  std::string log_dir = "../../../data/cardinality/logs2";
+  std::string log_dir = "../../../data/cardinality/logs3";
 //  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, false, start_penalty);
 //  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", true, true, start_penalty);
 //  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::CardinalityConstraint>::Factory(), "Propagator", false, false, start_penalty);
 //  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory *) new ::Pumpkin::IncrementalSequentialEncoder::Factory(), "Incremental", false, false, start_penalty);
 
-  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::PseudoBooleanConstraint>::Factory(), "Propagator", false, false, start_penalty);
+  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Incremental", false, false, start_penalty);
+//  test_setting(file, simple_file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::PseudoBooleanConstraint>::Factory(), "Propagator", false, false, start_penalty);
 }
 
 int main() {

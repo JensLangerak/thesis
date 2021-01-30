@@ -21,7 +21,7 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
     WatchedPseudoBooleanConstraint2 *constraint, SolverState &state) {
   assert(constraint!= nullptr);
   assert(constraint->current_sum_value > constraint->max_);
-  simple_sat_solver::logger::Logger::Log2("Explain Conflict: " + std::to_string(constraint->log_id_));
+//  simple_sat_solver::logger::Logger::Log2("Explain Conflict: " + std::to_string(constraint->log_id_));
   lits_ = std::vector<BooleanLiteral>();
   // Check if the min or max constraint is violated
   bool select_value = constraint->current_sum_value > constraint->max_;
@@ -40,7 +40,9 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
 
   int test = lits_.size();
   // TODO not sure if >= should be possible or that is should be ==
-  assert(sum >= constraint->max_);
+  if (sum < constraint ->max_) {
+    assert(sum >= constraint->max_);
+  }
 //  assert(select_value && lits_.size() >= constraint->current_sum_value);
 //      (!select_value) && lits_.size() >= constraint->false_count_);
 }
@@ -49,7 +51,7 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
     BooleanLiteral propagated_literal) {
   assert(constraint!= nullptr);
   assert(state.assignments_.IsAssignedTrue(propagated_literal));
-  simple_sat_solver::logger::Logger::Log2("Explain propagation: " + std::to_string(constraint->log_id_));
+//  simple_sat_solver::logger::Logger::Log2("Explain propagation: " + std::to_string(constraint->log_id_));
   // check if true for the minimum value is propagated or false for the upper bound.
   bool propagated_value = true;
   int l_w = 0;
@@ -79,7 +81,7 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
     }
   }
   assert(sum + l_w > constraint->max_);
-  lits_.push_back(propagated_literal);
+  lits_.push_back(~propagated_literal);
   constraint->UpdateCounts(lits_, state);
   // TODO trim lits if to many
 }

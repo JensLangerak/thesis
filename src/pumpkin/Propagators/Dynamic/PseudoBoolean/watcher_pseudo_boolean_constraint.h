@@ -18,6 +18,7 @@ public:
   WatcherPseudoBooleanConstraint2 &
   operator=(const WatcherPseudoBooleanConstraint2 &w) {
     this->constraint_ = w.constraint_;
+    this->weight_ = w.weight_;
     return *this;
   }
 

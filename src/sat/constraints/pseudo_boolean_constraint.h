@@ -20,12 +20,6 @@ public:
   int min_;
   int max_;
 
-  struct WeightedLit {
-    WeightedLit(Lit lit, int w) : l(lit), w(w) {};
-    Lit l;
-    int w;
-  };
-
   std::vector<WeightedLit> weighted_lits_;
 
 

@@ -29,6 +29,7 @@ bool PropagatorPseudoBoolean2::PropagateLiteral(BooleanLiteral true_literal,
   size_t current_index = 0;
   // Check if it has partly propagated the literal or not
   bool already_partly_done = false;
+  BooleanLiteral last = last_propagated_;
   if (!last_propagated_.IsUndefined() && last_propagated_ == true_literal) {
     current_index = last_index_;
     already_partly_done = true;
@@ -46,22 +47,28 @@ bool PropagatorPseudoBoolean2::PropagateLiteral(BooleanLiteral true_literal,
       continue;
     // only update the count the first time that the constraint is triggered.
     // //TODO not sure if the check is still needed
+    bool count_updated = false;
+    bool prev_already_done = already_partly_done;
+    int last_ind = last_index_;
     if (last_index_ != current_index || (!already_partly_done)) {
+      count_updated = true;
       constraint->current_sum_value+=watchers_true[current_index].weight_;
     }
     already_partly_done = false;
     last_index_ = current_index;
     int true_count = 0;
-//    int false_count = 0;
-//    for (auto wl : constraint->literals_) {
-//      BooleanLiteral l = wl.literal;
-//      if (state.assignments_.IsAssignedTrue(l) &&
-//          state.assignments_.GetTrailPosition(l.Variable()) <=
-//              state.assignments_.GetTrailPosition(true_literal.Variable()))
-//        true_count+= wl.weight;
-//    }
-//        assert(true_count == constraint->current_sum_value);
-//    constraint->current_sum_value = true_count;
+    int false_count = 0;
+    for (auto wl : constraint->literals_) {
+      BooleanLiteral l = wl.literal;
+      if (state.assignments_.IsAssignedTrue(l) &&
+          state.assignments_.GetTrailPosition(l.Variable()) <=
+              state.assignments_.GetTrailPosition(true_literal.Variable()))
+        true_count+= wl.weight;
+    }
+
+    int tet = true_literal.VariableIndex();
+        assert(true_count == constraint->current_sum_value);
+    constraint->current_sum_value = true_count;
 
     true_count = constraint->current_sum_value;
 
@@ -73,7 +80,7 @@ bool PropagatorPseudoBoolean2::PropagateLiteral(BooleanLiteral true_literal,
 
       // restore remaining watchers
       for (size_t k = current_index + 1; k < watchers_true.size(); ++k) {
-        watchers_true[end_position] = watchers_true[current_index];
+        watchers_true[end_position] = watchers_true[k];
         ++end_position;
       }
       watchers_true.resize(end_position);
@@ -188,12 +195,16 @@ void PropagatorPseudoBoolean2::Synchronise(SolverState &state) {
       BooleanLiteral l = next_position_on_trail_to_propagate_it.GetData();
       for (auto wc : pseudo_boolean_database_.watch_list_true[l]) {
         update.insert(wc.constraint_);
+        wc.constraint_->current_sum_value -= wc.weight_;
       }
     }
     assert(next_position_on_trail_to_propagate_it == state.GetTrailEnd());
-    RecomputeConstraintSums(state, update);
+    //TODO
+//    RecomputeConstraintSums(state, update);
 
   }
+
+//  RecomputeConstraintSums(state, update);
   PropagatorGeneric::Synchronise(state);
   last_propagated_ = BooleanLiteral();
   last_index_ = 0;
@@ -329,8 +340,10 @@ void PropagatorPseudoBoolean2::RecomputeConstraintSums(
   for (auto c : update_constraints) {
     c->current_sum_value = 0;
     for (auto wl : c->literals_) {
-      if (state.assignments_.IsAssignedTrue(wl.literal))
+      if (state.assignments_.IsAssignedTrue(wl.literal)) {
         c->current_sum_value += wl.weight;
+        }
+
     }
   }
 }

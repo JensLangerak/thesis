@@ -22,7 +22,8 @@ template <class T>
 bool IEncoder<T>::IsAdded(BooleanLiteral l) { return EncodingAdded();}
 
 template <class T>
-void IEncoder<T>::DebugInfo(SolverState &state) {}
+void IEncoder<T>::DebugInfo(SolverState &state) {
+}
 
 template <class T>
 IEncoder<T> *IEncoder<T>::IFactory::Create(T &constraint) {

@@ -74,9 +74,10 @@ public:
 
   std::vector<IConstraint*> GetConstraints() const;
 
-  inline void AddToMinimize(Lit l) {minimize_.push_back(l);};
+  inline void AddToMinimize(Lit l) {minimize_.push_back(WeightedLit(l,1));};
+  inline void AddToMinimize(WeightedLit l) {minimize_.push_back(l);};
 
-  std::vector<Lit> GetMinimizeLit();
+  std::vector<WeightedLit> GetMinimizeLit();
   ~SatProblem();
 
   SatProblem(const SatProblem & problem);
@@ -90,7 +91,7 @@ private:
   int nr_vars_;
   std::vector<std::vector<Lit>> clauses_;
   std::vector<IConstraint*> constraints;
-  std::vector<Lit> minimize_; //TODO different optimize functions
+  std::vector<WeightedLit> minimize_; //TODO different optimize functions
 };
 } // namespace simple_sat_solver::sat
 

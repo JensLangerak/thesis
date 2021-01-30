@@ -50,7 +50,7 @@ private:
   int course_room_start_index;
   void ProjectOnCourseDayVars(Course course);
 
-  std::vector<Lit> penalties_;
+  std::vector<WeightedLit> penalties_;
   void AddMinWorkingDayConstraints();
   void AddCompactnessConstraints();
   void AddRoomCapacityConstraints();

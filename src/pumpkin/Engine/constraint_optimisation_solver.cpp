@@ -35,6 +35,7 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 		if (output.HasSolution())
 		{//strenthen the bound of the objective function in the solver
 			UpdateBestSolution(output.solution);
+                        std::cout << upper_bound_ << std::endl;
 
 			bool success = StrengthenUpperBoundConstraints();
 			if (!success) { lower_bound_ = upper_bound_; break; }
@@ -76,6 +77,8 @@ void ConstraintOptimisationSolver::UpdateBestSolution(const std::vector<bool>& s
         simple_sat_solver::logger::Logger::Log2("New solution found: " + std::to_string(new_upper_bound));
         if (new_upper_bound > start_upper_bound_)
           new_upper_bound = start_upper_bound_;
+
+
 	runtime_assert(new_upper_bound < upper_bound_);
 
 	upper_bound_ = new_upper_bound;
@@ -133,7 +136,13 @@ bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost
   if (optimise_constraint == nullptr) {
     std::vector<BooleanLiteral>lits;
     std::vector<uint32_t> coefs;
-    for (auto w : objective_literals_) {
+    auto copy = objective_literals_;
+    std::sort(copy.begin(), copy.end(), [](WeightedLiteral a, WeightedLiteral b){ return a.weight > b.weight; });
+
+    for (auto w : copy) {
+      for (auto l : lits) {
+        assert (l.Variable() != w.literal.Variable());
+      }
       lits.push_back(w.literal);
       coefs.push_back(w.weight);
     }

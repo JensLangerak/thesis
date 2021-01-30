@@ -7,13 +7,14 @@
 
 #include "../types.h"
 #include "i_constraint.h"
+#include <cassert>
 #include <vector>
 namespace simple_sat_solver::sat {
 class CardinalityConstraint : public IConstraint {
 public:
   CardinalityConstraint() : lits(), min(0), max(0){};
   CardinalityConstraint(const std::vector<Lit> &lits, int min, int max)
-      : lits(lits), min(min), max(max){};
+      : lits(lits), min(min), max(max){ assert(max > 1);};
   CardinalityConstraint(const CardinalityConstraint & constraint) : lits(constraint.lits), max(constraint.max), min(constraint.min){};
   ~CardinalityConstraint() override;
   std::vector<Lit> lits;

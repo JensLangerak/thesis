@@ -114,7 +114,7 @@ void SatProblem::AddConstraint(IConstraint *constraint) {
 std::vector<IConstraint*> SatProblem::GetConstraints() const {
   return constraints;
 }
-std::vector<Lit> SatProblem::GetMinimizeLit() { return minimize_; }
+std::vector<WeightedLit> SatProblem::GetMinimizeLit() { return minimize_; }
 SatProblem::~SatProblem() {
   for (auto c : constraints)
     delete c;
