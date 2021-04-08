@@ -2,9 +2,10 @@
 #include "../Propagators/reason_generic.h"
 #include "../Basic Data Structures/runtime_assert.h"
 
-#include <assert.h>
 #include <algorithm>
+#include <assert.h>
 #include <iostream>
+#include <random>
 
 #include "../../logger/logger.h"
 namespace Pumpkin
@@ -20,11 +21,13 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification&
 	num_trail_literals_examined_(0),
 	use_glucose_bumping_(false)
 {
+  WatchedPseudoBooleanConstraint2::next_log_id_ = 0;
 	for (BooleanLiteral unit_literal : problem_specification.unit_clauses_) { state_.AddUnitClause(unit_literal); }
         for (auto& clause : problem_specification.clauses_) { state_.AddClause(clause); }
 
   simple_sat_solver::logger::Logger::Log2("Before cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
   for (auto& constraint : problem_specification.pseudo_boolean_constraints_) { state_.AddPseudoBoolean(constraint); }
+  for (auto& constraint : problem_specification.pb_sum_constraints_) { state_.AddPbSum(constraint); }
   for (auto& constraint : problem_specification.cardinality_constraints_) { state_.AddCardinality(constraint); }
   simple_sat_solver::logger::Logger::Log2("After cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
   for (auto & constraint : problem_specification.sum_constraints_) { state_.AddSumConstraint(constraint);}
@@ -44,8 +47,23 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
 	//check failure by unit propagation at root
 	if (SetUnitClauses() == false) { return SolverOutput(stopwatch_.TimeElapsedInSeconds(), false, std::vector<bool>()); }
 
+  for (auto c : state_.propagator_clausal_.clause_database_.unit_clauses_) {
+    assert(state_.assignments_.IsAssignedTrue(c));
+  }
+
   while (!state_.IsAssignmentBuilt() && stopwatch_.IsWithinTimeLimit())
 	{
+          for (auto c : state_.propagator_clausal_.clause_database_.unit_clauses_) {
+            assert(state_.assignments_.IsAssignedTrue(c));
+          }
+          for (auto c : state_.propagator_pb_sum_.sum_database_.permanent_constraints_) {
+            //TODO correct assert
+//            WeightedLiteral l =c->outputs_[ c->weight_output_index_map_[c->max_]];
+//            assert(state_.assignments_.IsAssignedFalse(l.literal));
+
+          }
+
+
           state_.IncreaseDecisionLevel();
 
           BooleanLiteral decision_literal = MakeDecision();
@@ -58,10 +76,20 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
 		{
 			bool success = ResolveConflict(conflicting_propagator);
 			if (success == false) { break; } //UNSAT detected, terminate.
-			if (ShouldRestart()) { PerformRestart(); }
+			if (ShouldRestart()) { PerformRestart();}
 		}
 
         }
+
+  simple_sat_solver::logger::Logger::Log2("Total encoded conflicts " + std::to_string(total_encoded_conflicts));
+  simple_sat_solver::logger::Logger::Log2("Total encoded conflicts multiple same constraint " + std::to_string(total_encoded_conflicts_more_same_constraint));
+  simple_sat_solver::logger::Logger::Log2("Avg lits " + std::to_string(((double)total_lits_in_conflicts) / total_encoded_conflicts));
+  simple_sat_solver::logger::Logger::Log2("Avg leaf lits " + std::to_string(((double)total_leaf_lits) / total_encoded_conflicts));
+  simple_sat_solver::logger::Logger::Log2("Avg prop lits " + std::to_string(((double)total_propagated_lits) / total_encoded_conflicts));
+  simple_sat_solver::logger::Logger::Log2("Avg non const " + std::to_string(((double)total_non_constraint) / total_encoded_conflicts));
+  simple_sat_solver::logger::Logger::Log2("Avg encoded lits " + std::to_string(((double )total_encoded_lits) / total_encoded_conflicts));
+  simple_sat_solver::logger::Logger::Log2("Avg path " + std::to_string(((double )total_max_path) / total_encoded_conflicts_more_same_constraint));
+  simple_sat_solver::logger::Logger::Log2("Avg max same constraint " + std::to_string(((double )total_max_same_constraints) / total_encoded_conflicts));
   return GenerateOutput();
 }
 
@@ -104,7 +132,14 @@ BooleanLiteral ConstraintSatisfactionSolver::MakeDecision()
 	state_.variable_selector_.Remove(selected_variable);
 	assert(selected_variable.IsUndefined() == false);//this is a "hack" since before calling this function, IsAssignmentBuilt is queries which will prevent this situation from happening
 	bool selected_value = state_.value_selector_.SelectValue(selected_variable);
+        if (selected_value == false){
+          int tes =2;
+        }
 	BooleanLiteral decision_literal(selected_variable, selected_value);
+        for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+          c->lit_decisions_[decision_literal.ToPositiveInteger()]++;
+          c->var_decisions_[decision_literal.VariableIndex()]++;
+        }
 	return decision_literal;
 }
 
@@ -121,9 +156,14 @@ bool ConstraintSatisfactionSolver::ResolveConflict(PropagatorGeneric *conflict_p
 		ConflictAnalysisResultClausal result = AnalyseConflict(conflict_propagator);
 		ProcessConflictAnalysisResult(result);
 		conflict_propagator = state_.PropagateEnqueued();
+          for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+            c->UpdateNotTouchedCount(state_);
+            c->ResetConflictLog();
+          }
 	}
 	state_.propagator_clausal_.clause_database_.DecayClauseActivities();
 	state_.variable_selector_.DecayActivities();
+
 
 	return true; //conflict was successful resolved
 }
@@ -196,7 +236,31 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 		//experimental for now, might remove
 		if (parameters_.bump_decision_variables == true || state_.assignments_.GetAssignmentPropagator(reason_variable) != NULL)
 		{
-			state_.variable_selector_.BumpActivity(reason_variable); //not sure about this one, but I am leaving it for now
+//                  bool is_decision_pb = false;
+//                  if (state_.assignments_.IsDecision(reason_variable)) {
+//                    for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+//                      for (WeightedLiteral l : c->original_literals_) {
+//                        if (l.literal.Variable() == reason_variable) {
+//                          is_decision_pb = true;
+//                          break;
+//                        }
+//                      }
+//                      if (is_decision_pb)
+//                        break;
+//                    }
+//                  }
+//                        if (is_decision_pb || state_.assignments_.GetAssignmentPropagator(reason_variable) == &state_.propagator_pseudo_boolean_2_) {
+//                          std::random_device r;
+//                          auto gen = std::bind(std::uniform_int_distribution<>(0,1),std::default_random_engine(r()));
+//
+//                          state_.variable_selector_.BumpActivityExtra(reason_variable,1); //not sure about this one, but I am leaving it for now
+////                          bool b = gen();
+////                          state_.value_selector_.UpdatePolarity(reason_variable, b);
+////                          state_.value_selector_.UpdatePolarity(reason_variable, false, true);//reason_literal.IsNegative());
+////                          state_.override_.push(~reason_literal);
+//                        } else {
+                          state_.variable_selector_.BumpActivity(reason_variable); //not sure about this one, but I am leaving it for now
+//                        }
 		}
 
 		//either classify the literal as part of a learned clause (if its decision level is smaller than the current level) 
@@ -221,6 +285,115 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 
 void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysisResultClausal& result)
 {
+  std::string clause="";
+  std::vector<std::string> labels;
+  bool log = false;
+          for (auto l : result.learned_clause_literals) {
+            clause += " ";
+
+            bool found = false;
+            for (auto pb : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+            std::string label;
+            if (pb->GetLabel(l, label)) {
+              clause += label;
+              labels.push_back(label);
+              log= true;
+              found = true;
+              break;
+              } else {
+
+            }
+            }
+            if(!found) {
+              clause += "N_" + std::to_string(l.code_);
+              labels.push_back("N_" + std::to_string(l.code_));
+            }
+          }
+  if (log) {
+        total_lits_in_conflicts+=labels.size();
+        total_encoded_conflicts += 1;
+        int max_path = 0;
+        bool encoded_lit = false;
+        int max_same_constraint = 0;
+        for (int i = 0; i < labels.size();++i) {
+            std::string l = labels[i];
+            if (l[0] == 'N') {
+              total_non_constraint += 1;
+              continue;
+            }
+            if (l[0] == 'P') {
+              total_propagated_lits += 1;
+              continue;
+            }
+            if (l[0] == 'E') {
+              total_encoded_lits += 1;
+              encoded_lit = true;
+
+
+
+              int stop = 2;
+              while (l[stop] != '_')
+                stop += 1;
+
+              int stop_l1 = stop + 1;
+              while(l[stop_l1] != '_'  && l[stop_l1] != 'L')
+                stop_l1 += 1;
+
+              if (l[stop_l1] == 'L')
+                total_leaf_lits += 1;
+
+              int count = 0;
+              int stop_l2 = stop + 1;
+              for (int j = i + 1; j < labels.size(); ++j) {
+                bool same = true;
+                std::string l2 = labels[j];
+                if (l2[0] != 'E')
+                  continue;
+                for (int k = 2; k < stop; ++k) {
+                  if(l2[k] == '_' || l2[k] == 'L') {
+                    stop_l2 = k;
+                    break;
+                  }
+
+                  if (l[k] != l2[k]) {
+                    same = false;
+                    break;
+                  }
+                }
+                if (!same)
+                  continue;
+                count += 1;
+                if (max_same_constraint < count)
+                  max_same_constraint = count;
+                while(l2[stop_l2] != '_' && l2[stop_l2] != 'L')
+                  stop_l2 += 1;
+                int path_dist = 0;
+                int h =stop;
+                stop = std::min(stop_l1, stop_l2);
+                bool diff = false;
+                for (; h < stop; ++h) {
+                  if (l[h] != l2[h])
+                    diff = true;
+                  if (diff)
+                    path_dist += 2;
+                }
+                path_dist += (stop_l1 - h) + (stop_l2 - h);
+                if (path_dist > max_path)
+                  max_path = path_dist;
+              }
+
+            }
+
+          }
+          if (max_same_constraint > 0){
+            total_max_same_constraints += max_same_constraint;
+            total_max_path += max_path;
+            total_encoded_conflicts_more_same_constraint +=1;
+          }
+
+//          if (encoded_lit)
+//          simple_sat_solver::logger::Logger::Log2("Conflict_clause : " + clause);
+        }
 	//unit clauses are treated in a special way: they are added as decision literals at decision level 0. This might change in the future if a better idea presents itself
 	if (result.learned_clause_literals.size() == 1)
 	{
@@ -325,7 +498,7 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 		state_.simple_moving_average_lbd.Reset();
 		counters_.conflicts_until_restart = parameters_.num_min_conflicts_per_restart;
 		return true;
-	} else if (!state_.propagator_pseudo_boolean_2_.add_constraints_.empty()) {
+	} else if (!(state_.propagator_pseudo_boolean_2_.add_constraints_.empty() && state_.propagator_pb_sum_.add_constraints_.empty())) {
           return true;
         }
 	else
@@ -336,6 +509,7 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 
 void ConstraintSatisfactionSolver::PerformRestart()
 {
+  std::cout << "Restart " << std::endl;
 	state_.Backtrack(0);
 
   if (counters_.until_clause_cleanup <= 0)
@@ -349,8 +523,9 @@ void ConstraintSatisfactionSolver::PerformRestart()
 	counters_.restarts++;
 	counters_.conflicts_until_restart = parameters_.num_min_conflicts_per_restart;
 
-        state_.propagator_cardinality_.AddScheduledEncodings(state_);
-        state_.propagator_pseudo_boolean_2_.AddScheduledEncodings(state_);
+        state_.AddScheduledEncodings();
+        bool res = SetUnitClauses();
+        assert(res);
 }
 
 void ConstraintSatisfactionSolver::UpdateConflictCounters()
@@ -385,6 +560,9 @@ SolverOutput ConstraintSatisfactionSolver::GenerateOutput()
 	}
 	else
 	{
+          for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+            c->UpdateSolutionCount(state_);
+          }
 		return SolverOutput(stopwatch_.TimeElapsedInSeconds(), false, state_.GetOutputAssignment());
 	}
 }

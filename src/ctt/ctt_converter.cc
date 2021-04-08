@@ -366,10 +366,15 @@ void CttConverter::AddMinWorkingDayConstraints() {
     for (int d = 0; d < ctt_problem_.nr_days; ++d) {
       days.push_back(CourseDayIndex(c.index, d));
     }
+    Lit prev;
     for (int i = 0; i < c.min_working_days - 1; ++i) {
       Lit p = sat_problem_.AddNewVar();
       penalties_.push_back(WeightedLit(p, 5));
       days.push_back(p);
+//      if (i > 0) {
+//        sat_problem_.AddClause({prev, ~p});
+//      }
+      prev = p;
     }
     std::vector<Lit> c_days;
     for (Lit l : days)
@@ -438,10 +443,10 @@ void CttConverter::AddRoomCapacityConstraints() {
       for (int t = 0; t < total_timeslots_; ++t) {
         if (c.nr_students > r.max_capactity) {
           Lit penalty = sat_problem_.AddNewVar();
-          sat_problem_.AddClause(
-              {penalty, ~Lit(CourseRoomScheduleIndex(c.index, r.index, t))});
-            penalties_.push_back(WeightedLit(penalty, c.nr_students - r.max_capactity));
-//            sat_problem_.AddClause({~Lit(CourseRoomScheduleIndex(c.index, r.index, t))});
+//          sat_problem_.AddClause(
+//              {penalty, ~Lit(CourseRoomScheduleIndex(c.index, r.index, t))});
+//            penalties_.push_back(WeightedLit(penalty, c.nr_students - r.max_capactity));
+            sat_problem_.AddClause({~Lit(CourseRoomScheduleIndex(c.index, r.index, t))});
         }
       }
 
@@ -470,10 +475,16 @@ void CttConverter::AddRoomStability() {
 //      sum.push_back(sat_problem_.AddNewVar());
       input.push_back(CourseRoomIndex(c.index, r.index));
     }
+    Lit prev;
     for (int i = 0; i < ctt_problem_.nr_rooms; ++i) {
       Lit l = sat_problem_.AddNewVar();
       penalties_.push_back(WeightedLit(l, 1));
       input.push_back(~l);
+
+//      if (i > 0) {
+//        sat_problem_.AddClause({prev, ~l});
+//      }
+      prev = l;
     }
     sat_problem_.AddConstraint(new CardinalityConstraint(input, 0, ctt_problem_.nr_rooms + 1));
 //    sat_problem_.AtMostOne(input);

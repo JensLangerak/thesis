@@ -8,6 +8,7 @@
 #include "../pumpkin/Basic Data Structures/solver_parameters.h"
 #include "../pumpkin/Engine/constraint_optimisation_solver.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totaliser.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/static_generalized_totaliser.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/i_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
@@ -16,6 +17,7 @@
 #include "../solver_wrappers/pumpkin.h"
 #include "../sat/sat_problem.h"
 #include "opb_parser.h"
+
 
 void Test(std::string test_file_path, std::string test_file, std::string log_dir, ::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * encoder, std::string encoder_message, int start_penalty) {
   simple_sat_solver::logger::Logger::StartNewLog(log_dir,test_file);
@@ -35,7 +37,11 @@ void Test(std::string test_file_path, std::string test_file, std::string log_dir
 
   std::clock_t start = std::clock();
 //  bool res = solver->Optimize(problem);
-  bool res = solver->Solve(problem);
+  bool res = false;
+  if (problem.GetMinimizeLit().empty())
+    res = solver->Solve(problem);
+  else
+    res = solver->Optimize(problem);
   double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout << "time: " << duration <<std::endl;
   simple_sat_solver::logger::Logger::Log2("Time: " + std::to_string(duration));
@@ -65,14 +71,16 @@ void test_setting(std::string test_file_path, std::string test_file, std::string
 }
 
 
-enum solver_type {encoder, dynamic, incremental, propagator};
+enum solver_type {encoder, dynamic, incremental, propagator, staticincremental};
 int main(int argc, char *argv[]) {
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/leberre/opb-paranoid/misc2010/datasets/caixa/normalized-1096.cudf.paranoid.opb";
-  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3014_7-sat.opb";
+//  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j60/normalized-j6017_10-unsat.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j120/normalized-j12012_9-unsat.opb";
 //  std::string test_file = "/home/jens/Downloads/normalized-PB09/OPT-SMALLINT-LIN/flexray/normalized-fx30.opb";
+//  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-unsat.opb";
+  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/OPT-SMALLINT-LIN/oliveras/j30opt/normalized-j301_1.std.opb";
   std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/pb/log";
-  solver_type s = propagator;
+  solver_type s = incremental;
   int add_delay_i = 0;
   if (argc >= 4) {
     s = (solver_type)atoi(argv[1]);
@@ -115,6 +123,14 @@ int main(int argc, char *argv[]) {
                *)new ::Pumpkin::
               PropagatorEncoder<Pumpkin::PseudoBooleanConstraint>::Factory(),
           "Propagator", false, false, start_penalty, add_delay);
+      break;
+    case staticincremental:
+      test_setting(
+          test_file, "test", log_dir,
+          (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
+          *)new ::Pumpkin::
+          StaticGeneralizedTotaliser::Factory(),
+          "Static", true, true, start_penalty, add_delay);
       break;
     default:
       return 1;

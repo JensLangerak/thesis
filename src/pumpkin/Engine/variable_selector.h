@@ -1,6 +1,7 @@
 #ifndef VARIABLE_SELETOR_H
 #define VARIABLE_SELECTOR_H
 
+#include "../Basic Data Structures/bit_string_map.h"
 #include "../Basic Data Structures/boolean_variable.h"
 #include "../Basic Data Structures/key_value_heap.h"
 
@@ -36,6 +37,8 @@ public:
 	
 	KeyValueHeap heap_;
 	double increment_, max_threshold_, decay_factor_;
+        BitStringMap bit_strings_;
+        void BumpActivityExtra(BooleanVariable boolean_variable, int extra);
 };
 
 } //end Pumpkin namespace

@@ -28,7 +28,7 @@ public:
 
 	int ToPositiveInteger() const;
 	std::string ToString() const;
-private:
+//private:
 	int code_;
 };
 

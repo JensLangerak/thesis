@@ -25,7 +25,7 @@ public:
 	void Readd(int key_id); //readd the entry with key 'key_id' to the heap. Assumes it was present in heap before and that it is in present in the current state. Its value is the previous value used before Remove(key_id) was called.  O(logn)
 	void Grow(); //increases the Size of the heap by one. The key will have zero assigned to its value.
 	void DivideValues(double divisor); //divides all the values in the heap by 'divisor'. This will affect the values of keys that have been removed. O(n)
-	
+
 	double GetKeyValue(int key_id) const;
 	bool IsKeyPresent(int key_id) const;
 	double ReadMaxValue() const; //read the key with the highest value without removing it. O(1)

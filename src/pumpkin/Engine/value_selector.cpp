@@ -17,9 +17,9 @@ bool ValueSelector::SelectValue(BooleanVariable variable)
 	return values_[variable.index_];
 }
 
-void ValueSelector::UpdatePolarity(BooleanVariable variable, bool truth_value)
+void ValueSelector::UpdatePolarity(BooleanVariable variable, bool truth_value, bool force)
 {
-	if (are_values_predetermined_ || is_frozen_[variable.index_]) return; //no updates if the values are forced
+	if ((!force) && (are_values_predetermined_ || is_frozen_[variable.index_])) return; //no updates if the values are forced
 
 	assert(variable.IsUndefined() == false);
 	values_[variable.index_] = truth_value;

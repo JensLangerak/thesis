@@ -13,7 +13,8 @@ class ValueSelector
 public:
 	ValueSelector(int num_variables);
 	bool SelectValue(BooleanVariable); //returns the suggested truth value assigned for the given variable
-	void UpdatePolarity(BooleanVariable, bool);//sets the polarity of the input variable to the given truth value. As a result, SelectValue will now suggest the input truth value for the variable
+  void UpdatePolarity(BooleanVariable, bool, bool);//sets the polarity of the input variable to the given truth value. As a result, SelectValue will now suggest the input truth value for the variable
+  void UpdatePolarity(BooleanVariable l, bool b) {UpdatePolarity(l, b, false);};//sets the polarity of the input variable to the given truth value. As a result, SelectValue will now suggest the input truth value for the variable
 	void Grow(); //increases the number of variables considered by one.
 
 	void SetPolaritiesToFalse();

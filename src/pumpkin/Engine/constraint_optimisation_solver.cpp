@@ -41,6 +41,11 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 			if (!success) { lower_bound_ = upper_bound_; break; }
 
 			constrained_satisfaction_solver_.state_.value_selector_.PredetermineValues(best_solution_);
+//                        for (auto c : constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_){
+//                          for (auto w : c->unencoded_constraint_literals_) {
+//                            constrained_satisfaction_solver_.state_.value_selector_.UpdatePolarity(w.literal.Variable(), w.literal.IsNegative(), true);
+//                          }
+//                        }
 
 		}
 		else if (output.ProvenInfeasible())
@@ -50,6 +55,8 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 		}
 	}
         std::cout << upper_bound_ << std::endl;
+        for (auto c : constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_)
+          c->LogCounts();
 	return GenerateOutput();
 }
 
@@ -79,7 +86,7 @@ void ConstraintOptimisationSolver::UpdateBestSolution(const std::vector<bool>& s
           new_upper_bound = start_upper_bound_;
 
 
-	runtime_assert(new_upper_bound < upper_bound_);
+//	runtime_assert(new_upper_bound < upper_bound_);
 
 	upper_bound_ = new_upper_bound;
 	best_solution_ = solution;
@@ -146,12 +153,14 @@ bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost
       lits.push_back(w.literal);
       coefs.push_back(w.weight);
     }
+
     PseudoBooleanConstraint c(lits, coefs, max_cost, optimisation_encoding_factory);
     constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
     optimise_constraint = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_.back();
 //    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_.back();
+
   } else {
-    assert(optimise_constraint->max_ > max_cost);
+    assert(optimise_constraint->max_ >= max_cost);
     optimise_constraint->max_ = max_cost;
     return optimise_constraint->encoder_->UpdateMax(max_cost, constrained_satisfaction_solver_.state_);
   }

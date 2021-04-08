@@ -38,6 +38,9 @@ public:
   }
 
   int start_uppberboud_ = -1;
+
+  static std::vector<bool> check_solution_;
+  static bool check_sol;
 private:
   std::vector<bool> solution_;
   bool solved_;

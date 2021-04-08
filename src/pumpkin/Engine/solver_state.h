@@ -9,10 +9,11 @@
 #include "../Basic Data Structures/small_helper_structures.h"
 #include "../Basic Data Structures/solver_parameters.h"
 #include "../Basic Data Structures/trail_list.h"
-#include "../Propagators/Dynamic/Cardinality/propagator_cardinality.h"
-#include "../Propagators/Dynamic/Sum/propagator_sum.h"
-#include "../Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean.h"
 #include "../Propagators/Clausal/propagator_clausal.h"
+#include "../Propagators/Dynamic/Cardinality/propagator_cardinality.h"
+#include "../Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean.h"
+#include "../Propagators/Dynamic/PseudoBooleanSum/propagator_pb_sum.h"
+#include "../Propagators/Dynamic/Sum/propagator_sum.h"
 #include "../Propagators/Pseudo-Boolean/propagator_pseudo_boolean_constraints.h"
 #include "value_selector.h"
 #include "variable_selector.h"
@@ -133,12 +134,14 @@ public:
 	VariableSelector variable_selector_;
 	ValueSelector value_selector_;
 	Assignments assignments_;
+        std::queue<BooleanLiteral> override_;
 
 	//propagators
 	PropagatorClausal propagator_clausal_;
   PropagatorPseudoBooleanConstraints propagator_pseudo_boolean_;
   PropagatorPseudoBoolean2 propagator_pseudo_boolean_2_;
   PropagatorCardinality propagator_cardinality_;
+  PropagatorPbSum propagator_pb_sum_;
 //  PropagatorSum propagator_sum_;
 //  PropagatorSum propagator_sum_;
 
@@ -175,6 +178,8 @@ public:
 
 	int decision_level_;
         void CheckClasualTrailState();
+        void AddPbSum(PbSumConstraint &constraint);
+        void AddScheduledEncodings();
 };
 
 } //end Pumpkin namespace

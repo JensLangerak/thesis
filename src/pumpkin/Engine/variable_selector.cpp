@@ -4,8 +4,21 @@ namespace Pumpkin
 {
 
 VariableSelector::VariableSelector(int num_variables)
-	:heap_(num_variables),increment_(1.0),max_threshold_(1e100),decay_factor_(0.95)
+	:heap_(num_variables),increment_(1.0),max_threshold_(1e100),decay_factor_(0.95), bit_strings_(num_variables)
 {
+}
+
+
+void VariableSelector::BumpActivityExtra(BooleanVariable boolean_variable, int extra)
+{
+  double value = heap_.GetKeyValue(boolean_variable.index_ - 1);
+  if (value + increment_ * extra >= max_threshold_)
+  {
+    heap_.DivideValues(max_threshold_);
+    increment_ /= max_threshold_;
+  }
+  heap_.Increment(boolean_variable.index_-1, increment_ * extra);
+  bit_strings_.Increment(boolean_variable.index_ -1);
 }
 
 void VariableSelector::BumpActivity(BooleanVariable boolean_variable)
@@ -17,11 +30,13 @@ void VariableSelector::BumpActivity(BooleanVariable boolean_variable)
 		increment_ /= max_threshold_;
 	}
 	heap_.Increment(boolean_variable.index_-1, increment_);
+        bit_strings_.Increment(boolean_variable.index_ -1);
 }
 
 void VariableSelector::DecayActivities()
 {
 	increment_ *= (1.0 / decay_factor_);
+        bit_strings_.IncreaseId();
 }
 
 BooleanVariable VariableSelector::PopHighestActivityVariable()
@@ -59,6 +74,7 @@ int VariableSelector::Size() const
 void VariableSelector::Grow()
 {
 	heap_.Grow();
+        bit_strings_.Grow();
 }
 
 bool VariableSelector::IsVariablePresent(BooleanVariable boolean_variable) const

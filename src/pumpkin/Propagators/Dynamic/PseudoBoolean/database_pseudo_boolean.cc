@@ -22,14 +22,14 @@ WatchedPseudoBooleanConstraint2* DatabasePseudoBoolean2::AddPermanentConstraint(
   return watched;
 }
 void DatabasePseudoBoolean2::AddWatchers(WatchedPseudoBooleanConstraint2 *constraint) {
-  for (WeightedLiteral lit : constraint->literals_) {
+  for (WeightedLiteral lit : constraint->current_literals_) {
     watch_list_true.Add(lit.literal, lit.weight, constraint);
   }
 
 }
 DatabasePseudoBoolean2::~DatabasePseudoBoolean2() {
   for (WatchedPseudoBooleanConstraint2 *c : permanent_constraints_) {
-    for (WeightedLiteral l : c->literals_) {
+    for (WeightedLiteral l : c->current_literals_) {
       watch_list_true.Remove(l.literal, c);
     }
     delete c;

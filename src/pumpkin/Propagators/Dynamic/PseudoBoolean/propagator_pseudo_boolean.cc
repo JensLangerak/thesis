@@ -57,18 +57,47 @@ bool PropagatorPseudoBoolean2::PropagateLiteral(BooleanLiteral true_literal,
     already_partly_done = false;
     last_index_ = current_index;
     int true_count = 0;
-    int false_count = 0;
-    for (auto wl : constraint->literals_) {
-      BooleanLiteral l = wl.literal;
-      if (state.assignments_.IsAssignedTrue(l) &&
-          state.assignments_.GetTrailPosition(l.Variable()) <=
-              state.assignments_.GetTrailPosition(true_literal.Variable()))
-        true_count+= wl.weight;
-    }
+//    int count_current=0;
+//    int false_count = 0;
+//    for (auto wl : constraint->current_literals_) {
+//      BooleanLiteral l = wl.literal;
+//      if (state.assignments_.IsAssignedTrue(l) &&
+//          state.assignments_.GetTrailPosition(l.Variable()) <=
+//              state.assignments_.GetTrailPosition(true_literal.Variable()))
+//        true_count+= wl.weight;
+//
+//      if (state.assignments_.IsAssignedTrue(l))
+//        count_current += wl.weight;
+//    }
+//    int count_original = 0;
+//    for (auto wl: constraint->original_literals_) {
+//      BooleanLiteral l = wl.literal;
+//      if (state.assignments_.IsAssignedTrue(l))
+//        count_original += wl.weight;
+//    }
 
-    int tet = true_literal.VariableIndex();
-        assert(true_count == constraint->current_sum_value);
-    constraint->current_sum_value = true_count;
+//    if (count_current != count_original) {
+//      int count_added_encoding = 0;
+//      for (auto wl:constraint->added_to_encoding_literals_) {
+//        if (state.assignments_.IsAssignedTrue(wl.literal))
+//          count_added_encoding+=wl.weight;
+//      }
+//      int count_not_added = 0;
+//      for (auto wl:constraint->unencoded_constraint_literals_) {
+//        if (state.assignments_.IsAssignedTrue(wl.literal))
+//          count_not_added+=wl.weight;
+//      }
+//      int count_encoding = 0;
+//      for (auto wl : constraint->encoded_sum_literals_) {
+//        if (state.assignments_.IsAssignedTrue(wl.literal))
+//          count_encoding += wl.weight;
+//      }
+//
+//      int test = 2;
+//    }
+//    int tet = true_literal.VariableIndex();
+//        assert(true_count == constraint->current_sum_value);
+//    constraint->current_sum_value = true_count;
 
     true_count = constraint->current_sum_value;
 
@@ -88,7 +117,7 @@ bool PropagatorPseudoBoolean2::PropagateLiteral(BooleanLiteral true_literal,
       //      return false;
       constraint->trigger_count_++;
       trigger_count_++;
-      simple_sat_solver::logger::Logger::Log2("Conflict ID " + std::to_string(constraint->log_id_) + " counts " + std::to_string(constraint->current_sum_value) + " " + std::to_string(trigger_count_));
+//      simple_sat_solver::logger::Logger::Log2("Conflict ID " + std::to_string(constraint->log_id_) + " counts " + std::to_string(constraint->current_sum_value) + " " + std::to_string(trigger_count_));
       if (constraint->encoder_->AddEncodingDynamic()) {
         bool res = AddEncoding(state, constraint);
         //        state.FullReset();
@@ -100,8 +129,8 @@ bool PropagatorPseudoBoolean2::PropagateLiteral(BooleanLiteral true_literal,
 
     int slack = constraint->max_ - true_count;
 
-    for (int i = 0; i <constraint->literals_.size(); ++i) {
-      WeightedLiteral l = constraint->literals_[i];
+    for (int i = 0; i <constraint->current_literals_.size(); ++i) {
+      WeightedLiteral l = constraint->current_literals_[i];
       if (slack >= l.weight)
         break;
 
@@ -287,8 +316,8 @@ void PropagatorPseudoBoolean2::PropagateIncremental2(SolverState &state, Watched
   assert(false); // TODO remove?
   assert(constraint != NULL);
 
-  for (int i = 0; i < constraint->literals_.size(); ++i) {
-    BooleanLiteral l = constraint->literals_[i].literal;
+  for (int i = 0; i < constraint->current_literals_.size(); ++i) {
+    BooleanLiteral l = constraint->current_literals_[i].literal;
     if ((!state.assignments_.IsAssigned(
         l.Variable()))) // && (!constraint->encoder_->IsAdded(l)))
       propagate.push_back(l);
@@ -302,7 +331,7 @@ PropagatorPseudoBoolean2::GetEncodingCause(SolverState &state, WatchedPseudoBool
   assert(constraint != NULL);
   std::vector<BooleanLiteral> cause;
   int level_count = 0;
-  for (WeightedLiteral wl : constraint->literals_) {
+  for (WeightedLiteral wl : constraint->current_literals_) {
     BooleanLiteral l = wl.literal;
     if (state.assignments_.IsAssignedTrue(l)) { // TODO check level
       cause.push_back(l);
@@ -318,17 +347,188 @@ PropagatorPseudoBoolean2::GetEncodingCause(SolverState &state, WatchedPseudoBool
   assert(cause.size() >= constraint->max_);
   return cause;
 }
+
+struct HeapWeightedLiteral {
+  WeightedLiteral l;
+  double activity;
+  int count;
+  HeapWeightedLiteral(WeightedLiteral l, double activity, int count) :l(l), activity(activity), count(count) {};
+};
+
+struct HammingDistanceLiteral {
+  WeightedLiteral l;
+  int distance;
+  int count;
+  int decisions;
+  int compl_dicisions;
+  int var_deci;
+  int prop;
+  HammingDistanceLiteral(WeightedLiteral l, int distance, int count, int decisions, int comp_dec, int var_d, int prop) : l(l), distance(distance), count(count), decisions(decisions), compl_dicisions(comp_dec), var_deci(var_d), prop(prop){};
+};
 void PropagatorPseudoBoolean2::AddScheduledEncodings(SolverState &state) {
   while(!add_constraints_.empty()) {
     WatchedPseudoBooleanConstraint2 * constraint = add_constraints_.front();
     add_constraints_.pop();
     if (!constraint->encoder_->EncodingAdded()) {
       if (constraint->encoder_->SupportsIncremental()) {
-        constraint->encoder_->Encode(state, constraint->add_next_literals_);
-        constraint->add_next_literals_.clear();
+        BitStringMap string_map = state.variable_selector_.bit_strings_;
+        for (BooleanLiteral l : constraint->add_next_literals_) {
+          if (constraint->encoder_->IsAdded(l))
+            continue;
+          std::vector<HammingDistanceLiteral> candidates;
+          std::vector<int> bit_s = string_map.GetKeyValue(l.VariableIndex() - 1);
+          for (auto l2 : constraint->unencoded_constraint_literals_) {
+            int count_trigger =
+                constraint->max_ * constraint->encoder_->add_delay;
+            int l2_count =
+                constraint->lit_count_[l2.literal.ToPositiveInteger()];
+            int l2_decisions =constraint->lit_decisions_[l2.literal.ToPositiveInteger()];
+            int l2_decisions2 =constraint->lit_decisions_[(~(l2.literal)).ToPositiveInteger()];
+            int var_d = constraint->var_decisions_[l2.literal.VariableIndex()];
+            int lit_prop = constraint->lit_prop_[l2.literal.ToPositiveInteger()];
+            int count_factor = l2.weight * l2_count;
+            if (count_factor * 1.1 > count_trigger) {
+              std::vector<int> bit_s2 =
+                  string_map.GetKeyValue(l2.literal.VariableIndex() - 1);
+              int distance = string_map.HammingDistance(bit_s, bit_s2);
+              if (distance > 0.1 * bit_s.size())
+                continue;
+              HammingDistanceLiteral c =
+                  HammingDistanceLiteral(l2, distance, l2_count, l2_decisions, l2_decisions2, var_d, lit_prop);
+
+              candidates.push_back(c);
+            }
+          }
+            std::sort(candidates.begin(), candidates.end(), [](HammingDistanceLiteral a, HammingDistanceLiteral b) {return a.distance < b.distance;}); // TODO perhahps also add weight
+            if (candidates.size() > 1 && bit_s.size() > 5) {
+              for (auto c : candidates) {
+                assert(!state.assignments_.IsAssigned(c.l.literal));
+              }
+
+              for (auto c : candidates) {
+//                state.IncreaseDecisionLevel();
+//                state.EnqueueDecisionLiteral(c.l.literal);
+//                PropagatorGeneric* conflicting_propagator = state.PropagateEnqueued();
+//                assert(conflicting_propagator == nullptr);
+//                for (auto c2: candidates) {
+//                  if (c.l.literal.VariableIndex() == c2.l.literal.VariableIndex())
+//                    continue;
+//                  if (state.assignments_.IsAssigned(c2.l.literal)) {
+//                    int implies = 2;
+//                  }
+//                }
+//                state.Backtrack(0);
+
+              }
+
+              int s = constraint->original_literals_.size();
+              int c_s = candidates.size();
+              int seg=2;
+            }
+            std::vector<BooleanLiteral> add_lits;
+            for (auto c : candidates) {
+              add_lits.push_back(c.l.literal);
+            }
+            constraint->encoder_->Encode(state, add_lits);
+            constraint->add_next_literals_.clear();
+        }
+
       } else {
         constraint->encoder_->Encode(state);
+        constraint->add_next_literals_.clear();
       }
+
+
+//
+//      std::vector<HeapWeightedLiteral> candidates;
+//      candidates.reserve(constraint->unencoded_constraint_literals_.size());
+//      for (auto l : constraint->unencoded_constraint_literals_) {
+//        candidates.push_back(HeapWeightedLiteral(l, state.variable_selector_.heap_.GetKeyValue(l.literal.VariableIndex() - 1), constraint->lit_count_[l.literal.ToPositiveInteger()]));
+//      }
+//      std::sort(candidates.begin(), candidates.end(), [](HeapWeightedLiteral a, HeapWeightedLiteral b) {return a.activity > b.activity;}); // TODO perhahps also add weight
+//      if (constraint->encoder_->SupportsIncremental()) {
+//        std::vector<BooleanLiteral> add_lits;
+//        double min_activity = -1;
+//        double max_acitivity = -1;
+//        for (int i = 0; i < candidates.size(); ++i) {
+//          HeapWeightedLiteral c = candidates[i];
+//          int count_factor = c.count * c.l.weight;
+//          int count_trigger = constraint->max_ * constraint->encoder_->add_delay;
+//          if (c.activity >= min_activity && c.activity <= max_acitivity && count_factor * 1.1 > count_trigger) {
+//            add_lits.push_back(c.l.literal);
+//            if (count_factor > count_trigger) {
+//              min_activity = c.activity * 0.9;
+//              max_acitivity = c.activity * 1.1;
+//            }
+//          } else if (count_factor > count_trigger) {
+//            add_lits.push_back(c.l.literal);
+//            min_activity = c.activity * 0.9;
+//            max_acitivity = c.activity * 1.1;
+//            for (int j = i -1; j >= 0; --j) {
+//              HeapWeightedLiteral c2 = candidates[j];
+//              int count_factor2 = c2.count * c2.l.weight;
+//              if (c2.activity >= min_activity && c2.activity <= max_acitivity) {
+//                if (count_factor2 * 1.1 > count_trigger) {
+//                  add_lits.push_back(c2.l.literal);
+//                }
+//              } else {
+//                break;
+//              }
+//            }
+//          }
+//
+//        }
+//        constraint->encoder_->Encode(state, add_lits);
+//      } else {
+//        std::vector<BooleanLiteral> lits;
+//        lits.reserve(candidates.size());
+//        for (auto c : candidates)
+//          lits.push_back(c.l.literal);
+//        constraint->encoder_->Encode(state, lits);
+//      }
+//      constraint->add_next_literals_.clear();
+
+//      if (constraint->encoder_->SupportsIncremental()) {
+//        constraint->encoder_->Encode(state, constraint->add_next_literals_);
+//        //TODO update constraint
+////        for (BooleanLiteral l : constraint->add_next_literals_) {
+////          for (int i = 0; i < constraint->unencoded_constraint_literals_.size(); ++i) {
+////            WeightedLiteral wl = constraint->unencoded_constraint_literals_[i];
+////            if (wl.literal == l) {
+////              constraint->unencoded_constraint_literals_.erase(constraint->unencoded_constraint_literals_.begin() + i);
+////              constraint->added_to_encoding_literals_.push_back(wl);
+////              state.propagator_pseudo_boolean_2_.pseudo_boolean_database_.watch_list_true.Remove(l, constraint);
+////            }
+////          }
+////        }
+////        //TODO watch new list
+////        std::vector<WeightedLiteral> new_encoded_lits = constraint->encoder_->GetCurrentSumSet();
+////        int i = 0;
+////        for (WeightedLiteral wl : new_encoded_lits) {
+////          if (constraint->encoded_sum_literals_.size() > i && constraint->encoded_sum_literals_[i].literal == wl.literal) {
+////            if (constraint->encoded_sum_literals_[i].weight != wl.weight) {
+////              state.propagator_pseudo_boolean_2_.pseudo_boolean_database_.watch_list_true.Remove(constraint->encoded_sum_literals_[i].literal, constraint);
+////              state.propagator_pseudo_boolean_2_.pseudo_boolean_database_.watch_list_true.Add(wl.literal, wl.weight, constraint);
+////              //TODO
+////            }
+////
+////            ++i;
+////            continue;
+////          }
+////          state.propagator_pseudo_boolean_2_.pseudo_boolean_database_.watch_list_true.Add(wl.literal, wl.weight, constraint);
+////        }
+////        for (; i < constraint->encoded_sum_literals_.size(); ++i)
+////          state.propagator_pseudo_boolean_2_.pseudo_boolean_database_.watch_list_true.Remove(constraint->encoded_sum_literals_[i].literal, constraint);
+////        constraint->encoded_sum_literals_ = new_encoded_lits;
+////
+////        constraint->current_literals_ = std::vector<WeightedLiteral>(constraint->unencoded_constraint_literals_);
+////        constraint->current_literals_.insert(constraint->current_literals_.begin(), constraint->encoded_sum_literals_.begin(), constraint->encoded_sum_literals_.end());
+////        std::sort(constraint->current_literals_.begin(), constraint->current_literals_.end(), [](WeightedLiteral &a, WeightedLiteral &b){return a.weight < b.weight;});
+//
+//        constraint->add_next_literals_.clear();
+//      } else {
+//        constraint->encoder_->Encode(state);
+//      }
     }
 
   }
@@ -339,7 +539,7 @@ void PropagatorPseudoBoolean2::RecomputeConstraintSums(
   assert(next_position_on_trail_to_propagate_it == state.GetTrailEnd());
   for (auto c : update_constraints) {
     c->current_sum_value = 0;
-    for (auto wl : c->literals_) {
+    for (auto wl : c->current_literals_) {
       if (state.assignments_.IsAssignedTrue(wl.literal)) {
         c->current_sum_value += wl.weight;
         }

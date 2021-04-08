@@ -37,4 +37,5 @@ IEncoder<T> *IEncoder<T>::IFactory::Create(T &constraint) {
 template class IEncoder<CardinalityConstraint>;
 template class IEncoder<PseudoBooleanConstraint>;
 template class IEncoder<SumConstraint>;
+template class IEncoder<PbSumConstraint>;
 }

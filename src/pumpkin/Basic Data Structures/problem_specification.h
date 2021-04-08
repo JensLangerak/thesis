@@ -49,6 +49,16 @@ struct SumConstraint {
   IEncoder<SumConstraint>::IFactory *encoder_factory;
 };
 
+struct PbSumConstraint {
+  PbSumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<uint32_t> & input_coefficients, std::vector<BooleanLiteral> & outputs, std::vector<uint32_t > & output_coefficients, IEncoder<PbSumConstraint>::IFactory *encoder_factory) : input_literals(inputs), input_coefficients(input_coefficients), output_literals(outputs), output_coefficients(output_coefficients), encoder_factory(encoder_factory) {};
+  std::vector<BooleanLiteral> input_literals;
+  std::vector<uint32_t> input_coefficients;
+  std::vector<BooleanLiteral> output_literals;
+  std::vector<uint32_t> output_coefficients;
+  IEncoder<PbSumConstraint>::IFactory *encoder_factory;
+};
+
+
 class ProblemSpecification
 {
 public:
@@ -66,6 +76,7 @@ public:
 	std::vector<PseudoBooleanConstraint> pseudo_boolean_constraints_;
   std::vector<CardinalityConstraint> cardinality_constraints_;
   std::vector<SumConstraint> sum_constraints_;
+  std::vector<PbSumConstraint> pb_sum_constraints_;
 
   //objective function
 	std::vector<WeightedLiteral> objective_literals_;

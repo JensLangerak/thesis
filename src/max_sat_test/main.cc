@@ -12,6 +12,8 @@
 #include "../pumpkin/Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/totaliser_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/static_generalized_totaliser.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totliser_sum_root.h"
 #include "../solver_wrappers/i_solver.h"
 #include "../solver_wrappers/pumpkin.h"
 
@@ -34,7 +36,7 @@ void Test(std::string test_file_path, std::string test_file, std::string log_dir
   solver.optimisation_encoding_factory = encoder; // TODO
 //  SolverOutput solver_output = solver.Solve(std::numeric_limits<double>::max());
   solver.start_upper_bound_ = 100000;
-  Pumpkin::SolverOutput solver_output = solver.Solve(900);
+  Pumpkin::SolverOutput solver_output = solver.Solve(300);
   bool solved = solver_output.HasSolution();
 
   if (solved)
@@ -59,11 +61,15 @@ void test_setting(std::string test_file_path, std::string test_file, std::string
 }
 
 
-enum solver_type {encoder, dynamic, incremental, propagator};
+enum solver_type {encoder, dynamic, incremental, propagator, static_incremental, sum};
 int main(int argc, char *argv[]) {
-  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/pima_train_3_CNF_5_20.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
+//  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/pima_train_3_CNF_5_20.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
+//  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/d4.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
+//  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/af-synthesis/af-synthesis_stb_50_140_8.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
+//  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/min-width/MinWidthCB_mitdbsample_300_32_1k_6s_1t_8.wcnf";
+  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/MaxSATQueriesinInterpretableClassifiers/titanic_train_4_DNF_4_20.wcnf";
   std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/log";// "../../../data/max_sat/log/";
-  solver_type s = incremental;
+  solver_type s = sum;
   int add_delay_i = 0;
   if (argc >= 4) {
     s = (solver_type)atoi(argv[1]);
@@ -106,6 +112,20 @@ int main(int argc, char *argv[]) {
                *)new ::Pumpkin::
               PropagatorEncoder<Pumpkin::PseudoBooleanConstraint>::Factory(),
           "Propagator", false, false, start_penalty, add_delay);
+      break;
+    case static_incremental:
+      test_setting(
+          test_file, "test", log_dir,
+          (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
+          *)new ::Pumpkin::StaticGeneralizedTotaliser::Factory(),
+          "Static", true, true, start_penalty, add_delay);
+      break;
+    case sum:
+      test_setting(
+          test_file, "test", log_dir,
+          (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
+          *)new ::Pumpkin::GeneralizedTotliserSumRoot::Factory(),
+          "SumPB", true, true, start_penalty, add_delay);
       break;
     default:
       return 1;

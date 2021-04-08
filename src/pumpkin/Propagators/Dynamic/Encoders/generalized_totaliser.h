@@ -24,7 +24,7 @@ public:
   std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propagated_values) override;
   bool IsAdded(BooleanLiteral lit) override;
   bool EncodingAdded() override { return encoding_added_;};
-
+  bool GetLabel(BooleanLiteral l, std::string & label) override;
 //  void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) override;
 
   void DebugInfo(SolverState &state) override;
@@ -53,9 +53,10 @@ public:
   void PrintState(SolverState &state);
   bool AddEncodingDynamic() override { return false;};
   bool AddOnRestart() override { return true;};
-
+  std::vector<WeightedLiteral> GetCurrentSumSet() override;
 
   struct Node {
+    std::string node_label;
     int index;
 //    std::vector<BooleanLiteral> variables;
     std::vector<BooleanLiteral> counting_variables;
@@ -71,10 +72,14 @@ public:
     Node() : left(nullptr), right(nullptr), parent(nullptr), nr_leafs(1) {}
     ~Node();
 //    std::vector<std::vector<BooleanLiteral>> clauses;
+    std::vector<WeightedLiteral> GetCurrentSumSet();
   };
+  std::unordered_map<int, Node*> node_map;
   Node * root_ = nullptr;
   Node * update_node = nullptr;
   int depth = 0;
+  int root_count =0;
+
   Node *CreateLeaf(SolverState &state, BooleanLiteral literal);
   Node *MergeNode(SolverState & state, Node *node_l, Node *node_r, std::vector<std::vector<BooleanLiteral>> &added_clauses);
   Node *CreateTree(SolverState &state, Node *leaf, int start_index);
@@ -84,6 +89,7 @@ public:
   int GetValueIndex(Node * n, int value);
   int AddValueIndex(SolverState &state, Node *n, int value);
   int TreeValid(SolverState &state, Node *node);
+  void SetLabels(Node *node, std::string label);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_ENCODERS_GENERALIZED_TOTALISER_H_

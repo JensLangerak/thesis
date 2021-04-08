@@ -27,7 +27,7 @@ public:
 protected:
   Logger() = default;
   ~Logger() = default;
-  static Logger *instance_;
+  static Logger *instance_ ;
   static std::recursive_mutex mutex_;
 
   std::string file_name_;

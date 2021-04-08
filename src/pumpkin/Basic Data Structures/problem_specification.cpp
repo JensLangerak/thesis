@@ -111,6 +111,7 @@ ProblemSpecification ProblemSpecification::ReadMaxSATFormula(std::string file_lo
 			{
 				BooleanLiteral objective_literal = ~clause[1];
 				int weight = clause[0].Variable().index_; //the index of the 0th variable in a soft clause encodes the weight
+//                                weight = 1;
 				runtime_assert(weight > 0);
 				problem_specification.objective_literals_.push_back(WeightedLiteral(objective_literal, weight));
 			}
@@ -118,6 +119,7 @@ ProblemSpecification ProblemSpecification::ReadMaxSATFormula(std::string file_lo
 			{
 				BooleanLiteral objective_literal(problem_specification.CreateNewVariable(), true);
 				int weight = clause[0].Variable().index_; //the index of the 0th variable in a soft clause encodes the weight
+//                                weight = 1;
 				runtime_assert(weight > 0);
 				clause[0] = objective_literal; //place the objective variable instead of the placeholder (weight)
 				problem_specification.objective_literals_.push_back(WeightedLiteral(objective_literal, weight));

@@ -9,9 +9,9 @@
 #include <vector>
 
 #include "../../../Basic Data Structures/boolean_literal.h"
-//#include "../../../Basic Data Structures/problem_specification.h"
 namespace Pumpkin {
 class SolverState;
+struct WeightedLiteral;
 template <class T>
 class IEncoder {
 public:
@@ -22,6 +22,7 @@ public:
   Encode(SolverState &state, std::vector<BooleanLiteral> lits);
   virtual std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propage_values) { assert(false);};
   virtual void DebugInfo(SolverState & state);
+  virtual bool GetLabel(BooleanLiteral l, std::string & label) {return false;};
 
   virtual ~IEncoder();
   virtual bool SupportsIncremental() { return false; };
@@ -34,6 +35,8 @@ public:
   virtual bool EncodingAdded() { return encoding_added_;};
   virtual bool EncodingPartialAdded() { return partial_added_;};
   virtual bool IsAdded(BooleanLiteral l);
+
+  virtual std::vector<WeightedLiteral> GetCurrentSumSet() { assert(false);};
 //  virtual void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) {assert(true);};
   class IFactory {
   public:
@@ -57,6 +60,8 @@ public:
 
 protected:
   IEncoder(){};
+
+public:
   bool add_dynamic_ = false;
   bool encoding_added_ = false;
   bool partial_added_ = false;

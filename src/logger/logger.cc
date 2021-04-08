@@ -47,6 +47,8 @@ void Logger::Log(std::string &message) {
   LogItem item;
   item.time = std::chrono::system_clock::now();
   item.message = message;
+  if (instance_ == nullptr)
+    return;
   instance_->Log(item);
 }
 void Logger::Log(Logger::LogItem &log_item) {

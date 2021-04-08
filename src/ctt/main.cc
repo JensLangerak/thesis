@@ -7,6 +7,8 @@
 #include "../pumpkin/Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/totaliser_encoder.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/static_generalized_totaliser.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totliser_sum_root.h"
 #include "../solver_wrappers/i_solver.h"
 #include "../solver_wrappers/pumpkin.h"
 #include "ctt.h"
@@ -103,14 +105,18 @@ void test_setting(std::string test_file_path, std::string test_file, std::string
 void test_file(std::string file, int start_penalty) {
   std::cout << "test file: " << file << std::endl;
   std::string dir = "../../../data/ctt/";
-  std::string log_dir = dir + "logs_t1";
-//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Incremental", true, false, start_penalty, 1);
-//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Incremental", true, true, start_penalty, 1);
-  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::CardinalityConstraint>::Factory(), "Propagator", false, false, start_penalty, 1);
-//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Incremental", false, false, start_penalty, 1);
+  std::string log_dir = dir + "logs_a1";
+//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Dynamic", true, false, start_penalty, 1);
+
+  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Dynamic root", true, true, start_penalty,   0.1);
+//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Dynamic", true, false, start_penalty, 1);
+//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Incremental", true, true, start_penalty, 10);
+//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::StaticGeneralizedTotaliser::Factory(), "Static order Incremental", true, true, start_penalty, 0);
+//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::CardinalityConstraint>::Factory(), "Propagator", false, false, start_penalty, 1);
+//  test_setting(dir + file, file, log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::GeneralizedTotaliser::Factory(), "Encoder", false, false, start_penalty, 0);
 }
 
-enum solver_type {encoder, dynamic, incremental, propagator};
+enum solver_type {encoder, dynamic, incremental, propagator, static_incremental, static_dynamic};
 int main(int argc, char *argv[]) {
   if (argc >= 4) {
      solver_type s = (solver_type) atoi(argv[1]);
@@ -121,7 +127,7 @@ int main(int argc, char *argv[]) {
        add_delay_i = atoi(argv[4]);
      }
      double add_delay = ((double ) add_delay_i) / 10.0;
-     int start_penalty = 1000;
+     int start_penalty = 100000;
      ::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * factory;
      switch (s) {
      case encoder:
@@ -136,6 +142,12 @@ int main(int argc, char *argv[]) {
      case propagator:
        test_setting(test_file, "test", log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::PropagatorEncoder<Pumpkin::PseudoBooleanConstraint>::Factory(), "Propagator", false, false, start_penalty, add_delay);
        break;
+     case static_incremental:
+       test_setting(test_file, "test", log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::StaticGeneralizedTotaliser::Factory(), "StaticIncremental", true, true, start_penalty, add_delay);
+       break;
+     case static_dynamic:
+       test_setting(test_file, "test", log_dir, (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new ::Pumpkin::StaticGeneralizedTotaliser::Factory(), "StaticDynamic", true, false, start_penalty, add_delay);
+       break;
      default:
        return 1;
      }
@@ -144,14 +156,25 @@ int main(int argc, char *argv[]) {
 
     //  simple_sat_solver::ctt::Test("../../../data/ctt/toyexample.ctt");
     // test_file("toyexample.ctt");
-      test_file("comp01.ctt", 10090);
-      test_file("comp02.ctt", 19000);
-      test_file("comp03.ctt", 10900);
-      test_file("comp04.ctt", 10900);
-    test_file("comp01.ctt", 10090);
-    test_file("comp06.ctt", 10090);
-    test_file("comp16.ctt", 1009000);
-      test_file("comp12.ctt", 10090);
+//    for (int i =2; i <= 21; ++i) {
+      {int i = 11;
+      char str[2];
+      std::sprintf (str, "%02d", i);
+      std::string s;
+      for (int k = 0; k < 2; ++k)
+        s += str[k];
+      std::cout << str << std::endl;
+      std::cout << s << std::endl;
+      test_file("comp" + s+ ".ctt", 100000);
+    }
+//      test_file("comp01.ctt", 10090);
+//      test_file("comp02.ctt", 19000);
+//      test_file("comp03.ctt", 10900);
+//      test_file("comp04.ctt", 10900);
+//    test_file("comp01.ctt", 10090);
+//    test_file("comp06.ctt", 10090);
+//    test_file("comp16.ctt", 1009000);
+//      test_file("comp12.ctt", 10090);
 
     //  ::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * encoder_factory = new ::Pumpkin::GeneralizedTotaliser::Factory();
     ////    ::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * encoder_factory = new ::Pumpkin::PropagatorEncoder::Factory();

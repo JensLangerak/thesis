@@ -33,4 +33,4 @@ add_library(basic_data_structures
         solver_parameters.h
         stopwatch.h
         vector_object_indexed.h
-        trail_list.cc trail_list.h)
+        trail_list.cc trail_list.h bit_string_map.cc bit_string_map.h)

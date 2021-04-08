@@ -6,6 +6,7 @@
 #include "../../../../logger/logger.h"
 #include "../../../Engine/solver_state.h"
 #include <iostream>
+#include <numeric>
 namespace Pumpkin {
 void GeneralizedTotaliser::PrintInfo() { IEncoder::PrintInfo(); }
 std::vector<std::vector<BooleanLiteral>>
@@ -29,7 +30,7 @@ GeneralizedTotaliser::Encode(SolverState &state,
   }
   encoding_added_ = added_lits_.size() == variables_.size();
   int new_lits = added_lits_.size();
-  simple_sat_solver::logger::Logger::Log2("Add encoding: ID " + std::to_string(log_id_) + " added vars " + std::to_string(current_lits) + " " + std::to_string(new_lits) + " " +std::to_string(variables_.size()));
+//  simple_sat_solver::logger::Logger::Log2("Add encoding: ID " + std::to_string(log_id_) + " added vars " + std::to_string(current_lits) + " " + std::to_string(new_lits) + " " +std::to_string(variables_.size()));
   for (auto c : added_clauses) {
     if (c.size() == 1)
       state.AddUnitClause(c[0]);
@@ -115,6 +116,8 @@ bool GeneralizedTotaliser::AddLiteral(
     root_ = leaf;
     update_node = root_;
     depth = 1;
+    root_count++;
+    SetLabels(root_, "R" + std::to_string(root_count));
     return true;
   }
 
@@ -125,6 +128,7 @@ bool GeneralizedTotaliser::AddLiteral(
     Node * second_tree = CreateTree(state, leaf, update_node->index);
     UpdateParents(state, leaf, l, added_clauses);
     root_ = MergeNode(state, update_node, second_tree, added_clauses);
+    root_count++;
     update_node = leaf->parent;
   } else {
     assert(update_node->index > update_node->nr_leafs);
@@ -134,6 +138,7 @@ bool GeneralizedTotaliser::AddLiteral(
     update_node = leaf;
     SetNextUpdateNode();
   }
+  SetLabels(root_, "R"+ std::to_string(root_count));
   return true;
 
 }
@@ -142,6 +147,7 @@ GeneralizedTotaliser::CreateLeaf(SolverState &state, BooleanLiteral literal) {
   Node * n = new Node();
 //  n->variables.push_back(literal);
   n->counting_variables.push_back(literal);
+  node_map[literal.ToPositiveInteger()] = n;
   uint32_t w = lit_weights[literal.ToPositiveInteger()];
   n->counting_variables_weights.push_back(w);
 //  n->variables_weights.push_back(w);
@@ -204,6 +210,14 @@ GeneralizedTotaliser::MergeNode(SolverState & state, GeneralizedTotaliser::Node 
     if (p->counting_variables_weights[i] > max_)
       added_clauses.push_back({~p->counting_variables[i]}); //TODO
   }
+  std::vector<size_t> idx(p->counting_variables_weights.size());
+  std::iota(idx.begin(), idx.end(), 0);
+  std::sort(idx.begin(), idx.end(), [&p](size_t i1, size_t i2) { return p->counting_variables_weights[i1] < p->counting_variables_weights[i2];});
+  for (int i =1; i < idx.size(); ++i) {
+//    added_clauses.push_back({p->counting_variables[i-1], ~p->counting_variables[i]});
+  }
+
+
   return p;
 }
 GeneralizedTotaliser::Node *
@@ -251,9 +265,29 @@ void GeneralizedTotaliser::UpdateParents(SolverState &state,
       int p_w = q_v;
       int index = GetValueIndex(parent, p_w);
       if (index == -1) {
+        int lower = -1;
+        int higher = -1;
+        for (int j =0; j < parent->counting_variables_weights.size(); j++) {
+           int w = parent->counting_variables_weights[j];
+           if (w < p_w) {
+             if (lower == -1 || w > parent->counting_variables_weights[lower])
+               lower = j;
+           }
+          if (w > p_w) {
+            if (higher == -1 || w < parent->counting_variables_weights[higher])
+              higher = j;
+          }
+        }
+
         index = AddValueIndex(state, parent, p_w);
         new_added_lits.push_back(parent->counting_variables[index]);
         new_added_weights.push_back(parent->counting_variables_weights[index]);
+
+//        if (lower > -1)
+//          added_clauses.push_back({parent->counting_variables[lower], ~parent->counting_variables[index]});
+//        if (higher > -1)
+//          added_clauses.push_back({~parent->counting_variables[higher], parent->counting_variables[index]});
+
       }
 //      parent->clauses.push_back({~added_lits[i], parent->counting_variables[index]});
       added_clauses.push_back({~added_lits[i], parent->counting_variables[index]});
@@ -271,9 +305,27 @@ void GeneralizedTotaliser::UpdateParents(SolverState &state,
 
           int index = GetValueIndex(parent, p_w);
           if (index == -1) {
+            int lower = -1;
+            int higher = -1;
+            for (int j =0; j < parent->counting_variables_weights.size(); j++) {
+              int w = parent->counting_variables_weights[j];
+              if (w < p_w) {
+                if (lower == -1 || w > parent->counting_variables_weights[lower])
+                  lower = j;
+              }
+              if (w > p_w) {
+                if (higher == -1 || w < parent->counting_variables_weights[higher])
+                  higher = j;
+              }
+            }
             index = AddValueIndex(state, parent, p_w);
             new_added_lits.push_back(parent->counting_variables[index]);
             new_added_weights.push_back(parent->counting_variables_weights[index]);
+//            if (lower > -1)
+//              added_clauses.push_back({parent->counting_variables[lower], ~parent->counting_variables[index]});
+//            if (higher > -1)
+//              added_clauses.push_back({~parent->counting_variables[higher], parent->counting_variables[index]});
+
           }
 //          parent->clauses.push_back({~parent->left->counting_variables[q], ~added_lits[r], parent->counting_variables[index]});
           added_clauses.push_back({~parent->left->counting_variables[q], ~added_lits[r], parent->counting_variables[index]});
@@ -321,6 +373,7 @@ int GeneralizedTotaliser::AddValueIndex(SolverState& state, GeneralizedTotaliser
   BooleanLiteral l = BooleanLiteral(state.CreateNewVariable(), true);
   int index= n->counting_variables.size();
   n->counting_variables.push_back(l);
+  node_map[l.ToPositiveInteger()] = n;
   n->counting_variables_weights.push_back(value);
   n->values_map[value] = index;
 
@@ -367,10 +420,55 @@ int GeneralizedTotaliser::TreeValid(SolverState &state,
   return value;
 
 }
+std::vector<WeightedLiteral>
+GeneralizedTotaliser::GetCurrentSumSet() {
+  if (root_ == nullptr)
+    return std::vector<WeightedLiteral>();
+  std::vector<WeightedLiteral> sum_sat = root_->GetCurrentSumSet();
+  return sum_sat;
+
+}
+void GeneralizedTotaliser::SetLabels(GeneralizedTotaliser::Node *node,
+                                     std::string label) {
+  if (node == nullptr)
+    return;
+  if (node->left == nullptr) {
+    node->node_label = label + "L";
+    return;
+  }
+  node->node_label = label;
+  SetLabels(node->left, label + "l");
+  SetLabels(node->right, label + "r");
+}
+bool GeneralizedTotaliser::GetLabel(BooleanLiteral l, std::string &label) {
+  if (node_map.count(l.ToPositiveInteger()) > 0) {
+    label = "E_" + std::to_string(log_id_) +"_" + node_map[l.ToPositiveInteger()]->node_label + "_" + std::to_string(l.code_);
+    return true;
+  }
+  return false;
+}
 GeneralizedTotaliser::Node::~Node() {
   if (left != nullptr)
     delete left;
   if (right != nullptr)
     delete right;
+}
+std::vector<WeightedLiteral> GeneralizedTotaliser::Node::GetCurrentSumSet() {
+  // balanced tree
+  if (index == 1) {//nr_leafs) {
+    //TODO store result
+    std::vector<WeightedLiteral> result;
+    for (int i = 0; i < counting_variables.size(); ++i) {
+      result.push_back(WeightedLiteral(counting_variables[i], counting_variables_weights[i]));
+    }
+    return result;
+  }
+  std::vector<WeightedLiteral> left_w = left->GetCurrentSumSet();
+  std::vector<WeightedLiteral> right_w;
+  if (right != nullptr)
+    right_w= right->GetCurrentSumSet();
+  left_w.reserve(left_w.size() + right_w.size());
+  left_w.insert(left_w.end(), right_w.begin(), right_w.end());
+  return left_w;
 }
 }

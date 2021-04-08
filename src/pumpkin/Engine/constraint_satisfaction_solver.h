@@ -101,6 +101,18 @@ private:
 	int backtrack_level_;
 	int num_current_decision_level_literals_;
 	int num_trail_literals_examined_;
+
+
+        //log info
+        int total_encoded_conflicts = 0;
+        int total_lits_in_conflicts = 0;
+  int total_propagated_lits = 0;
+  int total_encoded_lits = 0;
+  int total_leaf_lits = 0;
+        int total_max_path = 0;
+        int total_max_same_constraints = 0;
+        int total_non_constraint = 0;
+        int total_encoded_conflicts_more_same_constraint=0;
 };
 
 } //end Pumpkin namespace

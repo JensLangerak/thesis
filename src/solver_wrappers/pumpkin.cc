@@ -21,6 +21,9 @@
 namespace simple_sat_solver::solver_wrappers {
 using namespace Pumpkin;
 
+bool Pumpkin::check_sol = false;
+std::vector<bool> Pumpkin::check_solution_;
+
 bool Pumpkin::Solve(const sat::SatProblem &p2) {
   solved_ = false;
   sat::SatProblem p = p2;
@@ -68,7 +71,19 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
   solver.optimisation_encoding_factory = optimisation_encoder_factory_; // TODO
 //  SolverOutput solver_output = solver.Solve(std::numeric_limits<double>::max());
   solver.start_upper_bound_ = start_uppberboud_;
-  SolverOutput solver_output = solver.Solve(90);
+//  if (check_sol) {
+//    for (int i = 0; i < problem.num_Boolean_variables_; ++i) {
+//
+//      ::Pumpkin::BooleanLiteral l =
+//          ::Pumpkin::BooleanLiteral(BooleanVariable(i + 1), check_solution_[i]);
+//      solver.constrained_satisfaction_solver_.state_.AddUnitClause(l);
+//    }
+//
+////    SolverOutput solver_output =
+////        solver.constrained_satisfaction_solver_.Solve(190);
+////    assert(solver_output.HasSolution());
+//  }
+    SolverOutput solver_output = solver.Solve(300);
   solved_ = solver_output.HasSolution();
 
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());
@@ -90,6 +105,23 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
               << solver.constrained_satisfaction_solver_.state_
                      .propagator_cardinality_.trigger_count_
               << std::endl;
+  if (check_sol && false) {
+    solver.constrained_satisfaction_solver_.state_.Reset();
+    for (int i = 0; i < problem.num_Boolean_variables_; ++i) {
+
+      ::Pumpkin::BooleanLiteral l =
+          ::Pumpkin::BooleanLiteral(BooleanVariable(i+1), check_solution_[i]);
+      solver.constrained_satisfaction_solver_.state_.AddUnitClause(l);
+    }
+
+      SolverOutput solver_output = solver.constrained_satisfaction_solver_.Solve(30);
+      assert(solver_output.HasSolution());
+
+  }else {
+    check_solution_ = solution_;
+    check_sol = true;
+  }
+
 
   return solved_;
 }

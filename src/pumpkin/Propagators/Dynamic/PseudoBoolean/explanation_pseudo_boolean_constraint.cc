@@ -21,19 +21,23 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
     WatchedPseudoBooleanConstraint2 *constraint, SolverState &state) {
   assert(constraint!= nullptr);
   assert(constraint->current_sum_value > constraint->max_);
+  constraint->UpdateConflictCount(state);
 //  simple_sat_solver::logger::Logger::Log2("Explain Conflict: " + std::to_string(constraint->log_id_));
+  std::string cause;
   lits_ = std::vector<BooleanLiteral>();
   // Check if the min or max constraint is violated
   bool select_value = constraint->current_sum_value > constraint->max_;
   int sum = 0;
-  for (auto wl : constraint->literals_) {
+  for (auto wl : constraint->current_literals_) {
     BooleanLiteral l = wl.literal;
     if (state.assignments_.IsAssigned(l) &&
         state.assignments_.GetAssignment(l) == select_value) {
       lits_.push_back(l);
       sum += wl.weight;
+      cause += std::to_string(l.code_) + " ";
     }
   }
+//  simple_sat_solver::logger::Logger::Log2("Conflict lits for constraint " + std::to_string(constraint->log_id_)+" : " + cause );
 
   constraint->UpdateCounts(lits_, state);
 
@@ -51,11 +55,12 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
     BooleanLiteral propagated_literal) {
   assert(constraint!= nullptr);
   assert(state.assignments_.IsAssignedTrue(propagated_literal));
+  constraint->UpdatePropagateCount(state);
 //  simple_sat_solver::logger::Logger::Log2("Explain propagation: " + std::to_string(constraint->log_id_));
   // check if true for the minimum value is propagated or false for the upper bound.
   bool propagated_value = true;
   int l_w = 0;
-  for (auto wl : constraint->literals_) {
+  for (auto wl : constraint->current_literals_) {
     BooleanLiteral l =wl.literal;
     if (l == propagated_literal || ~l == propagated_literal) {
       propagated_value = l == propagated_literal;
@@ -72,14 +77,17 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
   int propagation_level = state.assignments_.GetTrailPosition(propagated_literal.Variable());
   lits_ = std::vector<BooleanLiteral>();
   int sum = 0;
-  for (auto wl : constraint->literals_) {
+  std::string cause;
+  for (auto wl : constraint->current_literals_) {
     BooleanLiteral l = wl.literal;
     if (state.assignments_.IsAssigned(l) && state.assignments_.GetTrailPosition(l.Variable()) < propagation_level &&
         state.assignments_.GetAssignment(l) == cause_value) {
       lits_.push_back(l);
       sum += wl.weight;
+      cause += std::to_string(l.code_) + " ";
     }
   }
+//  simple_sat_solver::logger::Logger::Log2("Propagate lit " +std::to_string(propagated_literal.code_)+" for constraint " + std::to_string(constraint->log_id_)+" : " + cause );
   assert(sum + l_w > constraint->max_);
   lits_.push_back(~propagated_literal);
   constraint->UpdateCounts(lits_, state);
