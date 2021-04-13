@@ -144,7 +144,7 @@ bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost
     std::vector<BooleanLiteral>lits;
     std::vector<uint32_t> coefs;
     auto copy = objective_literals_;
-    std::sort(copy.begin(), copy.end(), [](WeightedLiteral a, WeightedLiteral b){ return a.weight > b.weight; });
+//    std::sort(copy.begin(), copy.end(), [](WeightedLiteral a, WeightedLiteral b){ return a.weight > b.weight; });
 
     for (auto w : copy) {
       for (auto l : lits) {

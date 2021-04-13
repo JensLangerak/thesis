@@ -3,6 +3,10 @@ project(SimpleSatSolver)
 
 set(CMAKE_CXX_STANDARD 17)
 
+#SET(CMAKE_C_COMPILER   /home/jens/build/gcc49/pkg/gcc49/usr/bin/gcc-4.9)
+#SET(CMAKE_CXX_COMPILER   /home/jens/build/gcc49/pkg/gcc49/usr/bin/g++-4.9)
+
+
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(tests)

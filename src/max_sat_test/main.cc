@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 //  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/min-width/MinWidthCB_mitdbsample_300_32_1k_6s_1t_8.wcnf";
   std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/MaxSATQueriesinInterpretableClassifiers/titanic_train_4_DNF_4_20.wcnf";
   std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/log";// "../../../data/max_sat/log/";
-  solver_type s = sum;
+  solver_type s = incremental;
   int add_delay_i = 0;
   if (argc >= 4) {
     s = (solver_type)atoi(argv[1]);

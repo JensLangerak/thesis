@@ -83,7 +83,7 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
 ////        solver.constrained_satisfaction_solver_.Solve(190);
 ////    assert(solver_output.HasSolution());
 //  }
-    SolverOutput solver_output = solver.Solve(300);
+    SolverOutput solver_output = solver.Solve(60);
   solved_ = solver_output.HasSolution();
 
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());
@@ -126,19 +126,6 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
   return solved_;
 }
 ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
-  //  if (add_encodings_) {
-  //    if (cardinality_option_ == CardinalityOption::Sequential) {
-  //      for (sat::CardinalityConstraint c : p.GetConstraints()) {
-  //        assert(c.min == 0);
-  //        p.AtMostK(c.max, c.lits);
-  //      }
-  //    } else {
-  //      for (sat::CardinalityConstraint c : p.GetConstraints()) {
-  //        sat::TotaliserEncoder::Encode(p, c.lits, c.min, c.max);
-  //      }
-  //    }
-  //  }
-
   ProblemSpecification problem;
   problem.num_Boolean_variables_ = p.GetNrVars();
   for (const auto &c : p.GetClauses()) {
@@ -162,16 +149,6 @@ ProblemSpecification Pumpkin::ConvertProblem(sat::SatProblem &p) {
         lits.push_back(lit);
         weights.push_back(1);
       }
-      //          if (!add_encodings_) {
-      //          if (dynamic_cast<::Pumpkin::PropagatorEncoder::Factory *>(encoder_factory_) !=
-      //              nullptr)
-      //            problem.propagator_cardinality_constraints_.push_back(
-      //                ::Pumpkin::CardinalityConstraint(lits, c.min, c.max,
-      //                                                 encoder_factory_));
-      //          else
-//      problem.cardinality_constraints_.push_back(
-//          ::Pumpkin::CardinalityConstraint(lits, car->min, car->max,
-//                                           encoder_factory_));
       assert(car->min == 0);
       problem.pseudo_boolean_constraints_.push_back(::Pumpkin::PseudoBooleanConstraint(lits,weights,car->max, constraint_encoder_factory_));
       //    }

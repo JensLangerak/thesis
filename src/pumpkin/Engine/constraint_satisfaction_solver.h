@@ -106,6 +106,9 @@ private:
         //log info
         int total_encoded_conflicts = 0;
         int total_lits_in_conflicts = 0;
+        int total_lbd_conflicts = 0;
+        int lbd_conflict_count = 0;
+        int lbd_histogram[21];
   int total_propagated_lits = 0;
   int total_encoded_lits = 0;
   int total_leaf_lits = 0;

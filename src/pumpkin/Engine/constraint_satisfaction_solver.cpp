@@ -32,6 +32,8 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification&
   simple_sat_solver::logger::Logger::Log2("After cardinality: v " + std::to_string(state_.GetNumberOfVariables()) + " c_p " + std::to_string(state_.propagator_clausal_.clause_database_.permanent_clauses_.size()) + " c_u " + std::to_string(state_.propagator_clausal_.clause_database_.unit_clauses_.size() ));
   for (auto & constraint : problem_specification.sum_constraints_) { state_.AddSumConstraint(constraint);}
 //	if (!problem_specification.pseudo_boolean_constraints_.empty()) { std::cout << "TODO: add pseudo-Boolean constraints!\n"; }
+  for (int i =0; i < 21; ++i)
+    lbd_histogram[i] = 0;
 
 }
 
@@ -90,6 +92,23 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
   simple_sat_solver::logger::Logger::Log2("Avg encoded lits " + std::to_string(((double )total_encoded_lits) / total_encoded_conflicts));
   simple_sat_solver::logger::Logger::Log2("Avg path " + std::to_string(((double )total_max_path) / total_encoded_conflicts_more_same_constraint));
   simple_sat_solver::logger::Logger::Log2("Avg max same constraint " + std::to_string(((double )total_max_same_constraints) / total_encoded_conflicts));
+  simple_sat_solver::logger::Logger::Log2("Avg lbd " + std::to_string(((double )total_lbd_conflicts) / lbd_conflict_count));
+
+  std::string lbd_hist = "Hist lbd ";
+  std::string lbd_hist_norm = "Hist norm_lbd ";
+  for (int i = 0; i < 21 ; ++i) {
+    if (i>0) {
+      lbd_hist += " , ";
+      lbd_hist_norm += " , ";
+    }
+
+    lbd_hist_norm  += std::to_string(((double) lbd_histogram[i]) / lbd_conflict_count);
+    lbd_hist  += std::to_string(lbd_histogram[i]);
+  }
+  simple_sat_solver::logger::Logger::Log2(lbd_hist);
+  simple_sat_solver::logger::Logger::Log2(lbd_hist_norm);
+
+
   return GenerateOutput();
 }
 
@@ -406,6 +425,14 @@ void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysi
 	else
 	{
 		int lbd = TwoWatchedClause::computeLBD(result.learned_clause_literals, state_) - 1; //minus one since the 1UP will change its decision level
+                if (log) {
+                  lbd_conflict_count++;
+                  total_lbd_conflicts += lbd;
+                  if (lbd > 20)
+                    lbd_histogram[20] ++;
+                  else
+                    lbd_histogram[lbd]++;
+                }
 		state_.UpdateMovingAveragesForRestarts(lbd);
 
 		TwoWatchedClause* learned_clause = state_.AddLearnedClauseToDatabase(result.learned_clause_literals);
