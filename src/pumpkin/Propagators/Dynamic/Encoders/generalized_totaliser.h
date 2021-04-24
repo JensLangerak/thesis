@@ -25,6 +25,7 @@ public:
   bool IsAdded(BooleanLiteral lit) override;
   bool EncodingAdded() override { return encoding_added_;};
   bool GetLabel(BooleanLiteral l, std::string & label) override;
+  void UpdateNode(BooleanLiteral literal, int conflict_id) override;
 //  void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) override;
 
   void DebugInfo(SolverState &state) override;
@@ -65,6 +66,9 @@ public:
 //    std::vector<uint32_t> variables_weights;
     int nr_leafs;
 
+    int hits = 0;
+    double activity = 0;
+
     int max = 0;
     Node *left;
     Node *right;
@@ -73,6 +77,7 @@ public:
     ~Node();
 //    std::vector<std::vector<BooleanLiteral>> clauses;
     std::vector<WeightedLiteral> GetCurrentSumSet();
+    int last_conflict_id = -1;
   };
   std::unordered_map<int, Node*> node_map;
   Node * root_ = nullptr;

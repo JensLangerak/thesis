@@ -146,14 +146,17 @@ bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost
     auto copy = objective_literals_;
 //    std::sort(copy.begin(), copy.end(), [](WeightedLiteral a, WeightedLiteral b){ return a.weight > b.weight; });
 
+    std::string lit_order = "";
     for (auto w : copy) {
       for (auto l : lits) {
         assert (l.Variable() != w.literal.Variable());
       }
       lits.push_back(w.literal);
       coefs.push_back(w.weight);
+      lit_order += " " +w.literal.ToString();
     }
 
+    simple_sat_solver::logger::Logger::Log2("Opt lit order: " + lit_order);
     PseudoBooleanConstraint c(lits, coefs, max_cost, optimisation_encoding_factory);
     constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
     optimise_constraint = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_.back();
@@ -162,8 +165,89 @@ bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost
   } else {
     assert(optimise_constraint->max_ >= max_cost);
     optimise_constraint->max_ = max_cost;
-    return optimise_constraint->encoder_->UpdateMax(max_cost, constrained_satisfaction_solver_.state_);
+    if (!optimise_constraint->encoder_->UpdateMax(max_cost, constrained_satisfaction_solver_.state_))
+      return false;
   }
+
+  if (stopwatch_.TimeElapsedInSeconds() > 300 ) {
+
+    if (optimise_constraint5 == nullptr) {
+      std::vector<BooleanLiteral>lits;
+      std::vector<uint32_t> coefs;
+      auto copy = objective_literals_;
+    std::sort(copy.begin(), copy.end(), [&state = constrained_satisfaction_solver_.state_](WeightedLiteral a, WeightedLiteral b){
+        if (a.weight == b.weight) {
+          double av = state.variable_selector_.heap_.GetKeyValue(a.literal.VariableIndex() - 1);
+          double bv = state.variable_selector_.heap_.GetKeyValue(b.literal.VariableIndex() - 1);
+          return av > bv;
+        }
+        return a.weight > b.weight;
+      });
+
+      std::string lit_order = "";
+      for (auto w : copy) {
+        for (auto l : lits) {
+          assert (l.Variable() != w.literal.Variable());
+        }
+        lits.push_back(w.literal);
+        coefs.push_back(w.weight);
+        lit_order += " " +w.literal.ToString();
+      }
+
+      simple_sat_solver::logger::Logger::Log2("Opt lit order: " + lit_order);
+      PseudoBooleanConstraint c(lits, coefs, max_cost, optimisation_encoding_factory);
+      constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
+      optimise_constraint5 = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_.back();
+//    optimise_constraint5 = constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_.back();
+
+    } else {
+      assert(optimise_constraint5->max_ >= max_cost);
+      optimise_constraint5->max_ = max_cost;
+      if (!optimise_constraint5->encoder_->UpdateMax(max_cost, constrained_satisfaction_solver_.state_))
+        return false;
+    }
+  }
+
+  if (stopwatch_.TimeElapsedInSeconds() > 600) {
+
+    if (optimise_constraint10 == nullptr) {
+      std::vector<BooleanLiteral>lits;
+      std::vector<uint32_t> coefs;
+      auto copy = objective_literals_;
+      std::sort(copy.begin(), copy.end(), [&state = constrained_satisfaction_solver_.state_](WeightedLiteral a, WeightedLiteral b){
+        if (a.weight == b.weight) {
+          double av = state.variable_selector_.heap_.GetKeyValue(a.literal.VariableIndex() - 1);
+          double bv = state.variable_selector_.heap_.GetKeyValue(b.literal.VariableIndex() - 1);
+          return av > bv;
+        }
+        return a.weight > b.weight;
+      });
+
+      std::string lit_order = "";
+      for (auto w : copy) {
+        for (auto l : lits) {
+          assert (l.Variable() != w.literal.Variable());
+        }
+        lits.push_back(w.literal);
+        coefs.push_back(w.weight);
+        lit_order += " " +w.literal.ToString();
+      }
+      simple_sat_solver::logger::Logger::Log2("Opt lit order: " + lit_order);
+
+
+      PseudoBooleanConstraint c(lits, coefs, max_cost, optimisation_encoding_factory);
+      constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
+      optimise_constraint10 = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_.back();
+//    optimise_constraint10 = constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_.back();
+
+    } else {
+      assert(optimise_constraint10->max_ >= max_cost);
+      optimise_constraint10->max_ = max_cost;
+      if (!optimise_constraint10->encoder_->UpdateMax(max_cost, constrained_satisfaction_solver_.state_))
+        return false;
+    }
+  }
+
   return true;
 }
 

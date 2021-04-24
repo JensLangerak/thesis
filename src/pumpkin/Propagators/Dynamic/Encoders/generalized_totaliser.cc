@@ -447,6 +447,17 @@ bool GeneralizedTotaliser::GetLabel(BooleanLiteral l, std::string &label) {
   }
   return false;
 }
+void GeneralizedTotaliser::UpdateNode(BooleanLiteral l, int conflict_id) {
+
+  if (node_map.count(l.ToPositiveInteger()) > 0) {
+    Node * n = node_map[l.ToPositiveInteger()];
+    if (n->last_conflict_id == conflict_id)
+      return;
+    n->last_conflict_id = conflict_id;
+    n->hits++;
+    n->activity += 0;//TODO
+  }
+}
 GeneralizedTotaliser::Node::~Node() {
   if (left != nullptr)
     delete left;

@@ -24,6 +24,8 @@ bool IEncoder<T>::IsAdded(BooleanLiteral l) { return EncodingAdded();}
 template <class T>
 void IEncoder<T>::DebugInfo(SolverState &state) {
 }
+template <class T>
+void IEncoder<T>::UpdateNode(BooleanLiteral literal, int conflict_id) {}
 
 template <class T>
 IEncoder<T> *IEncoder<T>::IFactory::Create(T &constraint) {

@@ -227,4 +227,8 @@ bool WatchedPseudoBooleanConstraint2::GetLabel(BooleanLiteral l,
 
   return false;
 }
+void WatchedPseudoBooleanConstraint2::UpdateNode(BooleanLiteral literal,
+                                                 int conflict_id) {
+  encoder_->UpdateNode(literal, conflict_id);
+}
 }

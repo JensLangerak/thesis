@@ -8,6 +8,7 @@
 #include <random>
 
 #include "../../logger/logger.h"
+#include "../Propagators/Dynamic/Encoders/generalized_totaliser.h"
 namespace Pumpkin
 {
 
@@ -52,6 +53,12 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
   for (auto c : state_.propagator_clausal_.clause_database_.unit_clauses_) {
     assert(state_.assignments_.IsAssignedTrue(c));
   }
+
+  int start_conflict_id = log_conflict_id;
+  for (int i = 0; i < 9; ++i) {
+    log_conflict_ids[i] = log_conflict_ids[i+1];
+  }
+  log_conflict_ids[9] = start_conflict_id;
 
   while (!state_.IsAssignmentBuilt() && stopwatch_.IsWithinTimeLimit())
 	{
@@ -107,6 +114,8 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
   }
   simple_sat_solver::logger::Logger::Log2(lbd_hist);
   simple_sat_solver::logger::Logger::Log2(lbd_hist_norm);
+
+        LogNodeHits(start_conflict_id);
 
 
   return GenerateOutput();
@@ -307,6 +316,7 @@ void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysi
   std::string clause="";
   std::vector<std::string> labels;
   bool log = false;
+  log_conflict_id++;
           for (auto l : result.learned_clause_literals) {
             clause += " ";
 
@@ -314,6 +324,7 @@ void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysi
             for (auto pb : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
             std::string label;
             if (pb->GetLabel(l, label)) {
+              pb->UpdateNode(l, log_conflict_id);
               clause += label;
               labels.push_back(label);
               log= true;
@@ -623,6 +634,55 @@ bool ConstraintSatisfactionSolver::CheckDecisionLevelsLearnedLiteral(Disjunction
 		assert(state_.assignments_.GetAssignment(literals[i]) == false);
 	}
 	return true;
+}
+void ConstraintSatisfactionSolver::LogNodeHits(int start_conflict_id) {
+  for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+    if (c->encoder_->encoding_added_) {
+      GeneralizedTotaliser * encoder = (GeneralizedTotaliser *) c->encoder_;
+      std::string log_line = "Encoding stats constraint " + std::to_string(c->log_id_) + " ";
+      std::vector<int> level_hits;
+      std::vector<int> zero_hits;
+      std::vector<int> recent_hits;
+      std::vector<int> sligly_less_recent_hits;
+      UpdateHits(level_hits, zero_hits, recent_hits, sligly_less_recent_hits,0, start_conflict_id, encoder->root_);
+      for (int i = 0; i < level_hits.size(); ++i){
+        log_line += " " + std::to_string(level_hits[i]) + "-" + std::to_string(zero_hits[i]) + "-" + std::to_string(recent_hits[i]) + "-" + std::to_string(sligly_less_recent_hits[i]);
+      }
+      simple_sat_solver::logger::Logger::Log2(log_line);
+    }
+
+  }
+}
+void ConstraintSatisfactionSolver::UpdateHits(
+    std::vector<int> &level_hits, std::vector<int> &zero_hits,  std::vector<int> &recent_hits, std::vector<int> &slightly_less_recent, int index, int start_conflict_id,
+    Pumpkin::GeneralizedTotaliser::Node *node) {
+  assert(start_conflict_id >= 0);
+  if (node == nullptr)
+    return;
+  if (level_hits.size() <= index)
+    level_hits.push_back(0);
+  if (zero_hits.size() <= index)
+    zero_hits.push_back(0);
+  if (recent_hits.size() <= index)
+    recent_hits.push_back(0);
+  if (slightly_less_recent.size() <= index)
+    slightly_less_recent.push_back(0);
+
+  level_hits[index]+=node->hits;
+  if (node->hits == 0)
+    zero_hits[index]++;
+  if (node->last_conflict_id > start_conflict_id)
+    recent_hits[index]++;
+  if (node->last_conflict_id > log_conflict_ids[0])
+    slightly_less_recent[index]++;
+
+  if (node->left != nullptr)
+    UpdateHits(level_hits, zero_hits, recent_hits, slightly_less_recent, index + 1, start_conflict_id, node->left);
+  if (node->right != nullptr)
+    UpdateHits(level_hits, zero_hits, recent_hits, slightly_less_recent, index + 1,start_conflict_id, node->right);
+
+
+
 }
 
 } //end Pumpkin namespace

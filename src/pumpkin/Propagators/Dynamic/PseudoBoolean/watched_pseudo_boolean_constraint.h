@@ -95,7 +95,7 @@ public:
 
   bool GetLabel(BooleanLiteral l, std::string & label);
 
-
+  void UpdateNode(BooleanLiteral literal, int conflict_id);
 };
 } // namespace Pumpkin
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEAN_WATCHED_PSEUDO_BOOLEAN_CONSTRAINT_H_

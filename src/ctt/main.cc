@@ -228,7 +228,7 @@ void TestOrder(
   solver2.optimisation_encoding_factory = constraint_encoder; // TODO
   solver2.start_upper_bound_ = 100000;
   start = std::clock();
-  ::Pumpkin::SolverOutput solver_output2 = solver2.Solve(600);
+  ::Pumpkin::SolverOutput solver_output2 = solver2.Solve(900);
   duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
   std::cout << "time: " << duration << std::endl;
   simple_sat_solver::logger::Logger::Log2("Time: " + std::to_string(duration));
@@ -422,17 +422,18 @@ void test_setting(
 void test_file(std::string file, int start_penalty) {
   std::cout << "test file: " << file << std::endl;
   std::string dir = "../../../data/ctt/";
-  std::string log_dir = dir + "logs_a1";
+  std::string log_dir = dir + "logs_a4";
   //  test_setting(
   //      dir + file, file, log_dir,
   //      (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
   //           *)new ::Pumpkin::GeneralizedTotaliser::Factory(),
   //      "Dynamic", true, false, start_penalty, 1);
 
-  //  test_setting(dir + file, file, log_dir,
-  //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
-  //  ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Dynamic root", true,
-  //  true, start_penalty,   0.1); test_setting(dir + file, file, log_dir,
+//    test_setting(dir + file, file, log_dir,
+//    (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
+//    ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Dynamic root", true,
+//    true, start_penalty,   0.1);
+    //test_setting(dir + file, file, log_dir,
   //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
   //  ::Pumpkin::GeneralizedTotaliser::Factory(), "Dynamic", true, false,
   //  start_penalty, 1); test_setting(dir + file, file, log_dir,

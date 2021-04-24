@@ -65,6 +65,7 @@ public:
   bool add_dynamic_ = false;
   bool encoding_added_ = false;
   bool partial_added_ = false;
+  virtual void UpdateNode(BooleanLiteral literal, int conflict_id);
 };
 
 
