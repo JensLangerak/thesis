@@ -14,6 +14,7 @@
 #include <vector>
 
 namespace Pumpkin {
+class WatchedPbSumConstraint;
 class GeneralizedTotaliserSumNodes : public IEncoder<PbSumConstraint> {
 public:
   GeneralizedTotaliserSumNodes(std::vector<WeightedLiteral> inputs, std::vector<WeightedLiteral> outputs, int max);
@@ -43,6 +44,7 @@ public:
   };
 
 
+  WatchedPbSumConstraint *watched_constraint;
 private:
   struct LitActiveData {
       BooleanLiteral literal;

@@ -4,9 +4,9 @@
 
 #ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_DATABASE_PB_SUM_H_
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_DATABASE_PB_SUM_H_
+#include "../../../Basic Data Structures/problem_specification.h"
 #include "watch_list_pb_sum.h"
 #include "watched_pb_sum_constraint.h"
-#include "../../../Basic Data Structures/problem_specification.h"
 #include <stdint-gcc.h>
 #include <vector>
 namespace Pumpkin {
@@ -25,6 +25,7 @@ class DatabasePbSum {
 
   WatchedPbSumConstraint* AddPermanentConstraint(std::vector<BooleanLiteral> input_lits, std::vector<uint32_t > input_weights, std::vector<BooleanLiteral> output_lits, std::vector<uint32_t> outpu_weights, IEncoder<PbSumConstraint> * encoder, SolverState &state);
   WatchListPbSum watch_list_true;
+  WatchListPbSum watch_list_output_;
     std::vector<WatchedPbSumConstraint*> permanent_constraints_;
 
     ~DatabasePbSum();

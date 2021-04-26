@@ -415,7 +415,7 @@ void test_setting(
   encoder_factory->add_dynamic_ = add_dynamic;
   encoder_factory->add_incremetal_ = add_incremental;
   encoder_factory->add_delay_ = add_delay;
-  simple_sat_solver::ctt::TestOrder(test_file_path, test_file, log_dir,
+  simple_sat_solver::ctt::Test(test_file_path, test_file, log_dir,
                                encoder_factory, encoder_string, start_penalty);
 }
 
@@ -423,23 +423,25 @@ void test_file(std::string file, int start_penalty) {
   std::cout << "test file: " << file << std::endl;
   std::string dir = "../../../data/ctt/";
   std::string log_dir = dir + "logs_a4";
-  //  test_setting(
-  //      dir + file, file, log_dir,
-  //      (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
-  //           *)new ::Pumpkin::GeneralizedTotaliser::Factory(),
-  //      "Dynamic", true, false, start_penalty, 1);
+//    test_setting(
+//        dir + file, file, log_dir,
+//        (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
+//             *)new ::Pumpkin::GeneralizedTotaliser::Factory(),
+//        "Dynamic", true, false, start_penalty, 1);
 
-//    test_setting(dir + file, file, log_dir,
-//    (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
-//    ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Dynamic root", true,
-//    true, start_penalty,   0.1);
+    test_setting(dir + file, file, log_dir,
+    (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
+    ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Dynamic root", true,
+    true, start_penalty,   0.01);
     //test_setting(dir + file, file, log_dir,
   //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
   //  ::Pumpkin::GeneralizedTotaliser::Factory(), "Dynamic", true, false,
-  //  start_penalty, 1); test_setting(dir + file, file, log_dir,
-  //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
-  //  ::Pumpkin::GeneralizedTotaliser::Factory(), "Incremental", true, true,
-  //  start_penalty, 10); test_setting(dir + file, file, log_dir,
+  //  start_penalty, 1);
+//      test_setting(dir + file, file, log_dir,
+//    (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
+//    ::Pumpkin::GeneralizedTotaliser::Factory(), "Incremental", true, true,
+//    start_penalty, 1);
+      //test_setting(dir + file, file, log_dir,
   //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
   //  ::Pumpkin::StaticGeneralizedTotaliser::Factory(), "Static order
   //  Incremental", true, true, start_penalty, 0); test_setting(dir + file,
@@ -447,11 +449,11 @@ void test_file(std::string file, int start_penalty) {
   //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
   //  ::Pumpkin::PropagatorEncoder<Pumpkin::CardinalityConstraint>::Factory(),
   //  "Propagator", false, false, start_penalty, 1);
-  test_setting(
-      dir + file, file, log_dir,
-      (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
-           *)new ::Pumpkin::GeneralizedTotaliser::Factory(),
-      "Encoder", false, false, start_penalty, 0);
+//  test_setting(
+//      dir + file, file, log_dir,
+//      (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
+//           *)new ::Pumpkin::GeneralizedTotaliser::Factory(),
+//      "Encoder", false, false, start_penalty, 0);
 }
 
 enum solver_type {
@@ -460,7 +462,8 @@ enum solver_type {
   incremental,
   propagator,
   static_incremental,
-  static_dynamic
+  static_dynamic,
+  top_down,
 };
 int main(int argc, char *argv[]) {
   if (argc >= 4) {
@@ -518,6 +521,11 @@ int main(int argc, char *argv[]) {
                *)new ::Pumpkin::StaticGeneralizedTotaliser::Factory(),
           "StaticDynamic", true, false, start_penalty, add_delay);
       break;
+    case top_down:
+      test_setting(test_file, "test", log_dir,
+                   (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
+                       ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Top Down", true,
+                   true, start_penalty,   add_delay / 10.0);
     default:
       return 1;
     }
@@ -526,9 +534,9 @@ int main(int argc, char *argv[]) {
 
     //  simple_sat_solver::ctt::Test("../../../data/ctt/toyexample.ctt");
     // test_file("toyexample.ctt");
-    //    for (int i = 2; i <= 21; ++i) {
-    {
-      int i = 11;
+        for (int i = 2; i <= 21; ++i) {
+//    {
+//      int i = 11;
       char str[2];
       std::sprintf(str, "%02d", i);
       std::string s;

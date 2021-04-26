@@ -16,7 +16,7 @@ namespace Pumpkin {
 
 std::vector<std::vector<BooleanLiteral>>
 GeneralizedTotliserSumRoot::Encode(SolverState &state) {
-  std::cout << "Encode root " << std::endl;
+//  std::cout << "Encode root " << std::endl;
   if (max_ == 0) {
     std::vector<std::vector<BooleanLiteral>> res;
     for (auto wl : inputs_) {

@@ -32,7 +32,7 @@ bool Pumpkin::Solve(const sat::SatProblem &p2) {
   SolverParameters params;
   params.bump_decision_variables = true;
   ConstraintSatisfactionSolver solver(problem, params);
-  SolverOutput solver_output = solver.Solve(90);
+  SolverOutput solver_output = solver.Solve(900);
   std::cout << "Sol found: " << (solver_output.timeout_happened ? "F" : "T") <<std::endl;
   solved_ = solver_output.HasSolution();
   if (solved_) {
@@ -83,7 +83,7 @@ bool Pumpkin::Optimize(const sat::SatProblem &p2) {
 ////        solver.constrained_satisfaction_solver_.Solve(190);
 ////    assert(solver_output.HasSolution());
 //  }
-    SolverOutput solver_output = solver.Solve(60);
+    SolverOutput solver_output = solver.Solve(900);
   solved_ = solver_output.HasSolution();
 
   assert(solver_output.solution.size() - 1 >= p.GetNrVars());

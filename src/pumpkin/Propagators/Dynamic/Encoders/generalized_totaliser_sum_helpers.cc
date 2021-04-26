@@ -94,7 +94,9 @@ WatchedPbSumConstraint* GeneralizedTotaliserSumHelpers::AddPbSumConstraint(
   encoder->add_dynamic_ = add_dynamic;
   encoder_result = encoder;
 
-  return state.propagator_pb_sum_.sum_database_.AddPermanentConstraint(input_lits, input_weighs, output_lits, output_weighs, encoder, state);
+  auto res =  state.propagator_pb_sum_input_.sum_database_.AddPermanentConstraint(input_lits, input_weighs, output_lits, output_weighs, encoder, state);
+  encoder->watched_constraint = res;
+  return res;
 
 
 }

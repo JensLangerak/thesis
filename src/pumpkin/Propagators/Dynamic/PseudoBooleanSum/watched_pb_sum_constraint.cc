@@ -5,7 +5,8 @@
 #include "watched_pb_sum_constraint.h"
 #include "../../../Basic Data Structures/boolean_literal.h"
 #include "../../../Engine/solver_state.h"
-#include "explanation_pb_sum_constraint.h"
+#include "InputPropagator/explanation_pb_sum_constraint_input.h"
+#include "OuputPropagator/explanation_pb_sum_constraint_output.h"
 
 namespace Pumpkin {
 WatchedPbSumConstraint::WatchedPbSumConstraint(
@@ -33,16 +34,26 @@ WatchedPbSumConstraint::WatchedPbSumConstraint(
       max_ = output_weights[i];
     }
   }
+  current_max_ = max_;
 }
 
-ExplanationPbSumConstraint *
-WatchedPbSumConstraint::ExplainLiteralPropagation(BooleanLiteral literal,
-                                                  SolverState &state) {
-  return new ExplanationPbSumConstraint(this, state, literal);
+ExplanationPbSumConstraintOutput *
+WatchedPbSumConstraint::ExplainLiteralPropagationOutput(BooleanLiteral literal,
+                                                       SolverState &state) {
+  return new ExplanationPbSumConstraintOutput(this, state, literal);
 }
-ExplanationPbSumConstraint *
-WatchedPbSumConstraint::ExplainFailure(SolverState &state) {
-  return new ExplanationPbSumConstraint(this, state);
+ExplanationPbSumConstraintOutput *
+WatchedPbSumConstraint::ExplainFailureOutput(SolverState &state) {
+  return new ExplanationPbSumConstraintOutput(this, state);
+}
+ExplanationPbSumConstraintInput *
+WatchedPbSumConstraint::ExplainLiteralPropagationInput(BooleanLiteral literal,
+                                                  SolverState &state) {
+  return new ExplanationPbSumConstraintInput(this, state, literal);
+}
+ExplanationPbSumConstraintInput *
+WatchedPbSumConstraint::ExplainFailureInput(SolverState &state) {
+  return new ExplanationPbSumConstraintInput(this, state);
 }
 WatchedPbSumConstraint::~WatchedPbSumConstraint() {
   if (encoder_ != nullptr)
@@ -62,7 +73,7 @@ void WatchedPbSumConstraint::UpdateCounts(std::vector<BooleanLiteral> &lits,
   }
   if (add_partial) {
     if (!encoder_->EncodingAdded()) {
-      state.propagator_pb_sum_.add_constraints_.push(this);
+      state.propagator_pb_sum_input_.add_constraints_.push(this);
     }
   }
 }

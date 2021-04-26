@@ -401,11 +401,11 @@ void PropagatorPseudoBoolean2::AddScheduledEncodings(SolverState &state) {
           }
             std::sort(candidates.begin(), candidates.end(), [](HammingDistanceLiteral a, HammingDistanceLiteral b) {return a.distance < b.distance;}); // TODO perhahps also add weight
             if (candidates.size() > 1 && bit_s.size() > 5) {
-              for (auto c : candidates) {
-                assert(!state.assignments_.IsAssigned(c.l.literal));
-              }
+//              for (auto c : candidates) {
+//                assert(!state.assignments_.IsAssigned(c.l.literal));
+//              }
 
-              for (auto c : candidates) {
+//              for (auto c : candidates) {
 //                state.IncreaseDecisionLevel();
 //                state.EnqueueDecisionLiteral(c.l.literal);
 //                PropagatorGeneric* conflicting_propagator = state.PropagateEnqueued();
@@ -419,7 +419,7 @@ void PropagatorPseudoBoolean2::AddScheduledEncodings(SolverState &state) {
 //                }
 //                state.Backtrack(0);
 
-              }
+//              }
 
               int s = constraint->original_literals_.size();
               int c_s = candidates.size();

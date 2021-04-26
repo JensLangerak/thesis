@@ -12,18 +12,25 @@
 #include <unordered_map>
 #include <vector>
 namespace Pumpkin {
-class ExplanationPbSumConstraint;
+class ExplanationPbSumConstraintInput;
+class ExplanationPbSumConstraintOutput;
 class SolverState;
 class WatchedPbSumConstraint {
 public:
   WatchedPbSumConstraint(std::vector<BooleanLiteral> &inputs, std::vector<uint32_t> &input_weights, std::vector<BooleanLiteral> outputs, std::vector<uint32_t> & output_weights, IEncoder<PbSumConstraint> *encoder);
   ~WatchedPbSumConstraint() ;
-  ExplanationPbSumConstraint *
-  ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state)
-  ; // returns the conjunction that forces the assignment of input
+  ExplanationPbSumConstraintInput *
+    ExplainLiteralPropagationInput(BooleanLiteral literal, SolverState &state);
+  // returns the conjunction that forces the assignment of input
   // literal to true. AsPbSumes the input literal is not undefined.
-  ExplanationPbSumConstraint *ExplainFailure(SolverState &state)
-  ; // returns the conjunction that leads to failure
+  ExplanationPbSumConstraintInput *ExplainFailureInput(SolverState &state);
+  // returns the conjunction that leads to failure
+  ExplanationPbSumConstraintOutput *
+    ExplainLiteralPropagationOutput(BooleanLiteral literal, SolverState &state);
+  // returns the conjunction that forces the assignment of input
+  // literal to true. AsPbSumes the input literal is not undefined.
+  ExplanationPbSumConstraintOutput *ExplainFailureOutput(SolverState &state);
+  // returns the conjunction that leads to failure
 
   std::vector<WeightedLiteral> inputs_;
   std::unordered_map<int, int> lit_to_input_index_;
@@ -32,9 +39,13 @@ public:
 
   std::unordered_map<int,int> weight_output_index_map_;
 
-  std::unordered_map<int, int> weight_cause_index_;
-  std::vector<int> weight_trail_;
-  std::vector<int> weight_trail_delimitors_;
+//  std::unordered_map<int, int> weight_cause_index_;
+//  std::vector<int> weight_trail_;
+//  std::vector<int> weight_trail_delimitors_;
+  std::vector<BooleanLiteral> set_literals_;
+  std::vector<WeightedLiteral> set_outputs_;
+
+  int current_max_;
 
   int true_count_debug_;
   int true_count_;

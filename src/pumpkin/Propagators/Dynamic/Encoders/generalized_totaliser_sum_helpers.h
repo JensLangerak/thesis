@@ -7,12 +7,12 @@
 
 #include "../../../Basic Data Structures/boolean_literal.h"
 #include "../../../Basic Data Structures/problem_specification.h"
+#include "../PseudoBooleanSum/watched_pb_sum_constraint.h"
+#include "generalized_totaliser_sum_nodes.h"
 #include "i_encoder.h"
 #include <cassert>
 #include <unordered_map>
 #include <vector>
-#include "../PseudoBooleanSum/watched_pb_sum_constraint.h"
-#include "generalized_totaliser_sum_nodes.h"
 
 namespace Pumpkin {
 class GeneralizedTotaliserSumHelpers {

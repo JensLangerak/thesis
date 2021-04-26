@@ -70,9 +70,9 @@ public:
     double activity = 0;
 
     int max = 0;
-    Node *left;
-    Node *right;
-    Node *parent;
+    Node *left = nullptr;
+    Node *right = nullptr;
+    Node *parent = nullptr;
     Node() : left(nullptr), right(nullptr), parent(nullptr), nr_leafs(1) {}
     ~Node();
 //    std::vector<std::vector<BooleanLiteral>> clauses;

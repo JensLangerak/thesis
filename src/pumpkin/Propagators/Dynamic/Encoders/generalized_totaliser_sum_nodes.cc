@@ -10,6 +10,7 @@
 #include <stack>
 #include <stdlib.h>
 #include <utility>
+#include "../PseudoBooleanSum/watched_pb_sum_constraint.h"
 namespace Pumpkin {
 
 std::vector<std::vector<BooleanLiteral>>
@@ -24,7 +25,7 @@ GeneralizedTotaliserSumNodes::Encode(SolverState &state) {
     std::vector<std::vector<BooleanLiteral>> res;
     return res;
   }
-  std::cout << "Encode " << inputs_.size() << std::endl;
+//  std::cout << "Encode " << inputs_.size() << std::endl;
 
   if (inputs_.size() <= 2) {
     return CreateLeafs(state);
@@ -168,6 +169,8 @@ bool GeneralizedTotaliserSumNodes::UpdateMax(int max, SolverState &state) {
   }
 
   this->max_ = max;
+  this->watched_constraint->current_max_ = max;
+
   bool res = true;
   if (r_child != nullptr)
     res = res & r_child->UpdateMax(max, state);

@@ -62,17 +62,6 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
 
   while (!state_.IsAssignmentBuilt() && stopwatch_.IsWithinTimeLimit())
 	{
-          for (auto c : state_.propagator_clausal_.clause_database_.unit_clauses_) {
-            assert(state_.assignments_.IsAssignedTrue(c));
-          }
-          for (auto c : state_.propagator_pb_sum_.sum_database_.permanent_constraints_) {
-            //TODO correct assert
-//            WeightedLiteral l =c->outputs_[ c->weight_output_index_map_[c->max_]];
-//            assert(state_.assignments_.IsAssignedFalse(l.literal));
-
-          }
-
-
           state_.IncreaseDecisionLevel();
 
           BooleanLiteral decision_literal = MakeDecision();
@@ -115,7 +104,7 @@ SolverOutput ConstraintSatisfactionSolver::Solve(double time_limit_in_seconds)
   simple_sat_solver::logger::Logger::Log2(lbd_hist);
   simple_sat_solver::logger::Logger::Log2(lbd_hist_norm);
 
-        LogNodeHits(start_conflict_id);
+//        LogNodeHits(start_conflict_id);
 
 
   return GenerateOutput();
@@ -536,7 +525,7 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 		state_.simple_moving_average_lbd.Reset();
 		counters_.conflicts_until_restart = parameters_.num_min_conflicts_per_restart;
 		return true;
-	} else if (!(state_.propagator_pseudo_boolean_2_.add_constraints_.empty() && state_.propagator_pb_sum_.add_constraints_.empty())) {
+	} else if (!(state_.propagator_pseudo_boolean_2_.add_constraints_.empty() && state_.propagator_pb_sum_input_.add_constraints_.empty())) {
           return true;
         }
 	else
@@ -547,7 +536,7 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 
 void ConstraintSatisfactionSolver::PerformRestart()
 {
-  std::cout << "Restart " << std::endl;
+//  std::cout << "Restart " << std::endl;
 	state_.Backtrack(0);
 
   if (counters_.until_clause_cleanup <= 0)

@@ -2,21 +2,22 @@
 // Created by jens on 16-03-21.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_PROPAGATOR_PB_SUM_H_
-#define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_PROPAGATOR_PB_SUM_H_
+#ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_OUPUTPROPAGATOR_PROPAGATOR_PB_SUM_OUTPUT_H_
+#define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_OUPUTPROPAGATOR_PROPAGATOR_PB_SUM_OUTPUT_H_
 
-#include "watched_pb_sum_constraint.h"
-#include "../../propagator_generic.h"
-#include "database_pb_sum.h"
+#include "../../../propagator_generic.h"
+#include "../../propagator_dynamic.h"
+#include "../database_pb_sum.h"
+#include "../watched_pb_sum_constraint.h"
 #include <queue>
-#include "../propagator_dynamic.h"
 namespace Pumpkin {
 class SolverState;
-class PropagatorPbSum : public PropagatorDynamic<WatchedPbSumConstraint, PbSumConstraint> {
+class PropagatorPbSumOutput
+    : public PropagatorDynamic<WatchedPbSumConstraint, PbSumConstraint> {
 
 public:
-  explicit PropagatorPbSum(int64_t num_variables);
-  ~PropagatorPbSum() override = default;
+  explicit PropagatorPbSumOutput(int64_t num_variables);
+  ~PropagatorPbSumOutput() override = default;
 
   ExplanationGeneric *ExplainLiteralPropagation(BooleanLiteral literal,
                                                 SolverState &state)
@@ -34,7 +35,7 @@ public:
   // method which will internally set the pointer of the trail to
   // the new correct position
 
-  DatabasePbSum sum_database_;
+  DatabasePbSum *sum_database_;
 
   void SetTrailIterator(TrailList<BooleanLiteral>::Iterator iterator)override;
   bool PropagateOneLiteral(SolverState &state) override;
@@ -65,13 +66,7 @@ public:
   IEncoder<PbSumConstraint> * GetEncoder(WatchedPbSumConstraint * constraint) override { return constraint->encoder_;};
   std::queue<WatchedPbSumConstraint *> add_constraints_;
   void AddScheduledEncodings(SolverState &state);
-  void InitPropagation(WatchedPbSumConstraint *constraint, SolverState &state);
-  bool debug_flag = false;
   bool PropagateInputs(WatchedPbSumConstraint *constraint, SolverState &state);
-  void UpdateWeightTrail(WatchedPbSumConstraint *constraint,
-                         BooleanLiteral true_literal, SolverState &state);
-  bool EnqueTrailWeights(WatchedPbSumConstraint *constraint,
-                         SolverState &state);
 };
 }
-#endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_PROPAGATOR_PB_SUM_H_
+#endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PSEUDOBOOLEANSUM_INPUTPROPAGATOR_PROPAGATOR_PB_SUM_INPUT_H_
