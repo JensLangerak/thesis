@@ -55,8 +55,26 @@ SolverOutput ConstraintOptimisationSolver::Solve(double time_limit_in_seconds)
 		}
 	}
         std::cout << upper_bound_ << std::endl;
-        for (auto c : constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_)
+  for (auto c : constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_)
+    c->LogCounts();
+  for (auto c : constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.permanent_constraints_)
           c->LogCounts();
+
+  int max_lc_ad = 0;
+  int max_nc_ad = 0;
+  for (auto c : constrained_satisfaction_solver_.state_.propagator_clausal_.clause_database_.temporary_clauses_) {
+    if (c->activity_ > max_lc_ad)
+      max_lc_ad = c->activity_;
+  }
+  for (auto n : constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.node_database_.pairs_) {
+    for (auto n2 : n.second) {
+      for (auto c : n2.second->clauses_) {
+        if (c->activity_ > max_nc_ad)
+          max_nc_ad = c->activity_;
+      }
+    }
+  }
+    std::cout << max_lc_ad << " ---  " << max_nc_ad << std::endl;
 	return GenerateOutput();
 }
 
@@ -158,8 +176,10 @@ bool ConstraintOptimisationSolver::UpdateBestSolutionConstraint(int64_t max_cost
 
     simple_sat_solver::logger::Logger::Log2("Opt lit order: " + lit_order);
     PseudoBooleanConstraint c(lits, coefs, max_cost, optimisation_encoding_factory);
-    constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
-    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_.back();
+    constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
+    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.permanent_constraints_.back();
+//    constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(c, constrained_satisfaction_solver_.state_);
+//    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_.back();
 //    optimise_constraint = constrained_satisfaction_solver_.state_.propagator_cardinality_.cardinality_database_.permanent_constraints_.back();
 
   } else {

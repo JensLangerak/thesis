@@ -492,5 +492,6 @@ void PropagatorDynamic<T,P>::PropagateAddedClauses(SolverState &state,
 template class PropagatorDynamic<WatchedCardinalityConstraint, CardinalityConstraint>;
 template class PropagatorDynamic<WatchedSumConstraint, SumConstraint>;
 template class PropagatorDynamic<WatchedPseudoBooleanConstraint2, PseudoBooleanConstraint>;
+template class PropagatorDynamic<WatchedPseudoBooleanConstraint3, PseudoBooleanConstraint>;
 template class PropagatorDynamic<WatchedPbSumConstraint, PbSumConstraint>;
 } // namespace Pumpkin

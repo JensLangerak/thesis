@@ -19,6 +19,7 @@ SolverState::SolverState(int64_t num_Boolean_variables,
       propagator_pseudo_boolean_(num_Boolean_variables),
       propagator_cardinality_(num_Boolean_variables),
       propagator_pseudo_boolean_2_(num_Boolean_variables),
+      propagator_pseudo_boolean_3_(num_Boolean_variables),
       propagator_pb_sum_output_(num_Boolean_variables),
       propagator_pb_sum_input_(num_Boolean_variables),
       //      propagator_sum_(num_Boolean_variables),
@@ -29,6 +30,7 @@ SolverState::SolverState(int64_t num_Boolean_variables,
   propagator_clausal_.SetTrailIterator(trail_.begin());
   propagator_pseudo_boolean_.SetTrailIterator(trail_.begin());
   propagator_pseudo_boolean_2_.SetTrailIterator(trail_.begin());
+  propagator_pseudo_boolean_3_.SetTrailIterator(trail_.begin());
   propagator_pb_sum_input_.SetTrailIterator(trail_.begin());
   propagator_pb_sum_output_.SetTrailIterator(trail_.begin());
   propagator_cardinality_.SetTrailIterator(trail_.begin());
@@ -80,6 +82,7 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
          propagator_pseudo_boolean_.IsPropagationComplete(*this) == false ||
          propagator_cardinality_.IsPropagationComplete(*this) == false ||
       propagator_pseudo_boolean_2_.IsPropagationComplete(*this) == false ||
+      propagator_pseudo_boolean_3_.IsPropagationComplete(*this) == false ||
       propagator_pb_sum_output_.IsPropagationComplete(*this) == false ||
          propagator_pb_sum_input_.IsPropagationComplete(*this) == false) {
     //         propagator_sum_.IsPropagationComplete(*this) == false) {
@@ -96,6 +99,9 @@ PropagatorGeneric *SolverState::PropagateEnqueued() {
 
     if (!propagator_pseudo_boolean_2_.PropagateOneLiteral(*this)) {
       return &propagator_pseudo_boolean_2_;
+    }
+    if (!propagator_pseudo_boolean_3_.PropagateOneLiteral(*this)) {
+      return &propagator_pseudo_boolean_3_;
     }
     if (!propagator_pb_sum_input_.PropagateOneLiteral(*this)) {
       return &propagator_pb_sum_input_;
@@ -128,6 +134,7 @@ void SolverState::Backtrack(int backtrack_level) {
   propagator_pseudo_boolean_.Synchronise(*this);
   propagator_cardinality_.Synchronise(*this);
   propagator_pseudo_boolean_2_.Synchronise(*this);
+  propagator_pseudo_boolean_3_.Synchronise(*this);
   propagator_pb_sum_input_.Synchronise(*this);
   propagator_pb_sum_output_.Synchronise(*this);
   //  propagator_sum_.Synchronise(*this);
@@ -137,6 +144,7 @@ void SolverState::Reset() {
   // TODO fix bug
   propagator_cardinality_.SetTrailIterator(trail_.begin());
   propagator_pseudo_boolean_2_.SetTrailIterator(trail_.begin());
+  propagator_pseudo_boolean_3_.SetTrailIterator(trail_.begin());
   propagator_pb_sum_input_.SetTrailIterator(trail_.begin());
   propagator_pb_sum_output_.SetTrailIterator(trail_.begin());
   //  propagator_sum_.SetTrailIterator(trail_.begin());
@@ -301,6 +309,7 @@ BooleanVariable SolverState::CreateNewVariable() {
   //  propagator_cardinality_.cardinality_database_.watch_list_false.Grow();
   propagator_cardinality_.cardinality_database_.watch_list_true.Grow();
   propagator_pseudo_boolean_2_.pseudo_boolean_database_.watch_list_true.Grow();
+  propagator_pseudo_boolean_3_.pseudo_boolean_database_.watch_list_true.Grow();
   propagator_pb_sum_input_.sum_database_.watch_list_true.Grow();
     propagator_pb_sum_input_.sum_database_.watch_list_output_.Grow();
 
@@ -415,9 +424,9 @@ void SolverState::MakeAssignment(BooleanLiteral literal,
                               code, trail_.size());
 
   trail_.push_back(literal);
-  for (auto c : propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
-    c->lit_prop_[literal.ToPositiveInteger()]++;
-  }
+//  for (auto c : propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+//    c->lit_prop_[literal.ToPositiveInteger()]++;
+//  }
 }
 void SolverState::AddSumConstraint(SumConstraint &constraint) {
   // TODO
@@ -433,6 +442,8 @@ void SolverState::AddPbSum(PbSumConstraint &constraint) {
 void SolverState::AddPseudoBoolean(Pumpkin::PseudoBooleanConstraint &constraint) {
   propagator_pseudo_boolean_2_.pseudo_boolean_database_.AddPermanentConstraint(
       constraint, *this);
+//  propagator_pseudo_boolean_3_.pseudo_boolean_database_.AddPermanentConstraint(
+//      constraint, *this);
 }
 
 
@@ -449,6 +460,8 @@ void SolverState::FullReset() {
   propagator_cardinality_.ResetCounts();
   propagator_pseudo_boolean_2_.SetTrailIterator(trail_.begin());
   propagator_pseudo_boolean_2_.ResetCounts();
+  propagator_pseudo_boolean_3_.SetTrailIterator(trail_.begin());
+  propagator_pseudo_boolean_3_.ResetCounts();
   propagator_pb_sum_input_.SetTrailIterator(trail_.begin());
   propagator_pb_sum_input_.ResetCounts();
   propagator_pb_sum_output_.SetTrailIterator(trail_.begin());
@@ -467,6 +480,7 @@ void SolverState::ResetPropagatorsToLevel() {
   propagator_pseudo_boolean_.SetTrailIterator(update);
   propagator_cardinality_.SetTrailIterator(update);
   propagator_pseudo_boolean_2_.SetTrailIterator(update);
+  propagator_pseudo_boolean_3_.SetTrailIterator(update);
   propagator_pb_sum_input_.SetTrailIterator(update);
   propagator_pb_sum_output_.SetTrailIterator(update);
   //  propagator_sum_.SetTrailIterator(update);
@@ -509,6 +523,7 @@ void SolverState::CheckClasualTrailState() {
 void SolverState::AddScheduledEncodings() {
   propagator_cardinality_.AddScheduledEncodings(*this);
   propagator_pseudo_boolean_2_.AddScheduledEncodings(*this);
+  propagator_pseudo_boolean_3_.AddScheduledEncodings(*this);
   propagator_pb_sum_input_.AddScheduledEncodings(*this);
   propagator_pb_sum_output_.AddScheduledEncodings(*this);
 }

@@ -89,7 +89,7 @@ ExplanationPseudoBooleanConstraint2::ExplanationPseudoBooleanConstraint2(
   }
 //  simple_sat_solver::logger::Logger::Log2("Propagate lit " +std::to_string(propagated_literal.code_)+" for constraint " + std::to_string(constraint->log_id_)+" : " + cause );
   assert(sum + l_w > constraint->max_);
-  lits_.push_back(~propagated_literal);
+  lits_.push_back(~propagated_literal); //TODO not sure if correct?
   constraint->UpdateCounts(lits_, state);
   // TODO trim lits if to many
 }

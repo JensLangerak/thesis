@@ -40,7 +40,8 @@ private:
 
 //class variables------------------
 //	GeneralisedTotaliserCP192* encoder_; //this encoder needs to be redesigned/improved
-  WatchedPseudoBooleanConstraint2 *optimise_constraint = nullptr;
+  WatchedPseudoBooleanConstraint3 *optimise_constraint = nullptr;
+//  WatchedPseudoBooleanConstraint2 *optimise_constraint = nullptr;
 //  WatchedPseudoBooleanConstraint2 *optimise_constraint5 = nullptr;
 //  WatchedPseudoBooleanConstraint2 *optimise_constraint10 = nullptr;
 	Stopwatch stopwatch_;

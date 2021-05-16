@@ -138,8 +138,8 @@ void test_setting(std::string test_file_path, std::string test_file, std::string
   encoder_factory->add_dynamic_ = add_dynamic;
   encoder_factory->add_incremetal_ = add_incremental;
   encoder_factory->add_delay_ = add_delay;
-  TestOrder(test_file_path, test_file, log_dir , start_penalty);
-//  Test(test_file_path, test_file, log_dir , encoder_factory, encoder_string, start_penalty);
+//  TestOrder(test_file_path, test_file, log_dir , start_penalty);
+  Test(test_file_path, test_file, log_dir , encoder_factory, encoder_string, start_penalty);
 }
 
 

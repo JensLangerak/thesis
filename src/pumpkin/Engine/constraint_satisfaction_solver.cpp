@@ -153,7 +153,11 @@ BooleanLiteral ConstraintSatisfactionSolver::MakeDecision()
           int tes =2;
         }
 	BooleanLiteral decision_literal(selected_variable, selected_value);
-        for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+  for (auto c : state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.permanent_constraints_) {
+    c->lit_decisions_[decision_literal.ToPositiveInteger()]++;
+    c->var_decisions_[decision_literal.VariableIndex()]++;
+  }
+  for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
           c->lit_decisions_[decision_literal.ToPositiveInteger()]++;
           c->var_decisions_[decision_literal.VariableIndex()]++;
         }
@@ -174,6 +178,10 @@ bool ConstraintSatisfactionSolver::ResolveConflict(PropagatorGeneric *conflict_p
 		ProcessConflictAnalysisResult(result);
 		conflict_propagator = state_.PropagateEnqueued();
           for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+            c->UpdateNotTouchedCount(state_);
+            c->ResetConflictLog();
+          }
+          for (auto c : state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.permanent_constraints_) {
             c->UpdateNotTouchedCount(state_);
             c->ResetConflictLog();
           }
@@ -323,6 +331,21 @@ void ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysi
 
             }
             }
+
+            for (auto pb : state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.permanent_constraints_) {
+              std::string label;
+              if (pb->GetLabel(l, label)) {
+                pb->UpdateNode(l, log_conflict_id);
+                clause += label;
+                labels.push_back(label);
+                log= true;
+                found = true;
+                break;
+              } else {
+
+              }
+            }
+
             if(!found) {
               clause += "N_" + std::to_string(l.code_);
               labels.push_back("N_" + std::to_string(l.code_));
@@ -525,7 +548,7 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 		state_.simple_moving_average_lbd.Reset();
 		counters_.conflicts_until_restart = parameters_.num_min_conflicts_per_restart;
 		return true;
-	} else if (!(state_.propagator_pseudo_boolean_2_.add_constraints_.empty() && state_.propagator_pb_sum_input_.add_constraints_.empty())) {
+	} else if (!(state_.propagator_pseudo_boolean_2_.add_constraints_.empty() && state_.propagator_pb_sum_input_.add_constraints_.empty() && state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.node_database_.scheduled_.empty())) {
           return true;
         }
 	else
@@ -536,7 +559,7 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 
 void ConstraintSatisfactionSolver::PerformRestart()
 {
-//  std::cout << "Restart " << std::endl;
+  std::cout << "Restart " << std::endl;
 	state_.Backtrack(0);
 
   if (counters_.until_clause_cleanup <= 0)
@@ -587,6 +610,9 @@ SolverOutput ConstraintSatisfactionSolver::GenerateOutput()
 	}
 	else
 	{
+          for (auto c : state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.permanent_constraints_) {
+            c->UpdateSolutionCount(state_);
+          }
           for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
             c->UpdateSolutionCount(state_);
           }
@@ -626,6 +652,24 @@ bool ConstraintSatisfactionSolver::CheckDecisionLevelsLearnedLiteral(Disjunction
 }
 void ConstraintSatisfactionSolver::LogNodeHits(int start_conflict_id) {
   for (auto c : state_.propagator_pseudo_boolean_2_.pseudo_boolean_database_.permanent_constraints_) {
+    if (c->encoder_->encoding_added_) {
+      GeneralizedTotaliser * encoder = (GeneralizedTotaliser *) c->encoder_;
+      std::string log_line = "Encoding stats constraint " + std::to_string(c->log_id_) + " ";
+      std::vector<int> level_hits;
+      std::vector<int> zero_hits;
+      std::vector<int> recent_hits;
+      std::vector<int> sligly_less_recent_hits;
+      UpdateHits(level_hits, zero_hits, recent_hits, sligly_less_recent_hits,0, start_conflict_id, encoder->root_);
+      for (int i = 0; i < level_hits.size(); ++i){
+        log_line += " " + std::to_string(level_hits[i]) + "-" + std::to_string(zero_hits[i]) + "-" + std::to_string(recent_hits[i]) + "-" + std::to_string(sligly_less_recent_hits[i]);
+      }
+      simple_sat_solver::logger::Logger::Log2(log_line);
+    }
+
+  }
+
+
+  for (auto c : state_.propagator_pseudo_boolean_3_.pseudo_boolean_database_.permanent_constraints_) {
     if (c->encoder_->encoding_added_) {
       GeneralizedTotaliser * encoder = (GeneralizedTotaliser *) c->encoder_;
       std::string log_line = "Encoding stats constraint " + std::to_string(c->log_id_) + " ";

@@ -429,10 +429,10 @@ void test_file(std::string file, int start_penalty) {
 //             *)new ::Pumpkin::GeneralizedTotaliser::Factory(),
 //        "Dynamic", true, false, start_penalty, 1);
 
-    test_setting(dir + file, file, log_dir,
-    (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
-    ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Dynamic root", true,
-    true, start_penalty,   0.01);
+//    test_setting(dir + file, file, log_dir,
+//    (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
+//    ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Dynamic root", true,
+//    true, start_penalty,   0.01);
     //test_setting(dir + file, file, log_dir,
   //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
   //  ::Pumpkin::GeneralizedTotaliser::Factory(), "Dynamic", true, false,
@@ -444,11 +444,12 @@ void test_file(std::string file, int start_penalty) {
       //test_setting(dir + file, file, log_dir,
   //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
   //  ::Pumpkin::StaticGeneralizedTotaliser::Factory(), "Static order
-  //  Incremental", true, true, start_penalty, 0); test_setting(dir + file,
-  //  file, log_dir,
-  //  (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
-  //  ::Pumpkin::PropagatorEncoder<Pumpkin::CardinalityConstraint>::Factory(),
-  //  "Propagator", false, false, start_penalty, 1);
+  //  Incremental", true, true, start_penalty, 0);
+      test_setting(dir + file,
+    file, log_dir,
+    (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
+    ::Pumpkin::PropagatorEncoder<Pumpkin::PseudoBooleanConstraint>::Factory(),
+    "Propagator", false, false, start_penalty, 1);
 //  test_setting(
 //      dir + file, file, log_dir,
 //      (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory
@@ -533,7 +534,7 @@ int main(int argc, char *argv[]) {
   } else {
 
     //  simple_sat_solver::ctt::Test("../../../data/ctt/toyexample.ctt");
-    // test_file("toyexample.ctt");
+//     test_file("toyexample.ctt");
         for (int i = 2; i <= 21; ++i) {
 //    {
 //      int i = 11;

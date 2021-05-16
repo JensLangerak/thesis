@@ -16,6 +16,7 @@
 #include "../solver_wrappers/i_solver.h"
 #include "../solver_wrappers/pumpkin.h"
 #include "../sat/sat_problem.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totliser_sum_root.h"
 #include "opb_parser.h"
 
 
@@ -71,17 +72,18 @@ void test_setting(std::string test_file_path, std::string test_file, std::string
 }
 
 
-enum solver_type {encoder, dynamic, incremental, propagator, staticincremental};
+enum solver_type {encoder, dynamic, incremental, propagator, staticincremental, topdown};
 int main(int argc, char *argv[]) {
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/leberre/opb-paranoid/misc2010/datasets/caixa/normalized-1096.cudf.paranoid.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j60/normalized-j6017_10-unsat.opb";
+  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-sat.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j120/normalized-j12012_9-unsat.opb";
 //  std::string test_file = "/home/jens/Downloads/normalized-PB09/OPT-SMALLINT-LIN/flexray/normalized-fx30.opb";
-//  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-unsat.opb";
-  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/OPT-SMALLINT-LIN/oliveras/j30opt/normalized-j301_1.std.opb";
+//  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-sat.opb";
+//  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/OPT-SMALLINT-LIN/oliveras/j30opt/normalized-j301_1.std.opb";
   std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/pb/log";
   solver_type s = incremental;
-  int add_delay_i = 0;
+  int add_delay_i = 10;
   if (argc >= 4) {
     s = (solver_type)atoi(argv[1]);
     test_file = argv[2];
@@ -132,6 +134,11 @@ int main(int argc, char *argv[]) {
           StaticGeneralizedTotaliser::Factory(),
           "Static", true, true, start_penalty, add_delay);
       break;
+    case topdown:
+      test_setting(test_file, "test", log_dir,
+                   (::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory *) new
+                       ::Pumpkin::GeneralizedTotliserSumRoot::Factory(), "Top Down", true,
+                   true, start_penalty,   add_delay / 10.0);
     default:
       return 1;
   }

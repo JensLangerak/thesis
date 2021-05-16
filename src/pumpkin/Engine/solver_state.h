@@ -12,6 +12,7 @@
 #include "../Propagators/Clausal/propagator_clausal.h"
 #include "../Propagators/Dynamic/Cardinality/propagator_cardinality.h"
 #include "../Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean.h"
+#include "../Propagators/Dynamic/PseudoBooleanLower/propagator_pseudo_boolean.h"
 #include "../Propagators/Dynamic/PseudoBooleanSum/InputPropagator/propagator_pb_sum_input.h"
 #include "../Propagators/Dynamic/PseudoBooleanSum/OuputPropagator/propagator_pb_sum_output.h"
 #include "../Propagators/Dynamic/Sum/propagator_sum.h"
@@ -141,6 +142,7 @@ public:
 	PropagatorClausal propagator_clausal_;
   PropagatorPseudoBooleanConstraints propagator_pseudo_boolean_;
   PropagatorPseudoBoolean2 propagator_pseudo_boolean_2_;
+  PropagatorPseudoBoolean3 propagator_pseudo_boolean_3_;
   PropagatorCardinality propagator_cardinality_;
   PropagatorPbSumInput propagator_pb_sum_input_;
   PropagatorPbSumOutput propagator_pb_sum_output_;

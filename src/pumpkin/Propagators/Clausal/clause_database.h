@@ -67,7 +67,7 @@ public:
 	void RecomputeAndPrintClauseLengthStatsForPermanentClauses();
         ~ClauseDatabase();
 
-private:
+//private:
 	void RescaleClauseActivities(); //divides all activities with a large number when the maximum activity becomes too large
 	
 	static bool ClauseComparisonCriteria(const TwoWatchedClause * c1, const TwoWatchedClause * c2);
