@@ -9,7 +9,7 @@ DatabasePseudoBoolean::DatabasePseudoBoolean(uint64_t num_variables):
 }
 
 /*DatabasePseudoBoolean::DatabasePseudoBoolean(MaxSATformula &formula)
-	:watch_list_(formula.sat_formula_.num_variables_)
+	:database_(formula.sat_formula_.num_variables_)
 {
 	for (size_t m = 0; m < formula.pseudo_boolean_constraints_.size(); m++)
 	{

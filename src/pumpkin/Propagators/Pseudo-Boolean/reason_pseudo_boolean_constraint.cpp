@@ -1,8 +1,8 @@
 #include "reason_pseudo_boolean_constraint.h"
 #include "watched_pseudo_boolean_constraint.h"
-#include "../../Basic Data Structures/learned_pseudo_boolean_constraint_iterator.h"
+#include "../../Utilities/learned_pseudo_boolean_constraint_iterator.h"
 #include "../../Engine/solver_state.h"
-#include "../../Basic Data Structures/runtime_assert.h"
+#include "../../Utilities/runtime_assert.h"
 
 #include <iostream>
 #include <climits>

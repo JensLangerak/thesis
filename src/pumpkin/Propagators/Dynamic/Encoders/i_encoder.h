@@ -1,74 +1,56 @@
 //
-// Created by jens on 28-10-20.
+// Created by jens on 24-05-21.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_ENCODERS_I_ENCODER_H_
-#define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_ENCODERS_I_ENCODER_H_
-
+#ifndef PUMPKIN_PUBLIC_CODE_PUMPKIN_PROPAGATORS_DYNAMIC_ENCODERS_I_ENCODER_H_
+#define PUMPKIN_PUBLIC_CODE_PUMPKIN_PROPAGATORS_DYNAMIC_ENCODERS_I_ENCODER_H_
 #include <cassert>
 #include <vector>
+#include "../../../Utilities/boolean_literal.h"
 
-#include "../../../Basic Data Structures/boolean_literal.h"
 namespace Pumpkin {
 class SolverState;
-struct WeightedLiteral;
 template <class T>
 class IEncoder {
 public:
-  virtual void PrintInfo() { };
-  virtual std::vector<std::vector<BooleanLiteral>>
-  Encode(SolverState &state) = 0;
-  virtual std::vector<std::vector<BooleanLiteral>>
-  Encode(SolverState &state, std::vector<BooleanLiteral> lits);
-  virtual std::vector<std::vector<BooleanLiteral>> Propagate(SolverState &state, std::vector<BooleanLiteral> reason, std::vector<BooleanLiteral> propage_values) { assert(false);};
-  virtual void DebugInfo(SolverState & state);
-  virtual bool GetLabel(BooleanLiteral l, std::string & label) {return false;};
+  virtual void Encode(SolverState &state) = 0;
+  virtual void Encode(SolverState &state, std::vector<BooleanLiteral> lits) = 0;
 
-  virtual ~IEncoder();
-  virtual bool SupportsIncremental() { return false; };
-  bool add_incremental;
+  virtual ~IEncoder() = default;
   double add_delay = 1;
 
-  virtual bool AddOnRestart() { return false;};
-  virtual bool AddEncodingDynamic() { return add_dynamic_; };
-  virtual bool EncodingAddAtStart() { return !add_dynamic_; };
   virtual bool EncodingAdded() { return encoding_added_;};
   virtual bool EncodingPartialAdded() { return partial_added_;};
-  virtual bool IsAdded(BooleanLiteral l);
+  virtual bool IsAdded(BooleanLiteral l) { return encoding_added_;};
 
-  virtual std::vector<WeightedLiteral> GetCurrentSumSet() { assert(false);};
-//  virtual void SetSumLiterals(std::vector<BooleanLiteral> sum_lits) {assert(true);};
+  enum EncodingStrategy {START, DYNAMIC, INCREMENTAL, NEVER};
+  EncodingStrategy encoding_strategy_;
   class IFactory {
   public:
-//    IEncoder *Create(std::vector<BooleanLiteral> variables, int min, int max);
-//    IEncoder *Create(WatchedCardinalityConstraint &constraint);
     IEncoder<T> *Create(T &constraint);
-//    IEncoder *Create(SumConstraint & constraint); //TODO restucutre
-//    IEncoder *Create(PseudoBooleanConstraint & constraint); //TODO restucutre
 
-    virtual ~IFactory();
+    virtual ~IFactory() = default;
 
-    bool add_dynamic_ = true;
-    bool add_incremetal_ = false;
     double add_delay_ =1.0;
+    EncodingStrategy encoding_strategy_;
   protected:
+    IFactory(EncodingStrategy encoding_strategy, double add_delay_);
     virtual IEncoder *CallConstructor(T &constraint) = 0;
   };
 
-  int log_id_;
-  virtual bool UpdateMax(int max, SolverState &state) {return true;}; //TODO
+  virtual bool UpdateMax(int max, SolverState &state) = 0;
 
 protected:
   IEncoder(){};
 
 public:
-  bool add_dynamic_ = false;
   bool encoding_added_ = false;
   bool partial_added_ = false;
-  virtual void UpdateNode(BooleanLiteral literal, int conflict_id);
+  int log_id_;
+  virtual bool EncodingAddAtStart() { return encoding_strategy_ == START; }
 };
 
 
 } // namespace Pumpkin
 
-#endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_ENCODERS_I_ENCODER_H_
+#endif // PUMPKIN_PUBLIC_CODE_PUMPKIN_PROPAGATORS_DYNAMIC_ENCODERS_I_ENCODER_H_

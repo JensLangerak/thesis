@@ -3,24 +3,27 @@
 //
 
 #include "propagator_encoder.h"
-#include "../../../Basic Data Structures/boolean_literal.h"
-#include "../../../Basic Data Structures/problem_specification.h"
+#include "../../../Utilities/boolean_literal.h"
+#include "../../../Utilities/problem_specification.h"
+#include "../../../Engine/solver_state.h"
 namespace Pumpkin {
 
 template <class T>
-std::vector<std::vector<BooleanLiteral>>
-PropagatorEncoder<T>::Encode(SolverState &state) {
-  return std::vector<std::vector<BooleanLiteral>>();
+void PropagatorEncoder<T>::Encode(SolverState &state) {
+  return;
 }
 
 template <class T>
 PropagatorEncoder<T>::~PropagatorEncoder() {}
 
 template <class T>
-std::vector<std::vector<BooleanLiteral>>
-PropagatorEncoder<T>::Encode(SolverState &state,
+void PropagatorEncoder<T>::Encode(SolverState &state,
                           std::vector<BooleanLiteral> lits) {
   return Encode(state);
+}
+template <class T>
+bool PropagatorEncoder<T>::UpdateMax(int max, SolverState &state) {
+  return true;
 }
 
 template class  PropagatorEncoder<CardinalityConstraint>;

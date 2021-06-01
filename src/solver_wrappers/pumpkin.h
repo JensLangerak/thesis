@@ -8,7 +8,7 @@
 #include "i_solver.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/i_encoder.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/propagator_encoder.h"
-#include "../pumpkin/Basic Data Structures/problem_specification.h"
+#include "../pumpkin/Utilities/problem_specification.h"
 namespace Pumpkin {
 class ProblemSpecification;
 }

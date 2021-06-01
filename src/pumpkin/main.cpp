@@ -1,16 +1,17 @@
 #include "Engine/constraint_optimisation_solver.h"
-#include "Basic Data Structures/solver_parameters.h"
+#include "Propagators/Dynamic/Encoders/generalized_totaliser.h"
+#include "Propagators/Dynamic/PseudoBoolean/pseudo_boolean_adder.h"
+#include "Utilities/solver_parameters.h"
 
 #include <algorithm>
 #include <assert.h>
-#include <iostream>
-#include <vector>
-#include <time.h>
 #include <cstdlib>
-#include <signal.h>
-#include <algorithm>
+#include <iostream>
 #include <limits>
+#include <signal.h>
 #include <string>
+#include <time.h>
+#include <vector>
 
 using namespace std;
 using namespace Pumpkin;
@@ -24,7 +25,7 @@ void printStatisticsMain()
 	time_t total_solve = time(0) - start_solve;
 	clock_t total_clock = clock() - start_clock;
 
-	g_solver->PrintStats();
+//	g_solver->PrintStats();
 	//std::cout << "c conflicts per second (wallclock): " << double(g_solver->counters_.conflicts)/ total_solve << std::endl;
 	//std::cout << "c conflicts per second (cpu): " << double(g_solver->counters_.conflicts) / (double(total_clock) / CLOCKS_PER_SEC) << std::endl;
 	std::cout << "c wallclock time: " << total_solve << " s " << std::endl;
@@ -39,9 +40,9 @@ static void SIGINT_exit(int signum)
 	exit(1);
 }
 
-void printSolution(vector<bool> &solution)
+void printSolution(BooleanAssignmentVector &solution)
 {
-	if (solution.size() == 0)
+	if (solution.IsEmpty() == 0)
 	{
 		cout << "s UNSATISFIABLE\n";
 		return;
@@ -49,9 +50,9 @@ void printSolution(vector<bool> &solution)
 	
 	cout << "s SATISFIABLE\n";
 
-	if (solution.size() >= 100) { return; }
+	if (solution.NumVariables() >= 100) { return; }
 
-	for (int i = 1; i < solution.size(); i++)
+	for (int i = 1; i <= solution.NumVariables(); i++)
 	{
 		if (solution[i])
 		{
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
 
 	string file;
 	bool bump_decision_variables = true;
-	double time_limit_in_seconds = std::numeric_limits<double>::max();
+	double time_limit_in_seconds = 60;
 	
 	if (argc > 1)
 	{
@@ -118,6 +119,7 @@ int main(int argc, char *argv[])
 		//file = "test_instances\\quinn.txt";
 		//file = "test_instances\\quinn_maxsat.wcnf";
 		file = "test_instances\\xhstt\\BrazilInstance2.xml.wcnf";
+                file = "cnf_small.wcnf";
 		//file = "test_instances\\test_maxsat3.txt";
 		//file = "test_instances\\Instance6_11200.txt";
 		//file = "test_instances\\test_maxsat3.txt";
@@ -131,7 +133,7 @@ int main(int argc, char *argv[])
 	cout << "c File: " << file << endl;
 
 	ProblemSpecification* problem_specification;
-	
+
 	if (file.find(".wcnf") != std::string::npos)
 	{
 		problem_specification = new ProblemSpecification(ProblemSpecification::ReadMaxSATFormula(file));
@@ -148,19 +150,28 @@ int main(int argc, char *argv[])
 	}
 		
 	SolverParameters parameters;
-	parameters.bump_decision_variables = bump_decision_variables;
-	ConstraintOptimisationSolver solver(*problem_specification, parameters);
+//	parameters.bump_decision_variables = bump_decision_variables;
+        ParameterHandler parameter_handler = ConstraintOptimisationSolver::CreateParameterHandler();
+        parameter_handler.SetStringParameter("file", file);
+        PropagatorPseudoBoolean2 * propagator = new PropagatorPseudoBoolean2(0);
+        auto pb_adder = new PseudoBooleanAdder(propagator);
+        pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(Pumpkin::IEncoder<PseudoBooleanConstraint>::DYNAMIC, 0);
+        parameter_handler.optimisation_constraint_wrapper_ =  pb_adder;
+        ConstraintOptimisationSolver solver(parameter_handler);
+//	ConstraintOptimisationSolver solver(*problem_specification, parameters);
 	g_solver = &solver;
 	start_solve = time(0);
 	start_clock = clock();
-	SolverOutput solver_output = solver.Solve(time_limit_in_seconds);
+	SolverOutput solver_output = solver.Solve(time_limit_in_seconds, 0);
 	
 	CheckSolutionCorrectness(*problem_specification, solver_output);
 	
 	printStatisticsMain();
 	printSolution(solver_output.solution);
 
-	delete problem_specification;
+  delete parameter_handler.optimisation_constraint_wrapper_;
+  parameter_handler.optimisation_constraint_wrapper_ = nullptr;
+  delete problem_specification;
 	
     return 0;
 }

@@ -1,8 +1,7 @@
-#ifndef EXPLANATION_CLAUSE_H
-#define EXPLANATION_CLAUSE_H
+#pragma once
 
 #include "../explanation_generic.h"
-#include "../../Basic Data Structures/custom_vector.h"
+#include "../../Utilities/custom_vector.h"
 
 namespace Pumpkin
 {
@@ -10,21 +9,20 @@ namespace Pumpkin
 class ExplanationClausal : public ExplanationGeneric
 {
 public:
-	ExplanationClausal():p_literals_(0),ignore_position_(-1) {}; //todo possibly can remove this constructor?
-	ExplanationClausal(const LiteralVector &literals);
-	ExplanationClausal(const LiteralVector &literals, int ignore_position);
+	ExplanationClausal();
+	ExplanationClausal(const LiteralVector& literals);
+	ExplanationClausal(const LiteralVector& literals, int ignore_position);
 
-	void Clear();
-	BooleanLiteral operator[](int index) const;
-	ExplanationClausal & operator=(const ExplanationClausal &); //should be removed eventually, after I remove the legacy conflictanalysis code
-
+	BooleanLiteral operator[](int index) const;	
 	size_t Size() const;
 
+	void Initialise(const LiteralVector& literals);
+	void Initialise(const LiteralVector& literals, int ignore_position);
+
 private:
-	const LiteralVector *p_literals_;
+
+	const LiteralVector* p_literals_;
 	int ignore_position_;
 };
 
 } //end Pumpkin namespace
-
-#endif // !EXPLANATION_CLAUSE_H

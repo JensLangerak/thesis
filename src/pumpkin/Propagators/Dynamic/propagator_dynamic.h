@@ -1,100 +1,51 @@
 //
-// Created by jens on 28-11-20.
+// Created by jens on 21-05-21.
 //
 
-#ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_DYNAMIC_H_
-#define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_DYNAMIC_H_
+#ifndef PUMPKIN_PUBLIC_CODE_PUMPKIN_PROPAGATORS_DYNAMIC_PROPAGATOR_DYNAMIC_H_
+#define PUMPKIN_PUBLIC_CODE_PUMPKIN_PROPAGATORS_DYNAMIC_PROPAGATOR_DYNAMIC_H_
 
-#include "../../Basic Data Structures/boolean_literal.h"
 #include "../propagator_generic.h"
-#include "Encoders/i_encoder.h"
-#include <queue>
+#include "explanation_dynamic_constraint.h"
+#include "../explanation_generator.h"
 
 namespace Pumpkin {
-class SolverState;
-
-template <class T, class P>
-/// Class that dynamically adds encodings. This class contains the code that is
-/// needed to propagate the newly added clauses.
+class WatchedDynamicConstraint;
+template <class Watched>
 class PropagatorDynamic : public PropagatorGeneric {
 public:
-  virtual ~PropagatorDynamic() = default;
+  ReasonGeneric *ReasonLiteralPropagation(BooleanLiteral literal,
+                                          SolverState &state) override;
+  ReasonGeneric *ReasonFailure(SolverState &state) override;
+
+  ExplanationGeneric *ExplainLiteralPropagation(BooleanLiteral literal,
+                                                SolverState &state)
+  override; // returns the conjunction that forces the assignment of input
+  // literal to true. Assumes the input literal is not undefined.
+
+  ExplanationGeneric *ExplainFailure(SolverState &state)
+  override; // returns the conjunction that leads to failure
+
+  bool PropagateOneLiteral(SolverState &state) override;
+
+  void Synchronise(SolverState &state) override;
+  //  virtual void AddScheduledEncodings(SolverState &state);
 protected:
-  PropagatorDynamic() : PropagatorGeneric() {};
-  /// Add the encoding to the clause database.
-  /// \param state
-  /// \param constraint
-  bool AddEncoding(SolverState &state,
-                   T *constraint);
+  PropagatorDynamic() : PropagatorGeneric(), failure_constraint_(nullptr), last_propagation_info_(LastPropagationInfo(0,BooleanLiteral(),0,0)) {};
+  WatchedDynamicConstraint * failure_constraint_;
 
-  struct PropagtionElement {
-    PropagtionElement(BooleanLiteral lit, int level,
-                      PropagatorGeneric *propagator, uint64_t code)
-        : lit(lit), level(level), propagator(propagator), code(code){};
-
-    BooleanLiteral lit;
-    int level;
-    uint64_t code;
-    PropagatorGeneric *propagator;
-
-    bool operator<(const PropagtionElement o) const {
-      return this->level < o.level;
-    }
-
-    bool operator>(const PropagtionElement o) const {
-      return this->level > o.level;
-    }
+  struct LastPropagationInfo {
+    int propagation_step = 0;
+    BooleanLiteral last_propagated;
+    size_t last_watcher_index;
+    size_t end_index;
+    LastPropagationInfo(int propagation_step, BooleanLiteral last_propagated, size_t last_watcher_index, size_t end_index) :
+      propagation_step(propagation_step), last_propagated(last_propagated), last_watcher_index(last_watcher_index), end_index(end_index) {}
+    // TODO end index?
   };
-
-  /// propagate the literals in the queue to the state.
-  int PropagateLiterals(
-      std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
-      std::greater<PropagtionElement>>
-      &queue,
-      SolverState &state, int min_var_index);
-  /// propagate the true_literal using the clause database, enques values that can be propagated to the queue. Thus they are not yet added to the state.
-  bool ClausualPropagateLiteral(
-      BooleanLiteral true_literal, SolverState &state,
-      std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
-      std::greater<PropagtionElement>> &queue, int min_var);
-
-  std::vector<std::vector<BooleanLiteral>>
-
-  /// Add some clauses of the encoder.
-  AddEncodingClauses(SolverState &state,
-                     T *constraint);
-
-  /// Init the propagation queue with newly added clauses that are unit
-  std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
-                      std::greater<PropagtionElement>>
-  InitPropagationQueue(SolverState &state, int unit_start_index, int clause_start_index);
-
-  /// Based on the newly added clauses, check witch literals should have been propagated before and insert them in the trail.
-  /// If the literal is not a newly added variable, backtrack.
-  void UpdatePropagation(SolverState &state,
-                         std::priority_queue<PropagtionElement, std::vector<PropagtionElement>,
-                                             std::greater<PropagtionElement>>&
-                         queue, int min_var_index);
-  /// Set the position index correct.
-  void RepairTrailPositions(SolverState &state);
-
-  /// Get the clauses that trigger the encoding.
-  virtual std::vector<BooleanLiteral>
-  GetEncodingCause(SolverState &state, T *constraint) = 0;
-
-  /// Propagate incremental. Add the encoding and set some literals.
-  bool PropagateIncremental(SolverState &state,
-                            T *constraint);
-  /// Fill the reason and propagete vectors with the reason for the propagation and the values that should be propagated.
-  /// TODO change name.
-  virtual void PropagateIncremental2(SolverState &state, T *constraint, std::vector<BooleanLiteral> &reason, std::vector<BooleanLiteral> &propagate) = 0;
-
-  /// Get the encoder for the constraint.
-  virtual IEncoder<P> * GetEncoder(T * constraint) = 0;
-
-  /// Do clausual propagation over the added clauses, if propagation is to difficult backtrack.
-  void PropagateAddedClauses(SolverState &state, int unit_start_index,
-                             int clause_start_index, int var_start_index);
+  LastPropagationInfo last_propagation_info_;
+  ExplanationGenerator<ExplanationDynamicConstraint> explanation_generator_;
 };
-}
-#endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_CARDINALITY_PROPAGATOR_DYNAMIC_H_
+} // namespace Pumpkin
+
+#endif // PUMPKIN_PUBLIC_CODE_PUMPKIN_PROPAGATORS_DYNAMIC_PROPAGATOR_DYNAMIC_H_

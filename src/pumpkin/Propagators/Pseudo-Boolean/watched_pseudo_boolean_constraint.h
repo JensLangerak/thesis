@@ -3,10 +3,10 @@
 
 #include <vector>
 
-#include "../../Basic Data Structures/boolean_literal.h"
-#include "../../Basic Data Structures/small_helper_structures.h"
+#include "../../Utilities/boolean_literal.h"
+#include "../../Utilities/small_helper_structures.h"
 #include "explanation_pseudo_boolean_constraint.h"
-#include "../../Basic Data Structures/learned_pseudo_boolean_constraint.h"
+#include "../../Utilities/learned_pseudo_boolean_constraint.h"
 
 namespace Pumpkin
 {

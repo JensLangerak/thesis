@@ -1,8 +1,8 @@
 #ifndef ENCODER_TOTALISER_CP19_2
 #define ENCODER_TOTALISER_CP19_2
 
-#include "../Basic Data Structures/boolean_literal.h"
-#include "../Basic Data Structures/problem_specification.h"
+#include "../Utilities/boolean_literal.h"
+#include "../Utilities/problem_specification.h"
 #include "../Engine/solver_state.h"
 
 #include <map>
@@ -30,24 +30,24 @@ namespace Pumpkin
 		bool stable_sort;
 		int block_sort_size;
 		bool has_encoded;
-		std::vector<WeightedLiteral> objective_literals;
-		std::vector<WeightedLiteral> partial_sum_literals;
+		std::vector<PairWeightLiteral> objective_literals;
+		std::vector<PairWeightLiteral> partial_sum_literals;
 
 		GeneralisedTotaliserCP192();
 		~GeneralisedTotaliserCP192() {}
 
 		bool ReduceRightHandSide(int64_t new_rhs);
 
-		// Encode constraint.
-		vector<WeightedLiteral> encode(SolverState *state, std::vector<BooleanLiteral> &lits, std::vector<uint64_t> &coeffs, uint64_t rhs);
-		vector<BooleanLiteral> update(vector<WeightedLiteral> &output_variables, uint64_t rhs);
+		// EncodeSoftConstraint constraint.
+		vector<PairWeightLiteral> encode(SolverState *state, std::vector<BooleanLiteral> &lits, std::vector<uint64_t> &coeffs, uint64_t rhs);
+		vector<BooleanLiteral> update(vector<PairWeightLiteral> &output_variables, uint64_t rhs);
 
-		BooleanLiteral getLiteralForWeight(int weight, const vector<WeightedLiteral> &v);
-		int getIndexOfLiteralForWeight(int weight, const vector<WeightedLiteral> &v);
+		BooleanLiteral getLiteralForWeight(int weight, const vector<PairWeightLiteral> &v);
+		int getIndexOfLiteralForWeight(int weight, const vector<PairWeightLiteral> &v);
 
-		vector<WeightedLiteral> generalised_totaliser_bottom_up_tree(const vector<vector<WeightedLiteral> >  &leafs, int upper_bound, bool redundant_constraints);
-		vector<WeightedLiteral> create_generalised_totaliser_variables_based_on_children(vector<WeightedLiteral> &left_child, vector<WeightedLiteral> &right_child, int upper_bound);
-		vector<WeightedLiteral> generalised_totaliser_merge_two_batches(vector<WeightedLiteral> &left_child, vector<WeightedLiteral> &right_child, int upper_bound, bool redundant_constraints);
+		vector<PairWeightLiteral> generalised_totaliser_bottom_up_tree(const vector<vector<PairWeightLiteral> >  &leafs, int upper_bound, bool redundant_constraints);
+		vector<PairWeightLiteral> create_generalised_totaliser_variables_based_on_children(vector<PairWeightLiteral> &left_child, vector<PairWeightLiteral> &right_child, int upper_bound);
+		vector<PairWeightLiteral> generalised_totaliser_merge_two_batches(vector<PairWeightLiteral> &left_child, vector<PairWeightLiteral> &right_child, int upper_bound, bool redundant_constraints);
 	
 		SolverState * _hax_state;
 	};

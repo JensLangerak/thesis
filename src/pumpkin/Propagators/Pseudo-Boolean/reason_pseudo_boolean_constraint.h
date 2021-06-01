@@ -3,7 +3,7 @@
 
 #include "../reason_generic.h"
 #include "watched_pseudo_boolean_constraint.h"
-#include "../../Basic Data Structures/learned_pseudo_boolean_constraint.h"
+#include "../../Utilities/learned_pseudo_boolean_constraint.h"
 
 namespace Pumpkin
 {

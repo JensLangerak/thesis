@@ -1,7 +1,6 @@
-#ifndef EXPLANATION_GENERIC_H
-#define EXPLANATION_GENERIC_H
+#pragma once
 
-#include "../Basic Data Structures/boolean_literal.h"
+#include "../Utilities/boolean_literal.h"
 
 namespace Pumpkin
 {
@@ -14,9 +13,9 @@ class ExplanationGeneric
 public:
 	virtual BooleanLiteral operator[](int index) const = 0;
 	virtual size_t Size() const = 0;
-        virtual ~ExplanationGeneric() {};
+        virtual ~ExplanationGeneric() = default; //adding a private constructor to ensure that only dedicated classes can create/delete explanations
+protected:
+	ExplanationGeneric() {} //adding a private constructor to ensure that only dedicated classes can create/delete explanations
 };
 
 } //end Pumpkin namespace
-
-#endif // !EXPLANATION_GENERIC_H

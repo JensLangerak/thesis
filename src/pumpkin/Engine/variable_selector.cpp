@@ -1,24 +1,16 @@
 #include "variable_selector.h"
+#include "solver_state.h"
+#include "../Utilities/runtime_assert.h"
 
 namespace Pumpkin
 {
 
-VariableSelector::VariableSelector(int num_variables)
-	:heap_(num_variables),increment_(1.0),max_threshold_(1e100),decay_factor_(0.95), bit_strings_(num_variables)
+VariableSelector::VariableSelector(int num_variables, double decay_factor):
+	heap_(num_variables),
+	increment_(1.0),
+	max_threshold_(1e100),
+	decay_factor_(decay_factor),bit_strings_(num_variables)
 {
-}
-
-
-void VariableSelector::BumpActivityExtra(BooleanVariable boolean_variable, int extra)
-{
-  double value = heap_.GetKeyValue(boolean_variable.index_ - 1);
-  if (value + increment_ * extra >= max_threshold_)
-  {
-    heap_.DivideValues(max_threshold_);
-    increment_ /= max_threshold_;
-  }
-  heap_.Increment(boolean_variable.index_-1, increment_ * extra);
-  bit_strings_.Increment(boolean_variable.index_ -1);
 }
 
 void VariableSelector::BumpActivity(BooleanVariable boolean_variable)
@@ -30,31 +22,52 @@ void VariableSelector::BumpActivity(BooleanVariable boolean_variable)
 		increment_ /= max_threshold_;
 	}
 	heap_.Increment(boolean_variable.index_-1, increment_);
-        bit_strings_.Increment(boolean_variable.index_ -1);
+  bit_strings_.Increment(boolean_variable.index_ -1);
+}
+
+void VariableSelector::BumpActivity(BooleanVariable variable, double bump_multiplier)
+{
+	double value = heap_.GetKeyValue(variable.index_ - 1);
+	if (value + bump_multiplier *increment_ >= max_threshold_)
+	{
+		heap_.DivideValues(max_threshold_);
+		increment_ /= max_threshold_;
+	}
+	heap_.Increment(variable.index_ - 1, bump_multiplier *increment_);
+  bit_strings_.Increment(variable.index_ -1);
 }
 
 void VariableSelector::DecayActivities()
 {
 	increment_ *= (1.0 / decay_factor_);
-        bit_strings_.IncreaseId();
+  bit_strings_.IncreaseId();
 }
 
-BooleanVariable VariableSelector::PopHighestActivityVariable()
+BooleanVariable VariableSelector::PeekNextVariable(SolverState * state)
 {
-	if (heap_.Size() > 0)
+	if (heap_.Empty()) { return BooleanVariable(); }
+
+	//make sure the top variable is not assigned
+	//iteratively remove top variables until either the heap is empty or the top variable is unassigned
+	//note that the data structure is lazy: once a variable is assigned, it may not be removed from the heap, and this is why assigned variable may still be present in the heap
+	while (!heap_.Empty() && state->assignments_.IsAssigned(BooleanVariable(heap_.PeekMaxKey() + 1))) 
 	{
-		return BooleanVariable(heap_.PopMax() + 1);
+		heap_.PopMax();
+	}
+
+	if (heap_.Empty()) 
+	{ 
+		return BooleanVariable(); 
 	}
 	else
 	{
-		return BooleanVariable();
+		return BooleanVariable(heap_.PeekMaxKey()+1);
 	}
-	
 }
 
 void VariableSelector::Remove(BooleanVariable boolean_variable)
 {
-	heap_.Remove(boolean_variable.index_-1);
+	heap_.Remove(boolean_variable.index_ - 1);
 }
 
 void VariableSelector::Readd(BooleanVariable boolean_variable)
@@ -74,12 +87,17 @@ int VariableSelector::Size() const
 void VariableSelector::Grow()
 {
 	heap_.Grow();
-        bit_strings_.Grow();
+  bit_strings_.Grow();
 }
 
 bool VariableSelector::IsVariablePresent(BooleanVariable boolean_variable) const
 {
 	return heap_.IsKeyPresent(boolean_variable.index_-1);
+}
+
+void VariableSelector::Reset(int seed)
+{
+	heap_.Reset(seed);
 }
 
 void VariableSelector::RescaleActivities()

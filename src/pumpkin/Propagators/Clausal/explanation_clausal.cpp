@@ -1,25 +1,39 @@
 #include "explanation_clausal.h"
+#include "../../Utilities/runtime_assert.h"
 
 #include <cassert>
 
 namespace Pumpkin
 {
+ExplanationClausal::ExplanationClausal()
+{
+	p_literals_ = NULL;
+	ignore_position_ = -1;
+
+}
 
 ExplanationClausal::ExplanationClausal(const LiteralVector& literals)
-	:p_literals_(&literals), ignore_position_(int(literals.Size()))
 {
+	Initialise(literals);
 }
 
 ExplanationClausal::ExplanationClausal(const LiteralVector& literals, int ignore_position)
-	:p_literals_(&literals), ignore_position_(ignore_position)
 {
-	assert(ignore_position >= 0);
+	Initialise(literals, ignore_position);
 }
 
-void ExplanationClausal::Clear()
+void ExplanationClausal::Initialise(const LiteralVector& literals)
 {
-	p_literals_ = NULL;
-	ignore_position_ = 0;
+	p_literals_ = &literals;
+	ignore_position_ = int(literals.Size());
+}
+
+void ExplanationClausal::Initialise(const LiteralVector& literals, int ignore_position)
+{
+	runtime_assert(ignore_position == 0); //the convention is that the literal at position zero is the propagated literal. Might change in the future.
+
+	p_literals_ = &literals;
+	ignore_position_ = ignore_position;
 }
 
 BooleanLiteral ExplanationClausal::operator[](int index) const
@@ -35,18 +49,10 @@ BooleanLiteral ExplanationClausal::operator[](int index) const
 	}
 }
 
-ExplanationClausal & ExplanationClausal::operator=(const ExplanationClausal &e)
-{
-	p_literals_ = e.p_literals_;
-	ignore_position_ = e.ignore_position_;
-	return *this;
-}
-
 size_t ExplanationClausal::Size() const
 {
-	assert(p_literals_ != NULL);
+	runtime_assert(p_literals_ != NULL);
 
-	if (p_literals_ == NULL) { return 0; }
 	return int(p_literals_->Size()) - int(ignore_position_ < int(p_literals_->Size()));
 }
 

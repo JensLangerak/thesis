@@ -69,7 +69,7 @@ bool PropagatorPseudoBooleanConstraints::PropagateConstraintAtRoot(WatchedPseudo
 				if (state.assignments_.IsAssigned(constraint->terms_[i].literal)) { continue; } //ignore already assigned ones
 
 				uint64_t code = reinterpret_cast<uint64_t>(constraint);
-				bool success = state.AddUnitClauseDuringSearch(constraint->terms_[i].literal); //todo consider literals that were propagated together?
+				bool success = state.AddUnitClause(constraint->terms_[i].literal); //todo consider literals that were propagated together?
 				if (success == false) { return false; }
 			}
 		}
@@ -561,6 +561,9 @@ bool PropagatorPseudoBooleanConstraints::PropagateLiteral2(BooleanLiteral true_l
 	}
 
 	return true; //no conflicts detected	
+}
+void PropagatorPseudoBooleanConstraints::GrowDatabase() {
+  constraint_database_.watch_list_.Grow();
 }
 
 } //end Pumpkin namespace

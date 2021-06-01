@@ -6,6 +6,10 @@ add_library(pseudo_boolean
         conflict_analyser_cutting_planes.h               propagator_pseudo_boolean_constraints.h    watch_list_pseudo_boolean.cpp
         database_pseudo_boolean.cpp                      reason_pseudo_boolean_constraint.cpp       watch_list_pseudo_boolean.h
         database_pseudo_boolean.h                        reason_pseudo_boolean_constraint.h
+        counter_single_pseudo_boolean_propagator.cpp
+        counter_single_pseudo_boolean_propagator.h
+        explanation_single_counter_pseudo_boolean_constraint.cpp
+        explanation_single_counter_pseudo_boolean_constraint.h
         )
 
 target_link_libraries(pseudo_boolean propagator_generic)

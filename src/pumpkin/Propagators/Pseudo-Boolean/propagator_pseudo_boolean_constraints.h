@@ -24,8 +24,9 @@ public:
 	DatabasePseudoBoolean constraint_database_;
 
 	bool PropagateConstraintAtRoot(WatchedPseudoBooleanConstraint *constraint, SolverState &state);
+        void GrowDatabase() override;
 
-	WatchedPseudoBooleanConstraint *failure_constraint_;
+        WatchedPseudoBooleanConstraint *failure_constraint_;
 	
 private:
 	//this is the main propagation method. Note that it will change watch lists of true_literal and some other literals and enqueue assignments

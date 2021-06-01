@@ -1,12 +1,9 @@
 ﻿#include "EncoderGeneralisedTotaliserCP19_2.h"
-#include "../Basic Data Structures/runtime_assert.h"
-#include "../Propagators/Dynamic/Encoders/incremental_sequential_encoder.h"
-#include "../Propagators/Dynamic/Encoders/propagator_encoder.h"
-#include "../Propagators/Dynamic/Encoders/propagator_encoder.h"
+#include "../Utilities/runtime_assert.h"
 
-#include <iostream>
 #include <set>
 #include <time.h>
+#include <iostream>
 
 namespace Pumpkin
 {
@@ -31,24 +28,12 @@ bool GeneralisedTotaliserCP192::ReduceRightHandSide(int64_t new_rhs)
 		std::vector<BooleanLiteral> lits;
 		std::vector<uint64_t> weights;
 
-                int t2 = objective_literals.size();
-		for (WeightedLiteral& b : objective_literals)
+		for (PairWeightLiteral& b : objective_literals)
 		{
 			lits.push_back(b.literal);
 			weights.push_back(b.weight);
 		}
 		partial_sum_literals = encode(_hax_state, lits, weights, new_rhs);
-//                std::vector<BooleanLiteral> sum;
-//                for (int i = 0; i < new_rhs; ++i) {
-//                  BooleanLiteral l = BooleanLiteral(_hax_state->CreateNewVariable(), true);
-//                  sum.push_back(l);
-//                  partial_sum_literals.push_back(WeightedLiteral(l, 1));
-//                }
-
-//          CardinalityConstraint c(lits, 0, new_rhs ,  new Pumpkin::IncrementalSequentialEncoder::Factory());
-//          CardinalityConstraint c(lits, 0, new_rhs,  new Pumpkin::PropagatorEncoder::Factory());
-//          c.encoder_factory->add_dynamic_ = true;
-//                this->_hax_state->AddCardinality(c);
 		has_encoded = true;		
 		return true;
 	}
@@ -56,12 +41,9 @@ bool GeneralisedTotaliserCP192::ReduceRightHandSide(int64_t new_rhs)
 	{
 		//encoding exists, just need to add clauses reduce the right hand side
 		vector<BooleanLiteral> unit_clauses = update(partial_sum_literals, new_rhs);
-//                vector<BooleanLiteral> unit_clauses;
-//                for (int i = new_rhs; i < partial_sum_literals.size(); ++i)
-//                  unit_clauses.push_back(~partial_sum_literals[i].literal);
 		for (BooleanLiteral unit : unit_clauses)
 		{
-			bool ok = _hax_state->AddUnitClauseDuringSearch(unit);
+			bool ok = _hax_state->AddUnitClause(unit);
 			if (!ok) { return false; }
 		}
 		return true;
@@ -70,13 +52,13 @@ bool GeneralisedTotaliserCP192::ReduceRightHandSide(int64_t new_rhs)
 
 using namespace std;
 
-WeightedLiteral _global_hax_plw2(BooleanLiteral(BooleanVariable(1), true), 1);
+PairWeightLiteral _global_hax_plw2(BooleanLiteral(BooleanVariable(1), true), 1);
 
-BooleanLiteral GeneralisedTotaliserCP192::getLiteralForWeight(int weight, const vector<WeightedLiteral> &v)
+BooleanLiteral GeneralisedTotaliserCP192::getLiteralForWeight(int weight, const vector<PairWeightLiteral> &v)
 {
 	_global_hax_plw2.weight = weight;
 
-	auto iter = lower_bound(v.begin(), v.end(), _global_hax_plw2, [](const WeightedLiteral &p1, const WeightedLiteral &p2) {return p1.weight < p2.weight; });
+	auto iter = lower_bound(v.begin(), v.end(), _global_hax_plw2, [](const PairWeightLiteral &p1, const PairWeightLiteral &p2) {return p1.weight < p2.weight; });
 	assert(iter->weight == weight);
 	return iter->literal;
 
@@ -94,11 +76,11 @@ BooleanLiteral GeneralisedTotaliserCP192::getLiteralForWeight(int weight, const 
 	return BooleanLiteral();
 }
 
-int GeneralisedTotaliserCP192::getIndexOfLiteralForWeight(int weight, const vector<WeightedLiteral> &v)
+int GeneralisedTotaliserCP192::getIndexOfLiteralForWeight(int weight, const vector<PairWeightLiteral> &v)
 {
 	_global_hax_plw2.weight = weight;
 
-	auto iter = lower_bound(v.begin(), v.end(), _global_hax_plw2, [](const WeightedLiteral &p1, const WeightedLiteral &p2) {return p1.weight < p2.weight; });
+	auto iter = lower_bound(v.begin(), v.end(), _global_hax_plw2, [](const PairWeightLiteral &p1, const PairWeightLiteral &p2) {return p1.weight < p2.weight; });
 	assert(iter->weight == weight);
 	return iter - v.begin();
 
@@ -118,28 +100,28 @@ int GeneralisedTotaliserCP192::getIndexOfLiteralForWeight(int weight, const vect
 	return -1;
 }
 
-vector<WeightedLiteral> GeneralisedTotaliserCP192::create_generalised_totaliser_variables_based_on_children(vector<WeightedLiteral> &left_child, vector<WeightedLiteral> &right_child, int upper_bound)
+vector<PairWeightLiteral> GeneralisedTotaliserCP192::create_generalised_totaliser_variables_based_on_children(vector<PairWeightLiteral> &left_child, vector<PairWeightLiteral> &right_child, int upper_bound)
 {
 	set<int> unique_combinations;
 	//left + 0
-	for (WeightedLiteral &p : left_child)
+	for (PairWeightLiteral &p : left_child)
 	{
 		unique_combinations.insert(p.weight);
 	}
 	//right + 0
-	for (WeightedLiteral &p : right_child)
+	for (PairWeightLiteral &p : right_child)
 	{
 		unique_combinations.insert(p.weight);
 	}
 	//left + right
-	for (WeightedLiteral &p1 : left_child)
+	for (PairWeightLiteral &p1 : left_child)
 	{
-		for (WeightedLiteral &p2 : right_child)
+		for (PairWeightLiteral &p2 : right_child)
 		{
 			unique_combinations.insert(p1.weight + p2.weight);
 		}
 	}
-	vector<WeightedLiteral> ret;
+	vector<PairWeightLiteral> ret;
 	for (set<int>::iterator iter = unique_combinations.begin(); iter != unique_combinations.end(); ++iter)
 	{
 		if (*iter > upper_bound) {
@@ -149,33 +131,35 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::create_generalised_totaliser_
 		assert(*iter > 0);
 
 		BooleanLiteral p = BooleanLiteral(_hax_state->CreateNewVariable(), true);
-		ret.push_back(WeightedLiteral(p, *iter));
+		ret.push_back(PairWeightLiteral(p, *iter));
 	}
 	return ret;
 }
 
-vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_two_batches(vector<WeightedLiteral> &left_child, vector<WeightedLiteral> &right_child, int upper_bound, bool redundant_constraints)
+vector<PairWeightLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_two_batches(vector<PairWeightLiteral> &left_child, vector<PairWeightLiteral> &right_child, int upper_bound, bool redundant_constraints)
 {
-	vector<WeightedLiteral> ret = create_generalised_totaliser_variables_based_on_children(left_child, right_child, upper_bound);
+	vector<PairWeightLiteral> ret = create_generalised_totaliser_variables_based_on_children(left_child, right_child, upper_bound);
 
 	//merge using copy-pasted old code
 
 	//left[i] -> ret[i]
-	for (WeightedLiteral &p : left_child)
+	for (PairWeightLiteral &p : left_child)
 	{
 		assert(p.weight <= upper_bound);	
-		_hax_state->propagator_clausal_.clause_database_.AddBinaryClause(~p.literal, getLiteralForWeight(p.weight, ret), *_hax_state);
+		auto propagator = _hax_state->AddBinaryClause(~p.literal, getLiteralForWeight(p.weight, ret));
+		runtime_assert(propagator == NULL); //we expect no conflicts
 	}
 	//right[i] -> ret[i]
-	for (WeightedLiteral &p : right_child)
+	for (PairWeightLiteral &p : right_child)
 	{
 		assert(p.weight <= upper_bound);
-		_hax_state->propagator_clausal_.clause_database_.AddBinaryClause(~p.literal, getLiteralForWeight(p.weight, ret), *_hax_state);
+		auto propagator = _hax_state->AddBinaryClause(~p.literal, getLiteralForWeight(p.weight, ret));
+		runtime_assert(propagator == NULL);//we expect no conflicts
 	}
 	//left[i] + right[j] -> ret[i+j]
-	for (WeightedLiteral &p1 : left_child)
+	for (PairWeightLiteral &p1 : left_child)
 	{
-		for (WeightedLiteral &p2 : right_child)
+		for (PairWeightLiteral &p2 : right_child)
 		{
 			int sum = p1.weight + p2.weight;
 
@@ -183,11 +167,13 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_t
 			//otherwise, activating the p1 and p2 should lead to an empty clause
 			if (sum <= upper_bound)
 			{
-				_hax_state->propagator_clausal_.clause_database_.AddTernaryClause(~p1.literal, ~p2.literal, getLiteralForWeight(sum, ret), *_hax_state);
+				auto propagator = _hax_state->AddTernaryClause(~p1.literal, ~p2.literal, getLiteralForWeight(sum, ret));
+				runtime_assert(propagator == NULL);//we expect no conflicts
 			}
 			else
 			{
-				_hax_state->propagator_clausal_.clause_database_.AddBinaryClause(~p1.literal, ~p2.literal, *_hax_state);
+				auto propagator = _hax_state->AddBinaryClause(~p1.literal, ~p2.literal);
+				runtime_assert(propagator == NULL);//we expect no conflicts
 			}
 		}
 	}
@@ -220,7 +206,8 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_t
 				continue;
 			}
 
-			_hax_state->propagator_clausal_.clause_database_.AddBinaryClause(left_child[i].literal, ~ret[m+1].literal, *_hax_state);
+			auto propagator = _hax_state->AddBinaryClause(left_child[i].literal, ~ret[m+1].literal);
+			runtime_assert(propagator == NULL);//we expect no conflicts
 		}
 
 		for (int i = 0; i < right_child.size(); i++)
@@ -246,7 +233,8 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_t
 				continue;
 			}
 
-			_hax_state->propagator_clausal_.clause_database_.AddBinaryClause(right_child[i].literal, ~ret[m + 1].literal, *_hax_state);
+			auto propagator = _hax_state->AddBinaryClause(right_child[i].literal, ~ret[m + 1].literal);
+			runtime_assert(propagator == NULL);//we expect no conflicts
 		}
 
 		//not left[i] and not right[j] -> not ret[w[i-1]+w[j-1]+1]
@@ -274,7 +262,8 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_t
 
 				if (w_prev_left == 0 && w_prev_right == 0)
 				{
-					_hax_state->propagator_clausal_.clause_database_.AddTernaryClause(left_child[i].literal, right_child[j].literal, ~ret[0].literal, *_hax_state);
+					auto propagator = _hax_state->AddTernaryClause(left_child[i].literal, right_child[j].literal, ~ret[0].literal);
+					runtime_assert(propagator == NULL);//we expect no conflicts
 					continue;
 				}
 
@@ -285,7 +274,8 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_t
 					continue;
 				}
 
-				_hax_state->propagator_clausal_.clause_database_.AddTernaryClause(left_child[i].literal, right_child[j].literal, ~ret[m + 1].literal, *_hax_state);
+				auto propagator = _hax_state->AddTernaryClause(left_child[i].literal, right_child[j].literal, ~ret[m + 1].literal);
+				runtime_assert(propagator == NULL);//we expect no conflicts
 			}
 		}
 	}
@@ -293,14 +283,14 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_merge_t
 	return ret;
 }
 
-vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_bottom_up_tree(const vector<vector<WeightedLiteral> > &leafs, int upper_bound, bool redundant_constraints)
+vector<PairWeightLiteral> GeneralisedTotaliserCP192::generalised_totaliser_bottom_up_tree(const vector<vector<PairWeightLiteral> > &leafs, int upper_bound, bool redundant_constraints)
 {
 	assert(leafs.size() >= 1);
 
 	if (special_merge_strategy == false)
 	{
-		vector<vector<WeightedLiteral> > batch1, batch2;
-		vector<vector<WeightedLiteral> > *current_batch, *new_batch;
+		vector<vector<PairWeightLiteral> > batch1, batch2;
+		vector<vector<PairWeightLiteral> > *current_batch, *new_batch;
 
 		batch1 = leafs;
 		current_batch = &batch1;
@@ -311,9 +301,9 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_bottom_
 			new_batch->resize(0);
 			for (unsigned int i = 0; i < current_batch->size() / 2; i++)
 			{
-				vector<WeightedLiteral> &b1 = current_batch->at(2 * i);
-				vector<WeightedLiteral> &b2 = current_batch->at(2 * i + 1);
-				vector<WeightedLiteral> merged_batch = generalised_totaliser_merge_two_batches(b1, b2, upper_bound, redundant_constraints);
+				vector<PairWeightLiteral> &b1 = current_batch->at(2 * i);
+				vector<PairWeightLiteral> &b2 = current_batch->at(2 * i + 1);
+				vector<PairWeightLiteral> merged_batch = generalised_totaliser_merge_two_batches(b1, b2, upper_bound, redundant_constraints);
 
 				new_batch->push_back(merged_batch);
 			}
@@ -323,7 +313,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_bottom_
 				new_batch->push_back(current_batch->back());
 			}
 
-			vector<vector<WeightedLiteral> >  *temp(current_batch);
+			vector<vector<PairWeightLiteral> >  *temp(current_batch);
 			current_batch = new_batch;
 			new_batch = temp;
 		}
@@ -331,12 +321,12 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::generalised_totaliser_bottom_
 		return current_batch->at(0);
 	}
 	else {
-		assert(1 == 2);
+		runtime_assert(1 == 2);
 	}
 }
 
 //<= rhs constraint 
-vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, vector<BooleanLiteral> &lits, vector<uint64_t> &coeffs, uint64_t rhs)
+vector<PairWeightLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, vector<BooleanLiteral> &lits, vector<uint64_t> &coeffs, uint64_t rhs)
 {
 	runtime_assert(lits.size() > 0);
 	runtime_assert(lits.size() == coeffs.size());
@@ -344,7 +334,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 	time_t start_time;
 	time(&start_time);
 
-	vector<vector<WeightedLiteral> > relevant_variables;
+	vector<vector<PairWeightLiteral> > relevant_variables;
 
 	for (int i = 0; i < lits.size(); i++)
 	{
@@ -355,15 +345,15 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 		}
 		else if (coeffs[i] > rhs)
 		{
-			state->AddUnitClauseDuringSearch(~lits[i]);
+			state->AddUnitClause(~lits[i]);
 		}
 		else
 		{
-			WeightedLiteral p;
+			PairWeightLiteral p;
 			p.literal = lits[i];
 			p.weight = coeffs[i];
 
-			vector<WeightedLiteral> v;
+			vector<PairWeightLiteral> v;
 			v.push_back(p);
 
 			relevant_variables.push_back(v);
@@ -372,20 +362,20 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 
 	if (sorting_in_gte)
 	{
-//		printf("c sorting!\n");
+		printf("c sorting!\n");
 		if (block_sort_size == 1)
 		{
 			if (!stable_sort)
 			{
-				sort(relevant_variables.begin(), relevant_variables.end(), [](const vector<WeightedLiteral> &p1, const vector<WeightedLiteral> &p2) {return p1[0].weight < p2[0].weight; });
+				sort(relevant_variables.begin(), relevant_variables.end(), [](const vector<PairWeightLiteral> &p1, const vector<PairWeightLiteral> &p2) {return p1[0].weight < p2[0].weight; });
 			}
 			else
 			{
-				std::stable_sort(relevant_variables.begin(), relevant_variables.end(), [](const vector<WeightedLiteral> &p1, const vector<WeightedLiteral> &p2) {return p1[0].weight < p2[0].weight; });
+				std::stable_sort(relevant_variables.begin(), relevant_variables.end(), [](const vector<PairWeightLiteral> &p1, const vector<PairWeightLiteral> &p2) {return p1[0].weight < p2[0].weight; });
 			}
 		}
 		else {
-//			printf("c block sort!\n");
+			printf("c block sort!\n");
 			int block_size = relevant_variables.size() / block_sort_size;
 			for (int i = 0; i < block_sort_size; i++)
 			{
@@ -399,11 +389,11 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 
 				if (!stable_sort)
 				{
-					sort(relevant_variables.begin()+start, relevant_variables.begin()+end, [](const vector<WeightedLiteral> &p1, const vector<WeightedLiteral> &p2) {return p1[0].weight < p2[0].weight; });
+					sort(relevant_variables.begin()+start, relevant_variables.begin()+end, [](const vector<PairWeightLiteral> &p1, const vector<PairWeightLiteral> &p2) {return p1[0].weight < p2[0].weight; });
 				}
 				else
 				{
-					std::stable_sort(relevant_variables.begin()+start, relevant_variables.begin()+end, [](const vector<WeightedLiteral> &p1, const vector<WeightedLiteral> &p2) {return p1[0].weight < p2[0].weight; });
+					std::stable_sort(relevant_variables.begin()+start, relevant_variables.begin()+end, [](const vector<PairWeightLiteral> &p1, const vector<PairWeightLiteral> &p2) {return p1[0].weight < p2[0].weight; });
 				}
 			}
 
@@ -413,7 +403,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 		time_t end_time;
 		time(&end_time);
 		double seconds = difftime(start_time, end_time);
-//		printf("c sorting took about %f\n", seconds);
+		printf("c sorting took about %f\n", seconds);
 
 
 
@@ -439,13 +429,13 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 				val *= 2;
 			}
 		}
-		vector<vector<WeightedLiteral> > reordered_variables;
+		vector<vector<PairWeightLiteral> > reordered_variables;
 		for (int i = 0; i < pattern.size(); i++)
 		{
-			vector<WeightedLiteral> temp;
-			WeightedLiteral temp2(BooleanLiteral(BooleanVariable(1), true), pattern[i]);
+			vector<PairWeightLiteral> temp;
+			PairWeightLiteral temp2(BooleanLiteral(BooleanVariable(1), true), pattern[i]);
 			temp.push_back(temp2);
-			auto iter = lower_bound(relevant_variables.begin(), relevant_variables.end(), temp, [](const vector<WeightedLiteral> &p1, const vector<WeightedLiteral> &p2) { return p1[0].weight < p2[0].weight; });
+			auto iter = lower_bound(relevant_variables.begin(), relevant_variables.end(), temp, [](const vector<PairWeightLiteral> &p1, const vector<PairWeightLiteral> &p2) { return p1[0].weight < p2[0].weight; });
 
 			while (iter != relevant_variables.end() && iter->at(0).weight == pattern[i])
 			{
@@ -481,13 +471,13 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 			}
 		}
 
-		vector<vector<WeightedLiteral> > reordered_variables;
+		vector<vector<PairWeightLiteral> > reordered_variables;
 		for (int i = 0; i < pattern.size(); i++)
 		{
-			vector<WeightedLiteral> temp;
-			WeightedLiteral temp2(BooleanLiteral(BooleanVariable(1), true), pattern[i]);
+			vector<PairWeightLiteral> temp;
+			PairWeightLiteral temp2(BooleanLiteral(BooleanVariable(1), true), pattern[i]);
 			temp.push_back(temp2);
-			auto iter = lower_bound(relevant_variables.begin(), relevant_variables.end(), temp, [](const vector<WeightedLiteral> &p1, const vector<WeightedLiteral> &p2) { return p1[0].weight < p2[0].weight; });
+			auto iter = lower_bound(relevant_variables.begin(), relevant_variables.end(), temp, [](const vector<PairWeightLiteral> &p1, const vector<PairWeightLiteral> &p2) { return p1[0].weight < p2[0].weight; });
 
 			while (iter != relevant_variables.end() && iter->at(0).weight == pattern[i])
 			{
@@ -501,21 +491,21 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 	if (merge_identical_weights == 3)
 	{
 		assert(relevant_variables[0].size() == 1);
-		vector<vector<WeightedLiteral> > merged_variables;
+		vector<vector<PairWeightLiteral> > merged_variables;
 		int i = 0;
 		int current_weight = relevant_variables[0][0].weight;
-		vector<vector<WeightedLiteral> > vars_in_block;
+		vector<vector<PairWeightLiteral> > vars_in_block;
 		while (i < relevant_variables.size())
 		{
 			if (relevant_variables[i][0].weight != current_weight)
 			{
-//				cout << "c merging " << vars_in_block.size() << " of " << current_weight << endl;
+				cout << "c merging " << vars_in_block.size() << " of " << current_weight << endl;
 				merged_variables.push_back(generalised_totaliser_bottom_up_tree(vars_in_block, rhs, this->backward_propagation));
-//				cout << "c \t" << merged_variables.back().size() << endl;
+				cout << "c \t" << merged_variables.back().size() << endl;
 				vars_in_block.clear();
 				current_weight = relevant_variables[i][0].weight;
 			}
-			vector<WeightedLiteral> hehe;
+			vector<PairWeightLiteral> hehe;
 			hehe.push_back(relevant_variables[i][0]);
 			vars_in_block.push_back(hehe);
 			i++;
@@ -525,7 +515,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 		relevant_variables = merged_variables;
 	}
 
-	std::vector<WeightedLiteral> _output_literals;
+	std::vector<PairWeightLiteral> _output_literals;
 	
 	if (relevant_variables.size() >= 1 )
 		_output_literals = generalised_totaliser_bottom_up_tree(relevant_variables, rhs, this->backward_propagation);
@@ -533,7 +523,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 	time_t end_time;
 	time(&end_time);
 	double seconds = difftime(start_time, end_time);
-//	printf("c gte took about %f\n", seconds);
+	printf("c gte took about %f\n", seconds);
 
 	//for (auto iter = _output_literals.begin(); iter != _output_literals.end(); ++iter)
 	//{
@@ -544,7 +534,7 @@ vector<WeightedLiteral> GeneralisedTotaliserCP192::encode(SolverState *state, ve
 }
 
 //<= rhs
-vector<BooleanLiteral> GeneralisedTotaliserCP192::update(vector<WeightedLiteral> &output_literals, uint64_t rhs)
+vector<BooleanLiteral> GeneralisedTotaliserCP192::update(vector<PairWeightLiteral> &output_literals, uint64_t rhs)
 {
 	vector<BooleanLiteral> ret;
 	for (auto iter = output_literals.rbegin(); iter != output_literals.rend(); ++iter)

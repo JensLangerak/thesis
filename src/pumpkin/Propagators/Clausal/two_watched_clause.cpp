@@ -1,5 +1,6 @@
 #include "two_watched_clause.h"
 #include "../../Engine/solver_state.h"
+#include "../../Utilities/runtime_assert.h"
 
 #include <set>
 #include <assert.h>
@@ -128,63 +129,26 @@ bool TwoWatchedClause::WatcherComparison(const BooleanLiteral p1, const BooleanL
 	{
 		return false;
 	}
-	else //one of the variables is unassigned
+	//at this point at least one of the two literals must be unassigned
+	else if (assignments.IsAssignedTrue(p1))
 	{
-		return assignments.IsAssigned(p1) < assignments.IsAssigned(p2);
-	}
-	
-	//no means of distinguishing between two unassigned literals
-/*	if (state.assignments_.IsAssigned(l1) == false && state.assignments_.IsAssigned(l2) == false)
-	{
-		return false;
-	}
-
-	//todo I think there's a bug here, both conditions are returning false
-
-	//we prefer an unassigned literal over an assigned one
-	if (state.assignments_.IsAssigned(l1) == true && state.assignments_.IsAssigned(l2) == false)
-	{
-		return false;
-	}
-	//unassigned is better
-	if (state.assignments_.IsAssigned(l1) == false && state.assignments_.IsAssigned(l2) == true)
-	{
-		return false;
-	}
-	assert(state.assignments_.IsAssigned(l1) == true && state.assignments_.IsAssigned(l2) == true);
-
-	//prefer the literal which is assigned true
-
-	if (state.assignments_.IsAssignedTrue(l1) == true && state.assignments_.IsAssignedTrue(l2) == true)
-	{
-		//the lowest true assignment level is preferable
-		return state.assignments_.GetAssignmentLevel(l1.Variable()) < state.assignments_.GetAssignmentLevel(l2.Variable());
-	}
-
-	if (state.assignments_.IsAssignedTrue(l1) == true && state.assignments_.IsAssignedTrue(l2) == false)
-	{
+		runtime_assert(assignments.IsAssigned(p2) == false);
 		return true;
 	}
-
-	if (state.assignments_.IsAssignedTrue(l1) == false && state.assignments_.IsAssignedTrue(l2) == true)
+	else if (assignments.IsAssignedTrue(p2))
 	{
+		runtime_assert(assignments.IsAssigned(p1) == false);
 		return false;
 	}
-
-	//only remaining option
-	assert(state.assignments_.IsAssignedFalse(l1) == true && state.assignments_.IsAssignedFalse(l2) == true);
-	
-	//prefer the highest decision level
-	return state.assignments_.GetAssignmentLevel(l1.Variable()) > state.assignments_.GetAssignmentLevel(l2.Variable());*/
+	else
+	{
+		return assignments.IsAssigned(p1) < assignments.IsAssigned(p2);
+	}	
 }
 
 bool TwoWatchedClause::updateLBD(const SolverState & state)
 {
-	//HAX TODO because of adding clauses during search
-	if (state.GetCurrentDecisionLevel() == 0) { return false; }
-
-
-	if (best_literal_blocking_distance_ <= 2) { return false; } //could activate this since no point in updating if two or lower
+	if (best_literal_blocking_distance_ <= 2) { return false; } //no reason to update below two since anyway clauses with LBD=2 are never deleted
 
 	int old_best = best_literal_blocking_distance_;
 	best_literal_blocking_distance_ = std::min(best_literal_blocking_distance_, computeLBD(literals_, state));
@@ -207,15 +171,14 @@ bool TwoWatchedClause::IsSatisfied(const SolverState & state)
 int TwoWatchedClause::computeLBD(std::vector<BooleanLiteral>& literals, const SolverState & state)
 {
 	static std::vector<int> seen_decision_level(state.GetNumberOfVariables()+1, false);
-
 	if (seen_decision_level.size() < state.GetNumberOfVariables() + 1) { seen_decision_level.resize(state.GetNumberOfAssignedVariables() + 1, false); } //+1 since variables are indexed starting from 1
 	
 	int counter = 0;
 	for (BooleanLiteral lit : literals)
 	{
-		int i = state.assignments_.GetAssignmentLevel(lit.Variable());
-		counter += (seen_decision_level[i] == false);
-		seen_decision_level[i] = true;
+		int decision_level = state.assignments_.GetAssignmentLevel(lit.Variable());
+		counter += (decision_level != 0 && seen_decision_level[decision_level] == false);
+		seen_decision_level[decision_level] = true;
 	}
 	//clear the seen_decision_level data structure - all of its values should be false for the next function call
 	for (BooleanLiteral lit : literals)
@@ -229,37 +192,32 @@ int TwoWatchedClause::computeLBD(std::vector<BooleanLiteral>& literals, const So
 int TwoWatchedClause::computeLBD(LiteralVector & literals, const SolverState & state)
 {
 	static std::vector<int> seen_decision_level(state.GetNumberOfVariables() + 1, false);
-
 	if (seen_decision_level.size() < state.GetNumberOfVariables() + 1) { seen_decision_level.resize(state.GetNumberOfAssignedVariables() + 1, false); } //+1 since variables are indexed starting from 1
 																																						//count the number of unique decision levels by using the seen_decision_level to store whether or not a particular decision level has already been counted
 	int counter = 0;
 	for (BooleanLiteral lit : literals)
 	{
-          if (state.assignments_.IsAssigned(lit)) {
-            int i = state.assignments_.GetAssignmentLevel(lit.Variable());
-            counter += (seen_decision_level[i] == false);
-            seen_decision_level[i] = true;
-          }
+		if (state.assignments_.IsAssigned(lit))
+		{
+			int decision_level = state.assignments_.GetAssignmentLevel(lit.Variable());
+			counter += (decision_level != 0 && seen_decision_level[decision_level] == false);
+			seen_decision_level[decision_level] = true;
+		}
+		else //for unassigned literals, pesimistically assume that that each unassigned literal will be set at a different decision level
+		{
+			counter++;
+		}
 	}
 	//clear the seen_decision_level data structure - all of its values should be false for the next function call
 	for (BooleanLiteral lit : literals)
 	{
-          if (state.assignments_.IsAssigned(lit)) {
-            int i = state.assignments_.GetAssignmentLevel(lit.Variable());
-            seen_decision_level[i] = false;
-          }
+		if (state.assignments_.IsAssigned(lit))
+		{
+			int decision_level = state.assignments_.GetAssignmentLevel(lit.Variable());
+			seen_decision_level[decision_level] = false;
+		}		
 	}
 	return counter;
-}
-
-ExplanationClausal * TwoWatchedClause::ExplainLiteralPropagation(BooleanLiteral literal) const
-{
-	return new ExplanationClausal(literals_, 0);
-}
-
-ExplanationClausal * TwoWatchedClause::ExplainFailure() const
-{
-	return new ExplanationClausal(literals_);
 }
 
 WatchedLiterals TwoWatchedClause::GetWatchedLiterals() const

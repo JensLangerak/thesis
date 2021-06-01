@@ -3,8 +3,8 @@
 
 #include "watched_pseudo_boolean_constraint.h"
 #include "../propagator_generic.h"
-#include "../../Basic Data Structures/small_helper_structures.h"
-#include "../../Basic Data Structures/learned_pseudo_boolean_constraint.h"
+#include "../../Utilities/small_helper_structures.h"
+#include "../../Utilities/learned_pseudo_boolean_constraint.h"
 
 namespace Pumpkin
 {

@@ -1,7 +1,7 @@
 #ifndef WATCH_LIST_PSEUDO_BOOLEAN_H
 #define WATCH_LIST_PSEUDO_BOOLEAN_H
 
-#include "../../Basic Data Structures/boolean_literal.h"
+#include "../../Utilities/boolean_literal.h"
 #include "watched_pseudo_boolean_constraint.h"
 #include "watcher_pseudo_boolean.h"
 

@@ -1,4 +1,5 @@
 #include "reason_clausal.h"
+#include "../../Utilities/runtime_assert.h"
 
 namespace Pumpkin
 {
@@ -7,7 +8,8 @@ ReasonClausal::ReasonClausal(TwoWatchedClause * clause):
 	explanation_(0),
 	scaling_factor_(1)
 {
-	explanation_ = clause->ExplainFailure();
+	runtime_assert(1 == 2); //disabled for now
+	//explanation_ = clause->ExplainFailure();
 }
 
 /*ReasonClausal::ReasonClausal(TwoWatchedClause * clause, BooleanLiteral propagated_literal):
@@ -19,7 +21,7 @@ ReasonClausal::ReasonClausal(TwoWatchedClause * clause):
 
 ReasonClausal::~ReasonClausal()
 {
-	delete explanation_;
+	//delete explanation_;
 }
 
 void ReasonClausal::RoundToOne(BooleanLiteral resolving_literal, SolverState & state)

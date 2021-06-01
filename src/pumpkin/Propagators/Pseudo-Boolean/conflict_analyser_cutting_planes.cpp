@@ -1,6 +1,6 @@
 #include "conflict_analyser_cutting_planes.h"
-#include "../../Basic Data Structures/learned_pseudo_boolean_constraint_iterator.h"
-#include "../../Basic Data Structures/runtime_assert.h"
+#include "../../Utilities/learned_pseudo_boolean_constraint_iterator.h"
+#include "../../Utilities/runtime_assert.h"
 #include "../../Engine/constraint_satisfaction_solver.h"
 
 #include <fstream>
