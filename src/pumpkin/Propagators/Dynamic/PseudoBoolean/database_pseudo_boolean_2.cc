@@ -11,8 +11,8 @@ DatabasePseudoBoolean2::DatabasePseudoBoolean2(uint64_t num_vars)
     : watch_list_true_(num_vars) {}
 
 
-WatchedPseudoBooleanConstraint2* DatabasePseudoBoolean2::AddPermanentConstraint(PseudoBooleanConstraint &constraint, SolverState & state) {
-  WatchedPseudoBooleanConstraint2 * watched = new WatchedPseudoBooleanConstraint2(constraint);
+WatchedPseudoBooleanConstraint2* DatabasePseudoBoolean2::AddPermanentConstraint(PseudoBooleanConstraint &constraint, IEncoder<PseudoBooleanConstraint>::IFactory *encoding_factory, SolverState & state) {
+  WatchedPseudoBooleanConstraint2 * watched = new WatchedPseudoBooleanConstraint2(constraint, encoding_factory);
   if (watched->encoder_->EncodingAddAtStart()) {
     watched->encoder_->Encode(state);
   }

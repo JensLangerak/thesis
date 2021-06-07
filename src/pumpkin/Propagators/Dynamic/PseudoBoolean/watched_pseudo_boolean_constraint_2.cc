@@ -13,8 +13,8 @@ bool CompareByWeight(const WeightedLiteral &a, WeightedLiteral &b) {
 }
 
 WatchedPseudoBooleanConstraint2::WatchedPseudoBooleanConstraint2(
-    PseudoBooleanConstraint &constraint)
-    : encoder_(constraint.encoder_factory->Create(constraint)),
+    PseudoBooleanConstraint &constraint, IEncoder<PseudoBooleanConstraint>::IFactory * encoding_factory)
+    : encoder_(encoding_factory->Create(constraint)),
       max_(constraint.right_hand_side), current_sum_value_(0),
       decision_level_sums_(std::stack<DecisionLevelCount>()) {
   assert(constraint.literals.size() == constraint.coefficients.size());

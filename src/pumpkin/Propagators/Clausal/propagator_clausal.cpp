@@ -159,7 +159,6 @@ bool PropagatorClausal::PropagateLiteral(BooleanLiteral true_literal, SolverStat
 		//inspect if the cached true_literal is already set to true
 		//if so, no need to go further in the memory to check the clause
 		//often this literal will be true in practice so it is a good heuristic to check
-                assert(watches[current_index].cached_literal_.Variable().index_ <= 100000);
 		if (state.assignments_.IsAssignedTrue(watches[current_index].cached_literal_))
 		{
 			watches[end_position] = watches[current_index]; //keep the watch
@@ -178,7 +177,6 @@ bool PropagatorClausal::PropagateLiteral(BooleanLiteral true_literal, SolverStat
 		if (state.assignments_.IsAssignedTrue(watched_clause->literals_[0]) == true) 
 		{
 			watches[current_index].cached_literal_ = watched_clause->literals_[0]; //take the true literal as the new cache
-                        assert(watches[current_index].cached_literal_.Variable().index_ <= 100000);
 			watches[end_position] = watches[current_index]; //keep the watch
 			end_position++;
 			continue; //the clause is satisfied, no propagation can take place, go to the next clause

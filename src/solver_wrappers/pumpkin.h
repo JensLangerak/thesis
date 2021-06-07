@@ -18,7 +18,7 @@ public:
   enum class CardinalityOption{ Totolizer, Sequential, Propagator};
   inline Pumpkin(::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * encoder_factory, int start_upperbound) : optimisation_encoder_factory_(encoder_factory), constraint_encoder_factory_(encoder_factory),solved_(false), start_uppberboud_(start_upperbound) {};
   inline Pumpkin(::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * optimisation_encoder_factory, ::Pumpkin::IEncoder<::Pumpkin::PseudoBooleanConstraint>::IFactory * constraint_encoder_factory,int start_upperbound) : optimisation_encoder_factory_(optimisation_encoder_factory), constraint_encoder_factory_(constraint_encoder_factory),solved_(false), start_uppberboud_(start_upperbound) {};
-  inline Pumpkin(::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory * encoder_factory, int start_upperbound) : optimisation_encoder_factory_(nullptr), solved_(false), start_uppberboud_(start_upperbound) {assert(false);};
+//  inline Pumpkin(::Pumpkin::IEncoder<::Pumpkin::CardinalityConstraint>::IFactory * encoder_factory, int start_upperbound) : optimisation_encoder_factory_(nullptr), solved_(false), start_uppberboud_(start_upperbound) {assert(false);};
 
   bool Solve(const sat::SatProblem &p) override;
   bool Optimize(const sat::SatProblem &p) override;

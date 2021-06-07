@@ -26,6 +26,6 @@ bool PropagatorEncoder<T>::UpdateMax(int max, SolverState &state) {
   return true;
 }
 
-template class  PropagatorEncoder<CardinalityConstraint>;
+//template class  PropagatorEncoder<CardinalityConstraint>;
 template class  PropagatorEncoder<PseudoBooleanConstraint>;
 }

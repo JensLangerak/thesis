@@ -21,6 +21,7 @@ public:
   /// create helper vars and therefore increase the final amount of vars.
   /// \param nr_vars the number of vars int the sat problem.
   explicit SatProblem(int nr_vars) : nr_vars_(nr_vars < 0 ? 0 : nr_vars){};
+  SatProblem() : SatProblem(0) {};
 
   /// Add the clause to the sat problem.
   /// \param lits the clause

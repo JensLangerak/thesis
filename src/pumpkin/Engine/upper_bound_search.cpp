@@ -138,7 +138,7 @@ std::vector<PairWeightLiteral> UpperBoundSearch::EncodeInitialUpperBound(Constra
             weights.push_back(objective_function.GetWeight(l));
           }
           //TODO encoder
-          PseudoBooleanConstraint constraint(lits, weights, upper_bound, nullptr);
+          PseudoBooleanConstraint constraint(lits, weights, upper_bound, upper_bound_adder_);
           upper_bound_constraint_ = upper_bound_adder_->AddConstraintWithModifier(constraint, solver.state_);
 	  return std::vector<PairWeightLiteral>();
         }

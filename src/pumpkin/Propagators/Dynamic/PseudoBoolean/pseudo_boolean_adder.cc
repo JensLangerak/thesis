@@ -21,13 +21,11 @@ PseudoBooleanAdder::CreateWatchedConstraint(PseudoBooleanConstraint c,
   if (!propagator_added_)
     AddPropagator(state);
 
-  if (c.encoder_factory == nullptr) {
     if (encoder_factory == nullptr)
     encoder_factory =
         new PropagatorEncoder<PseudoBooleanConstraint>::Factory();
-    c.encoder_factory = encoder_factory;
-  }
-  return propagator_->pseudo_boolean_database_.AddPermanentConstraint(c, state);
+
+  return propagator_->pseudo_boolean_database_.AddPermanentConstraint(c, encoder_factory, state);
 }
 void PseudoBooleanAdder::AddPropagator(SolverState &state) {
   if (!state.HasPropagator(propagator_)) {

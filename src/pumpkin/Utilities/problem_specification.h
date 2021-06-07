@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <string>
-
+#include "../Propagators/i_constraint_adder.h"
 namespace Pumpkin
 {
 
@@ -23,39 +23,41 @@ struct WeightedLiteral {
 struct PseudoBooleanConstraint
 {
 	PseudoBooleanConstraint(std::vector<BooleanLiteral>& lits, std::vector<uint32_t>& coefs, int rhs,
-                                IEncoder<PseudoBooleanConstraint>::IFactory *encoder_factory) :encoder_factory(encoder_factory), literals(lits), coefficients(coefs), right_hand_side(rhs) {}
+                                IConstraintAdder<PseudoBooleanConstraint> * pseudo_boolean_adder) : pseudo_boolean_adder(pseudo_boolean_adder), literals(lits), coefficients(coefs), right_hand_side(rhs) {
+          int tes=2;
+        }
 
 	std::vector<BooleanLiteral> literals;
 	std::vector<uint32_t> coefficients;
 	int right_hand_side;
 
-        IEncoder<PseudoBooleanConstraint>::IFactory *encoder_factory;
+        IConstraintAdder<PseudoBooleanConstraint> * pseudo_boolean_adder;
 };
 
-struct CardinalityConstraint
-{
-  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max,  IEncoder<CardinalityConstraint>::IFactory *encoder_factory) : encoder_factory(encoder_factory), literals(lits), min(min), max(max) {};
-  std::vector<BooleanLiteral> literals;
-  int min;
-  int max;
-  IEncoder<CardinalityConstraint>::IFactory *encoder_factory;
-};
-
-struct SumConstraint {
-  SumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<BooleanLiteral> & outputs,  IEncoder<SumConstraint>::IFactory *encoder_factory) : input_literals(inputs), output_literals(outputs), encoder_factory(encoder_factory) {};
-  std::vector<BooleanLiteral> input_literals;
-  std::vector<BooleanLiteral> output_literals;
-  IEncoder<SumConstraint>::IFactory *encoder_factory;
-};
-
-struct PbSumConstraint {
-  PbSumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<uint32_t> & input_coefficients, std::vector<BooleanLiteral> & outputs, std::vector<uint32_t > & output_coefficients, IEncoder<PbSumConstraint>::IFactory *encoder_factory) : input_literals(inputs), input_coefficients(input_coefficients), output_literals(outputs), output_coefficients(output_coefficients), encoder_factory(encoder_factory) {};
-  std::vector<BooleanLiteral> input_literals;
-  std::vector<uint32_t> input_coefficients;
-  std::vector<BooleanLiteral> output_literals;
-  std::vector<uint32_t> output_coefficients;
-  IEncoder<PbSumConstraint>::IFactory *encoder_factory;
-};
+//struct CardinalityConstraint
+//{
+//  CardinalityConstraint(std::vector<BooleanLiteral> &lits, int min, int max,  IEncoder<CardinalityConstraint>::IFactory *encoder_factory) : encoder_factory(encoder_factory), literals(lits), min(min), max(max) {};
+//  std::vector<BooleanLiteral> literals;
+//  int min;
+//  int max;
+//  IEncoder<CardinalityConstraint>::IFactory *encoder_factory;
+//};
+//
+//struct SumConstraint {
+//  SumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<BooleanLiteral> & outputs,  IEncoder<SumConstraint>::IFactory *encoder_factory) : input_literals(inputs), output_literals(outputs), encoder_factory(encoder_factory) {};
+//  std::vector<BooleanLiteral> input_literals;
+//  std::vector<BooleanLiteral> output_literals;
+//  IEncoder<SumConstraint>::IFactory *encoder_factory;
+//};
+//
+//struct PbSumConstraint {
+//  PbSumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<uint32_t> & input_coefficients, std::vector<BooleanLiteral> & outputs, std::vector<uint32_t > & output_coefficients, IEncoder<PbSumConstraint>::IFactory *encoder_factory) : input_literals(inputs), input_coefficients(input_coefficients), output_literals(outputs), output_coefficients(output_coefficients), encoder_factory(encoder_factory) {};
+//  std::vector<BooleanLiteral> input_literals;
+//  std::vector<uint32_t> input_coefficients;
+//  std::vector<BooleanLiteral> output_literals;
+//  std::vector<uint32_t> output_coefficients;
+//  IEncoder<PbSumConstraint>::IFactory *encoder_factory;
+//};
 
 class ProblemSpecification
 {

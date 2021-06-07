@@ -10,7 +10,7 @@ namespace simple_sat_solver::max_sat {
 using namespace benchmark;
 class MaxSatBenchMark : public Benchmark {
 protected:
-  Pumpkin::ProblemSpecification *GetProblem() override;
+  Pumpkin::ProblemSpecification GetProblem() override;
 };
 }
 

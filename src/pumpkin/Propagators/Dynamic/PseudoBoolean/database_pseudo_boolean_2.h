@@ -8,6 +8,7 @@
 #include "../database_dynamic_constraint.h"
 #include "../watcher_dynamic_constraint.h"
 #include "../watch_list_dynamic.h"
+#include "../Encoders/i_encoder.h"
 #include <cstdint>
 namespace Pumpkin {
 class SolverState;
@@ -22,7 +23,7 @@ public:
   /// \param constraint
   /// \param state
   /// \return the constructed constraint.
-  WatchedPseudoBooleanConstraint2* AddPermanentConstraint(PseudoBooleanConstraint &constraint,
+  WatchedPseudoBooleanConstraint2* AddPermanentConstraint(PseudoBooleanConstraint &constraint, IEncoder<PseudoBooleanConstraint>::IFactory * encoding_factory,
                                                           SolverState &state);
 
   WatchListDynamic<WatchedPseudoBooleanConstraint2, WatcherDynamicConstraint<WatchedPseudoBooleanConstraint2>> watch_list_true_;

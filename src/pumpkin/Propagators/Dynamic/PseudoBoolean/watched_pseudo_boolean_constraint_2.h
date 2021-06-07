@@ -15,7 +15,7 @@ class SolverState;
 class PseudoBooleanConstraint;
 class WatchedPseudoBooleanConstraint2 : public WatchedDynamicConstraint {
 public:
-  WatchedPseudoBooleanConstraint2(PseudoBooleanConstraint &constraint);
+  WatchedPseudoBooleanConstraint2(PseudoBooleanConstraint &constraint, IEncoder<PseudoBooleanConstraint>::IFactory *encoding_factory);
   ~WatchedPseudoBooleanConstraint2();
   ExplanationGeneric *
   ExplainLiteralPropagation(BooleanLiteral literal, SolverState &state, ExplanationDynamicConstraint * explanation); // returns the conjunction that forces the assignment of input

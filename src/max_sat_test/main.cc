@@ -144,9 +144,9 @@ void TestOrder(std::string test_file_path, std::string test_file, std::string lo
 using namespace simple_sat_solver::max_sat;
 using namespace simple_sat_solver::benchmark;
 int main(int argc, char *argv[]) {
-  MaxSatBenchMark * benchnark = new MaxSatBenchMark();
+  MaxSatBenchMark benchnark;
   if (argc >= 4) {
-    Benchmark::BenchmarkMain(argc, argv, benchnark);
+    benchnark.Main(argc, argv);
   } else {
     //  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/pima_train_3_CNF_5_20.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
 //  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/d4.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
@@ -160,13 +160,13 @@ int main(int argc, char *argv[]) {
 //  }
 
 
-    benchnark->solver_type_ = simple_sat_solver::benchmark::SolverType::PROPAGATOR;
-    benchnark->problem_file_full_path_ =test_file;
-    benchnark->log_dir_ = log_dir;
-    benchnark->delay_factor_ = 0.0;
-    benchnark->start_penalty_ = 100000;
+    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::INCREMENTAL;
+    benchnark.problem_file_full_path_ =test_file;
+    benchnark.log_dir_ = log_dir;
+    benchnark.delay_factor_ = 0.4;
+    benchnark.start_penalty_ = 100000;
 
-    Benchmark::BenchmarkMain(benchnark);
+    benchnark.Main();
   }
 
 

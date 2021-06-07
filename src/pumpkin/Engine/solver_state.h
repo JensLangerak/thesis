@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../Propagators/Clausal/propagator_clausal.h"
-#include "../Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean_2.h"
+#include "../Propagators/Dynamic/watched_dynamic_constraint.h"
+#include "../Propagators/Dynamic/watcher_dynamic_constraint.h"
 #include "../Propagators/Pseudo-Boolean/propagator_pseudo_boolean_constraints.h"
 #include "../Utilities/assignments.h"
 #include "../Utilities/boolean_assignment_vector.h"

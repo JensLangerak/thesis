@@ -21,6 +21,8 @@ public:
   virtual void AddConstraint(C &constraint, SolverState& state) =0;
   virtual IPseudoBooleanConstraintModifier * AddConstraintWithModifier(PseudoBooleanConstraint &constraint, SolverState& state) = 0;
   virtual PropagatorGeneric * GetPropagator() = 0;
+  int debug_code = 0;
+
 };
 
 } // namespace Pumpkin

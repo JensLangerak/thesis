@@ -39,7 +39,7 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification*
 	for (BooleanLiteral unit_literal : problem_specification->unit_clauses_) { state_.AddUnitClause(unit_literal); }
 	for (auto& clause : problem_specification->clauses_) { state_.AddClause(clause); }
         for (auto pb : problem_specification->pseudo_boolean_constraints_) {
-          parameters.optimisation_constraint_wrapper_
+          pb.pseudo_boolean_adder
               ->AddConstraintWithModifier(pb, state_);
         }
 

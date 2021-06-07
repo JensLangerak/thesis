@@ -14,7 +14,7 @@ namespace simple_sat_solver::ctt {
 class CttConverter {
 public:
   explicit CttConverter(Ctt problem);
-  SatProblem GetSatProblem() { return sat_problem_;};
+  SatProblem *GetSatProblem() { return &sat_problem_;};
   std::vector<CttAssignment> ConvertSolution(std::vector<bool> sat_solution);
 
   int ValidateSolution(std::vector<CttAssignment> solution);
