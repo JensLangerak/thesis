@@ -65,4 +65,4 @@ add_library(utilities
         stopwatch.h
         vector_object_indexed.h
         )
-target_link_libraries(utilities PRIVATE zlib PUBLIC encoders)
+target_link_libraries(utilities PRIVATE zlibstatic PUBLIC encoders)
