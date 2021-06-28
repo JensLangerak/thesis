@@ -14,4 +14,4 @@ add_library(engine
         upper_bound_search.h
         )
 
-target_link_libraries(engine utilities propagators pseudo_boolean_encoders)
+target_link_libraries(engine utilities logger propagators pseudo_boolean_encoders)

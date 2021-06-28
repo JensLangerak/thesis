@@ -1,4 +1,5 @@
 #include "solution_tracker.h"
+#include "../../logger/logger.h"
 #include "runtime_assert.h"
 
 #include <iostream>
@@ -31,7 +32,8 @@ bool SolutionTracker::UpdateBestSolution(const BooleanAssignmentVector& solution
 		if (new_upper_bound < upper_bound_) 
 		{ 
 			std::cout << "o " << new_upper_bound << "\nc t = " << stopwatch_.TimeElapsedInSeconds() << "\n";
-			upper_bound_ = new_upper_bound;			
+                        simple_sat_solver::logger::Logger::Log2("New upperbound: " + std::to_string(new_upper_bound));
+			upper_bound_ = new_upper_bound;
 			time_stamps_.AddTimePoint(time_t(stopwatch_.TimeElapsedInSeconds()), new_upper_bound);
 		}
 		else

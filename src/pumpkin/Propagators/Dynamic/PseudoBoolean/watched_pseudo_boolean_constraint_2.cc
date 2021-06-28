@@ -126,15 +126,15 @@ void WatchedPseudoBooleanConstraint2::UpdateCounts(
     lit_count_[l.ToPositiveInteger()]++;
   }
   if (encoder_->encoding_strategy_ ==
-          IEncoder<PseudoBooleanConstraint>::DYNAMIC ||
+          DYNAMIC ||
       encoder_->encoding_strategy_ ==
-          IEncoder<PseudoBooleanConstraint>::INCREMENTAL) {
+          INCREMENTAL) {
     bool add_partial = encoder_->EncodingPartialAdded(); // TODO scheduled
 
     if (!add_partial) {
       // TODO
       if (encoder_->encoding_strategy_ ==
-          IEncoder<PseudoBooleanConstraint>::INCREMENTAL) {
+          INCREMENTAL) {
         int sum = 0;
         for (auto wl : unencoded_constraint_literals_) {
           BooleanLiteral l = wl.literal;
@@ -153,7 +153,7 @@ void WatchedPseudoBooleanConstraint2::UpdateCounts(
       if (!encoder_->EncodingAdded()) {
         state.scheduled_dynamic_constraints_.push_back(this);
         if (encoder_->encoding_strategy_ ==
-            IEncoder<PseudoBooleanConstraint>::INCREMENTAL) {
+            INCREMENTAL) {
           if (encoder_->EncodingPartialAdded()) {
             for (BooleanLiteral l : lits) {
               if (lit_count_[l.ToPositiveInteger()] *
@@ -188,10 +188,10 @@ void WatchedPseudoBooleanConstraint2::AddScheduledEncoding(SolverState &state) {
   if (encoder_->EncodingAdded())
     return;
 
-  if (encoder_->encoding_strategy_==IEncoder<PseudoBooleanConstraint>::DYNAMIC) {
+  if (encoder_->encoding_strategy_==DYNAMIC) {
     encoder_->Encode(state);
     add_next_literals_.clear();
-  } else if (encoder_->encoding_strategy_ == IEncoder<PseudoBooleanConstraint>::INCREMENTAL) {
+  } else if (encoder_->encoding_strategy_ == INCREMENTAL) {
     BitStringMap string_map = state.variable_selector_.bit_strings_;
     for (BooleanLiteral l : add_next_literals_) {
       if (encoder_->IsAdded(l))

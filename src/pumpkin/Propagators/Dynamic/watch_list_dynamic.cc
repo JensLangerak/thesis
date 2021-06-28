@@ -6,6 +6,7 @@
 #include "Pairs/watched_pb_pairs_constraint.h"
 #include "PseudoBoolean/watched_pseudo_boolean_constraint_2.h"
 #include "watcher_dynamic_constraint.h"
+#include "Sum/watched_pb_sum_constraint.h"
 namespace Pumpkin {
 
 template <class Watched, class Watcher>
@@ -82,4 +83,5 @@ int WatchListDynamic<Watched, Watcher>::ComputeIndexForLiteral(
 
 template class WatchListDynamic<WatchedPseudoBooleanConstraint2, WatcherDynamicConstraint<WatchedPseudoBooleanConstraint2>>;
 template class WatchListDynamic<WatchedPbPairsConstraint, WatcherDynamicConstraint<WatchedPbPairsConstraint>>;
+template class WatchListDynamic<WatchedPbSumConstraint, WatcherDynamicConstraint<WatchedPbSumConstraint>>;
 } // namespace Pumpkin

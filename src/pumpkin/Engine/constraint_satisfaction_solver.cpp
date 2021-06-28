@@ -1,9 +1,10 @@
 #include "constraint_satisfaction_solver.h"
+#include "../../logger/logger.h"
 #include "../Propagators/reason_generic.h"
 #include "../Utilities/runtime_assert.h"
 
-#include <assert.h>
 #include <algorithm>
+#include <assert.h>
 #include <iostream>
 
 namespace Pumpkin
@@ -56,9 +57,10 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification*
 SolverOutput ConstraintSatisfactionSolver::Solve(std::vector<BooleanLiteral>& assumptions, double time_limit_in_seconds)
 {
 	SolverExecutionFlag flag = SolveInternal(assumptions, time_limit_in_seconds);
+        LogUsedVars();
 
-	std::cout << "c conflicts until restart: " << counters_.conflicts_until_restart << "\n";
-	std::cout << "c restart counter: " << counters_.num_restarts << "\n";
+//	std::cout << "c conflicts until restart: " << counters_.conflicts_until_restart << "\n";
+//	std::cout << "c restart counter: " << counters_.num_restarts << "\n";
 
 	double runtime = stopwatch_.TimeElapsedInSeconds();
 	bool timeout = (flag == SolverExecutionFlag::TIMEOUT);
@@ -120,6 +122,8 @@ std::string ConstraintSatisfactionSolver::GetStatisticsAsString()
 ConstraintSatisfactionSolver::SolverExecutionFlag ConstraintSatisfactionSolver::SolveInternal(std::vector<BooleanLiteral>& assumptions, double time_limit_in_seconds)
 {
 	Initialise(time_limit_in_seconds, assumptions);
+        simple_sat_solver::logger::Logger::Log2("nr lits: " + std::to_string(state_.GetNumberOfVariables()));
+
 
 	//check failure by unit propagation at root level - perhaps this could be done as part of a preprocessing step?
 	if (SetUnitClauses() == false) { return SolverExecutionFlag::UNSAT; }
@@ -345,7 +349,9 @@ ConflictAnalysisResultClausal ConstraintSatisfactionSolver::AnalyseConflict(Prop
 	state_.variable_selector_.BumpActivity(unique_implication_point_literal.Variable());
 	learned_clause_literals_.push_back(~unique_implication_point_literal);
 
-	ConflictAnalysisResultClausal analysis_result(learned_clause_literals_, ~unique_implication_point_literal, backtrack_level_);
+        state_.update_vars_analyzer_.insert(unique_implication_point_literal.VariableIndex());
+
+        ConflictAnalysisResultClausal analysis_result(learned_clause_literals_, ~unique_implication_point_literal, backtrack_level_);
 	assert(analysis_result.CheckCorrectnessAfterConflictAnalysis(state_));
 
 	if (use_clause_minimisation_) { learned_clause_minimiser_.RemoveImplicationGraphDominatedLiterals(analysis_result); }
@@ -390,6 +396,7 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 
 		//label it as seen so we do not process the same variable twice in the future for the current conflict
 		seen_.Insert(reason_variable.index_);
+                state_.update_vars_analyzer_.insert(reason_variable.index_);
 
 		//experimental for now, might remove
 		if (internal_parameters_.bump_decision_variables == true || state_.assignments_.GetAssignmentPropagator(reason_variable) != NULL)
@@ -418,6 +425,11 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 
 PropagatorGeneric * ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysisResultClausal& result)
 {
+
+        for (BooleanLiteral l : result.learned_clause_literals) {
+          state_.update_vars_conflict_clause_.insert(l.VariableIndex());
+        }
+
 	//unit clauses are treated in a special way: they are added as decision literals at decision level 0. This might change in the future if a better idea presents itself
 	if (result.learned_clause_literals.size() == 1)
 	{
@@ -618,6 +630,9 @@ void ConstraintSatisfactionSolver::PerformRestartDuringSearch()
 		runtime_assert(1 == 2);
 	}
 
+        LogUsedVars();
+
+
         state_.AddScheduledEncodings();
         bool res = SetUnitClauses();
         assert(res);
@@ -711,6 +726,25 @@ bool ConstraintSatisfactionSolver::IsSeenCleared() const
 	assert(seen_.GetNumPresentValues() == 0);
 	//for (unsigned int i = 0; i < seen_.size(); i++) { assert(seen_[i] == false); }
 	return true;
+}
+void ConstraintSatisfactionSolver::LogUsedVars() {
+  std::string analyze_vars;
+  for (int i : state_.update_vars_analyzer_) {
+    analyze_vars += " " + std::to_string(i);
+  }
+  simple_sat_solver::logger::Logger::Log2("Analyzed conflict vars:" + analyze_vars);
+
+
+  std::string clause_vars;
+  for (int i : state_.update_vars_conflict_clause_) {
+    clause_vars += " " + std::to_string(i);
+  }
+  simple_sat_solver::logger::Logger::Log2("Learned clause vars:" + clause_vars);
+
+
+  state_.update_vars_conflict_clause_.clear();
+  state_.update_vars_analyzer_.clear();
+
 }
 
 } //end Pumpkin namespace

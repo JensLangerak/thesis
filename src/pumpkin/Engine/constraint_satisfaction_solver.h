@@ -138,7 +138,9 @@ private:
 	} internal_parameters_;
 
 	Stopwatch stopwatch_;
+
 	Counters counters_;
+
 	LubySequenceGenerator luby_generator_;
 
 	std::vector<BooleanLiteral> assumptions_;
@@ -155,6 +157,7 @@ private:
 	int backtrack_level_;
 	int num_current_decision_level_literals_;
 	int num_trail_literals_examined_;
+        void LogUsedVars();
 };
 
 } //end Pumpkin namespace

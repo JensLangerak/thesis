@@ -29,8 +29,19 @@ public:
 	std::string ToString() const;
 	static BooleanLiteral IntToLiteral(int code); //returns the literal which would return 'code' when calling ToPositiveInteger() on it. todo This seems hacky, and will be considered for removal later on
 	static BooleanLiteral UndefinedLiteral();
-private:
+//private:
 	int code_;
 };
 
 } //end Pumpkin namespace
+
+namespace std
+{
+template<> struct hash<Pumpkin::BooleanLiteral>
+{
+  std::size_t operator()(Pumpkin::BooleanLiteral const& s) const noexcept
+  {
+    return std::hash<int>{}(s.code_);
+  }
+};
+}

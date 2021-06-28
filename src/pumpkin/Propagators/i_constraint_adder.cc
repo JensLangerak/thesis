@@ -3,4 +3,8 @@
 //
 
 #include "i_constraint_adder.h"
-namespace Pumpkin {}
+namespace Pumpkin {
+
+template class IConstraintAdder<PseudoBooleanConstraint>;
+template class IConstraintAdder<PbSumConstraint>;
+}

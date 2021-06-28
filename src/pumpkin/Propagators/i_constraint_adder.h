@@ -10,6 +10,7 @@ namespace Pumpkin {
 class SolverState;
 class PropagatorGeneric;
 struct PseudoBooleanConstraint;
+struct PbSumConstraint;
 class IPseudoBooleanConstraintModifier {
 public:
   virtual bool UpdateMax(int max, SolverState&state) = 0;
@@ -19,10 +20,8 @@ class IConstraintAdder {
 public:
   virtual ~IConstraintAdder() = default;
   virtual void AddConstraint(C &constraint, SolverState& state) =0;
-  virtual IPseudoBooleanConstraintModifier * AddConstraintWithModifier(PseudoBooleanConstraint &constraint, SolverState& state) = 0;
+  virtual IPseudoBooleanConstraintModifier * AddConstraintWithModifier(C &constraint, SolverState& state) = 0;
   virtual PropagatorGeneric * GetPropagator() = 0;
-  int debug_code = 0;
-
 };
 
 } // namespace Pumpkin

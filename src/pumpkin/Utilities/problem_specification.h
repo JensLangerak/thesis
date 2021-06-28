@@ -24,7 +24,6 @@ struct PseudoBooleanConstraint
 {
 	PseudoBooleanConstraint(std::vector<BooleanLiteral>& lits, std::vector<uint32_t>& coefs, int rhs,
                                 IConstraintAdder<PseudoBooleanConstraint> * pseudo_boolean_adder) : pseudo_boolean_adder(pseudo_boolean_adder), literals(lits), coefficients(coefs), right_hand_side(rhs) {
-          int tes=2;
         }
 
 	std::vector<BooleanLiteral> literals;
@@ -32,6 +31,15 @@ struct PseudoBooleanConstraint
 	int right_hand_side;
 
         IConstraintAdder<PseudoBooleanConstraint> * pseudo_boolean_adder;
+};
+
+struct PbSumConstraint {
+  PbSumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<uint32_t> & input_coefficients, std::vector<BooleanLiteral> & outputs, std::vector<uint32_t > & output_coefficients
+                  ) : input_literals(inputs), input_coefficients(input_coefficients), output_literals(outputs), output_coefficients(output_coefficients) {};
+  std::vector<BooleanLiteral> input_literals;
+  std::vector<uint32_t> input_coefficients;
+  std::vector<BooleanLiteral> output_literals;
+  std::vector<uint32_t> output_coefficients;
 };
 
 //struct CardinalityConstraint
@@ -50,14 +58,7 @@ struct PseudoBooleanConstraint
 //  IEncoder<SumConstraint>::IFactory *encoder_factory;
 //};
 //
-//struct PbSumConstraint {
-//  PbSumConstraint(std::vector<BooleanLiteral> & inputs, std::vector<uint32_t> & input_coefficients, std::vector<BooleanLiteral> & outputs, std::vector<uint32_t > & output_coefficients, IEncoder<PbSumConstraint>::IFactory *encoder_factory) : input_literals(inputs), input_coefficients(input_coefficients), output_literals(outputs), output_coefficients(output_coefficients), encoder_factory(encoder_factory) {};
-//  std::vector<BooleanLiteral> input_literals;
-//  std::vector<uint32_t> input_coefficients;
-//  std::vector<BooleanLiteral> output_literals;
-//  std::vector<uint32_t> output_coefficients;
-//  IEncoder<PbSumConstraint>::IFactory *encoder_factory;
-//};
+
 
 class ProblemSpecification
 {

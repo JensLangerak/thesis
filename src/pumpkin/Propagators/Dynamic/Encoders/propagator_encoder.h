@@ -23,7 +23,7 @@ public:
   bool UpdateMax(int max, SolverState &state) override;
   class Factory : public IEncoder<T>::IFactory {
   public:
-    Factory() : IEncoder<T>::IFactory(IEncoder<T>::NEVER, 1) {}
+    Factory() : IEncoder<T>::IFactory(NEVER, 1) {}
 
   protected:
     IEncoder<T> *CallConstructor(T &constraint) override {

@@ -150,9 +150,9 @@ int main(int argc, char *argv[]) {
   } else {
     //  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/pima_train_3_CNF_5_20.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
 //  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/d4.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
-//  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/af-synthesis/af-synthesis_stb_50_140_8.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
+  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/af-synthesis/af-synthesis_stb_50_140_8.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
 //  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/min-width/MinWidthCB_mitdbsample_300_32_1k_6s_1t_8.wcnf";
-    std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/MaxSATQueriesinInterpretableClassifiers/titanic_train_4_DNF_4_20.wcnf";
+//    std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/MaxSATQueriesinInterpretableClassifiers/titanic_train_4_DNF_4_20.wcnf";
     std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/log2";// "../../../data/max_sat/log/";
     std::string test_dir = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/uw/";
 //  for (const auto & entry : std::filesystem::directory_iterator(test_dir)) {
@@ -160,10 +160,10 @@ int main(int argc, char *argv[]) {
 //  }
 
 
-    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::INCREMENTAL;
+    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::TOPDOWN;
     benchnark.problem_file_full_path_ =test_file;
     benchnark.log_dir_ = log_dir;
-    benchnark.delay_factor_ = 0.4;
+    benchnark.delay_factor_ = 0.1;
     benchnark.start_penalty_ = 100000;
 
     benchnark.Main();

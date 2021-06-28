@@ -1,9 +1,10 @@
 #include "solver_state.h"
-#include "variable_selector.h"
+#include "../../logger/logger.h"
 #include "../Utilities/runtime_assert.h"
+#include "variable_selector.h"
 
-#include <assert.h>
 #include <algorithm>
+#include <assert.h>
 #include <iostream>
 
 namespace Pumpkin
@@ -370,10 +371,13 @@ bool SolverState::IsPropagationComplete()
 	return propagation_complete;
 }
 void SolverState::AddScheduledEncodings() {
+  int start_lits = GetNumberOfVariables();
   for (auto c : scheduled_dynamic_constraints_) {
     c->AddScheduledEncoding(*this);
   }
   scheduled_dynamic_constraints_.clear();
+  if (GetNumberOfVariables() > start_lits)
+    simple_sat_solver::logger::Logger::Log2("nr lits: " + std::to_string(GetNumberOfVariables()));
 }
 
 

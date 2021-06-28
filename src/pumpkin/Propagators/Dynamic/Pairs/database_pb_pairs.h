@@ -5,14 +5,18 @@
 #ifndef SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PAIRS_DATABASE_PB_PAIRS_H_
 #define SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_PAIRS_DATABASE_PB_PAIRS_H_
 
-#include "watched_pb_pairs_constraint.h"
+#include "../database_dynamic_constraint.h"
+#include "../watcher_dynamic_constraint.h"
 #include "../watch_list_dynamic.h"
-#include "../../../Utilities/problem_specification.h"
-#include "../../../Engine/solver_state.h"
+#include "../Encoders/i_encoder.h"
 #include "pairs_database.h"
 #include <stdint-gcc.h>
 namespace Pumpkin {
+class SolverState;
+class PseudoBooleanConstraint;
+class WatchedPbPairsConstraint;
 class DatabasePbPairs {
+public:
   explicit DatabasePbPairs(uint64_t num_vars);
 
   /// Create a new WatchedCardinalityConstraint from the given constraint. Add the constraint to the watched lists.

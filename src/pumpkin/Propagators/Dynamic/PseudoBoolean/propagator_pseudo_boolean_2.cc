@@ -86,9 +86,9 @@ void PropagatorPseudoBoolean2::Synchronise(SolverState &state) {
   PropagatorDynamic::Synchronise(state);
   for (auto constraint : pseudo_boolean_database_.permanent_constraints_) {
     constraint->Synchronise(state);
-    if (next_position_on_trail_to_propagate_ > 0)
+    if (next_position_on_trail_to_propagate_ > 0) {
     assert(constraint->CountCorrect(state, state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_ - 1)));
-  }
+  }}
 
 
 }

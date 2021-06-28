@@ -34,4 +34,6 @@ public:
 
 } //end Pumpkin namespace
 
+
+
 #endif // !BOOLEAN_LITERAL_H

@@ -39,5 +39,4 @@ bool PseudoBooleanModifier::UpdateMax(int max, SolverState &state) {
   watched_constraint_->max_ = max;
   return watched_constraint_->encoder_->UpdateMax(max, state);
 }
-template class IConstraintAdder<PseudoBooleanConstraint>;
 }

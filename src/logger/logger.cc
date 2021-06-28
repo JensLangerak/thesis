@@ -63,8 +63,9 @@ void Logger::LogToFile(Logger::LogItem &log_item) {
   std::time_t tt = std::chrono::system_clock::to_time_t(log_item.time);
   std::tm tm = *std::gmtime(&tt); //GMT (UTC)
   std::stringstream ss;
-  ss << std::put_time( &tm, "UTC: %Y-%m-%d %H:%M:%S:" );
-  file_ << ss.rdbuf() << ms.count() << " " << ms_all.count() << " " << log_item.message << "\n";
+//  ss << std::put_time( &tm, "UTC: %Y-%m-%d %H:%M:%S:" );
+//  file_ << ss.rdbuf() << ms.count() << " " << ms_all.count() << " " << log_item.message << "\n";
+  file_ << ms_all.count() << " " << log_item.message << "\n";
 }
 void Logger::End() {
   mutex_.lock();

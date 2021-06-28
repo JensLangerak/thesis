@@ -12,11 +12,11 @@ template <class T> IEncoder<T> *IEncoder<T>::IFactory::Create(T &constraint) {
   return encoder;
 }
 template <class T>
-IEncoder<T>::IFactory::IFactory(IEncoder::EncodingStrategy encoding_strategy,
+IEncoder<T>::IFactory::IFactory(EncodingStrategy encoding_strategy,
                                 double add_delay_) : encoding_strategy_(encoding_strategy), add_delay_(add_delay_) {}
 
 //template class IEncoder<CardinalityConstraint>;
 template class IEncoder<PseudoBooleanConstraint>;
 //template class IEncoder<SumConstraint>;
-//template class IEncoder<PbSumConstraint>;
+template class IEncoder<PbSumConstraint>;
 }

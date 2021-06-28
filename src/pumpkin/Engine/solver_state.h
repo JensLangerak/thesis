@@ -17,6 +17,7 @@
 #include "variable_selector.h"
 
 #include <vector>
+#include <set>
 
 namespace Pumpkin
 {
@@ -168,6 +169,10 @@ private:
 	std::vector<int> trail_delimiter_; //[i] is the position where the i-th decision level ends (exclusive) on the trail.
 	bool use_binary_clause_propagator_;
 	int decision_level_;
+
+      public:
+  std::set<int> update_vars_conflict_clause_;
+  std::set<int> update_vars_analyzer_;
 
 };
 

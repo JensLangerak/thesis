@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
         parameter_handler.SetStringParameter("file", file);
         PropagatorPseudoBoolean2 * propagator = new PropagatorPseudoBoolean2(0);
         auto pb_adder = new PseudoBooleanAdder(propagator);
-        pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(Pumpkin::IEncoder<PseudoBooleanConstraint>::DYNAMIC, 0);
+        pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(DYNAMIC, 0);
         parameter_handler.optimisation_constraint_wrapper_ =  pb_adder;
         ConstraintOptimisationSolver solver(parameter_handler);
 //	ConstraintOptimisationSolver solver(*problem_specification, parameters);

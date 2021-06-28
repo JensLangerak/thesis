@@ -10,6 +10,7 @@
 
 namespace Pumpkin {
 class SolverState;
+enum EncodingStrategy {START, DYNAMIC, INCREMENTAL, NEVER};
 template <class T>
 class IEncoder {
 public:
@@ -23,7 +24,6 @@ public:
   virtual bool EncodingPartialAdded() { return partial_added_;};
   virtual bool IsAdded(BooleanLiteral l) { return encoding_added_;};
 
-  enum EncodingStrategy {START, DYNAMIC, INCREMENTAL, NEVER};
   EncodingStrategy encoding_strategy_;
   class IFactory {
   public:

@@ -7,8 +7,10 @@
 #include "../pseudo_boolean/opb_parser.h"
 #include "../pumpkin/Engine/constraint_optimisation_solver.h"
 #include "../pumpkin/Engine/constraint_satisfaction_solver.h"
+#include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totliser_sum_root.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totaliser.h"
 #include "../pumpkin/Propagators/Dynamic/PseudoBoolean/pseudo_boolean_adder.h"
+#include "../pumpkin/Propagators/Dynamic/Pairs/pb_pairs_adder.h"
 #include "../pumpkin/Utilities/solver_parameters.h"
 #include "../sat/constraints/cardinality_constraint.h"
 #include "../sat/constraints/sum_constraint.h"
@@ -23,15 +25,13 @@ void Benchmark::Main(int argc, char **argv) {
 void Benchmark::Main() {
   WriteHeader();
   optimisation_adder_ = CreatePbConstraintWrapper(solver_type_);
-  optimisation_adder_->debug_code = 1;
   pb_adder_ = CreatePbConstraintWrapper(SolverType::PROPAGATOR);
-pb_adder_->debug_code = 2;
   ProblemSpecification problem = GetProblem();
 
 
   ParameterHandler parameter_handler = ConstraintOptimisationSolver::CreateParameterHandler();
   parameter_handler.optimisation_constraint_wrapper_ = optimisation_adder_;
-  parameter_handler.SetIntegerParameter("seed", 23624);
+  parameter_handler.SetIntegerParameter("seed", 0);
 
 
   SolverOutput solver_output;
@@ -77,6 +77,12 @@ void Benchmark::WriteHeader() {
   simple_sat_solver::logger::Logger::Log2("File: " + problem_file_full_path_);
   simple_sat_solver::logger::Logger::Log2("Encoder: " + GetEncoderName());
   simple_sat_solver::logger::Logger::Log2("Delay factor: " + std::to_string(delay_factor_));
+
+  auto timenow =
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  std::string time_message =  std::ctime(&timenow);
+  simple_sat_solver::logger::Logger::Log2("Starttime:" + time_message);
+
 }
 std::string Benchmark::GetEncoderName() {
   switch (solver_type_) {
@@ -88,6 +94,10 @@ std::string Benchmark::GetEncoderName() {
     return "incremental";
   case SolverType::PROPAGATOR:
     return "propagator";
+  case SolverType::PAIRS:
+    return "pairs";
+  case SolverType::TOPDOWN:
+    return "topdown";
   }
 }
 Pumpkin::IConstraintAdder<Pumpkin::PseudoBooleanConstraint> *
@@ -97,24 +107,36 @@ Benchmark::CreatePbConstraintWrapper(SolverType solver_type) {
   case SolverType::ENCODER:
   case SolverType::DYNAMIC:
   case SolverType::INCREMENTAL:
-  case SolverType::PROPAGATOR: {
+  case SolverType::PROPAGATOR:
+  case SolverType::TOPDOWN:
+  {
     PropagatorPseudoBoolean2 * propagator = new PropagatorPseudoBoolean2(0);
     auto pb_adder = new PseudoBooleanAdder(propagator);
     switch (solver_type) {
 
     case SolverType::ENCODER:
-      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(Pumpkin::IEncoder<PseudoBooleanConstraint>::START, delay_factor_);
+      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(START, delay_factor_);
       break;
     case SolverType::DYNAMIC:
-      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(Pumpkin::IEncoder<PseudoBooleanConstraint>::DYNAMIC, delay_factor_);
+      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(DYNAMIC, delay_factor_);
       break;
     case SolverType::INCREMENTAL:
-      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(Pumpkin::IEncoder<PseudoBooleanConstraint>::INCREMENTAL, delay_factor_);
+      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(INCREMENTAL, delay_factor_);
       break;
     case SolverType::PROPAGATOR:
-      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(Pumpkin::IEncoder<PseudoBooleanConstraint>::NEVER, delay_factor_);
+      pb_adder->encoder_factory = new GeneralizedTotaliser::Factory(NEVER, delay_factor_);
       break;
+    case SolverType::TOPDOWN:
+      pb_adder->encoder_factory = new GeneralizedTotliserSumRoot::Factory(DYNAMIC, delay_factor_); //TODO not sure what the best way is to handle this method
+      break;
+    default:
+      assert(false);
     }
+    return pb_adder;
+  }
+  case SolverType::PAIRS: {
+    auto prop = new PropagatorPbPairs(0);
+    auto pb_adder = new PbPairsAdder(prop);
     return pb_adder;
   }
   }
