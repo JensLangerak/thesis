@@ -10,7 +10,7 @@ BooleanVariable::BooleanVariable()
 {
 }
 
-BooleanVariable::BooleanVariable(int index)
+BooleanVariable::BooleanVariable(long index)
 	: index_(index)
 {
 	assert(index_ > 0);

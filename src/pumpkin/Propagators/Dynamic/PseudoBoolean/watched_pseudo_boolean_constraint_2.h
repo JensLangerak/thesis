@@ -51,6 +51,8 @@ public:
   std::unordered_map<int, int> lit_count_;
 
   std::vector<BooleanLiteral> add_next_literals_;
+
+
 };
 } // namespace Pumpkin
 

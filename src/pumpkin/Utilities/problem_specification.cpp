@@ -102,6 +102,14 @@ ProblemSpecification ProblemSpecification::ReadMaxSATFormula(std::string file_lo
 	//read the clauses 
 	for (int i = 0; i < num_clauses; i++)
 	{
+
+          while (input.peek() == 'c' || input.peek() == '\n') {
+            if (input.peek() == '\n') {
+              char sk = input.get();
+            } else {
+              std::getline(input, s);
+            }
+          }
 		std::vector<BooleanLiteral> clause;
 		while (input >> n)
 		{
@@ -130,7 +138,7 @@ ProblemSpecification ProblemSpecification::ReadMaxSATFormula(std::string file_lo
 			if (clause.size() == 2)
 			{
 				BooleanLiteral objective_literal = ~clause[1];
-				int weight = clause[0].Variable().index_; //the index of the 0th variable in a soft clause encodes the weight
+				int64_t weight = clause[0].Variable().index_; //the index of the 0th variable in a soft clause encodes the weight
 				runtime_assert(weight > 0);
 				problem_specification.weighted_literals_.push_back(PairWeightLiteral(objective_literal, weight));
 			}

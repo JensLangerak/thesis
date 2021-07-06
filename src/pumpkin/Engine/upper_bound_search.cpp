@@ -1,6 +1,7 @@
 #include "upper_bound_search.h"
-#include "preprocessor.h"
+#include "../../logger/logger.h"
 #include "../Utilities/stopwatch.h"
+#include "preprocessor.h"
 
 namespace Pumpkin
 {
@@ -110,6 +111,7 @@ void UpperBoundSearch::LinearSearch(ConstraintSatisfactionSolver& solver, Linear
 		}
 		else if (output.ProvenInfeasible())
 		{
+                  simple_sat_solver::logger::Logger::Log2("Proven infeasible: " + std::to_string(solution_tracker.UpperBound()));
 			break;
 		}
 	}

@@ -30,7 +30,7 @@ public:
 	static BooleanLiteral IntToLiteral(int code); //returns the literal which would return 'code' when calling ToPositiveInteger() on it. todo This seems hacky, and will be considered for removal later on
 	static BooleanLiteral UndefinedLiteral();
 //private:
-	int code_;
+	long code_;
 };
 
 } //end Pumpkin namespace

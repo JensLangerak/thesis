@@ -6,6 +6,7 @@
 #include "../Utilities/boolean_assignment_vector.h"
 #include "../Utilities/linear_boolean_function.h"
 #include "../Utilities/gz_file_reader.h"
+#include <zlib.h>
 #include "../Utilities/directly_hashed_boolean_literal_set.h"
 
 #include <algorithm>

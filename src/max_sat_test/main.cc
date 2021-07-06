@@ -150,7 +150,10 @@ int main(int argc, char *argv[]) {
   } else {
     //  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/pima_train_3_CNF_5_20.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
 //  std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/d4.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
-  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/af-synthesis/af-synthesis_stb_50_140_8.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
+//  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/af-synthesis/af-synthesis_stb_50_140_8.wcnf" ;//"../../../data/max_sat/cnf_small.wcnf";
+//    std::string test_file = "/home/jens/starexec_files/max_sat_incomplete_w1/causal_Autos_8_159.wcnf";
+    std::string test_file = "/home/jens/starexec_files/max_sat_incomplete_w1/causal_carpo_9_10000.wcnf";
+//    std::string test_file = "/home/jens/starexec_files/max_sat_incomplete_w1/Rounded_BTWBNSL_hailfinder_10000_1_3.scores_TWBound_3.wcnf";
 //  std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/min-width/MinWidthCB_mitdbsample_300_32_1k_6s_1t_8.wcnf";
 //    std::string test_file = "/home/jens/Downloads/maxsat_instances (2)/ms_evals/MS20/mse20-incomplete-weighted/MaxSATQueriesinInterpretableClassifiers/titanic_train_4_DNF_4_20.wcnf";
     std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/max_sat/log2";// "../../../data/max_sat/log/";
@@ -160,7 +163,7 @@ int main(int argc, char *argv[]) {
 //  }
 
 
-    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::TOPDOWN;
+    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::ENCODER;
     benchnark.problem_file_full_path_ =test_file;
     benchnark.log_dir_ = log_dir;
     benchnark.delay_factor_ = 0.1;

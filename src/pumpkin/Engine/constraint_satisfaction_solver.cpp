@@ -387,8 +387,9 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 		//assigned
 		BooleanLiteral reason_literal = (*explanation)[i];
 		BooleanVariable reason_variable = reason_literal.Variable();
+          state_.update_vars_analyzer_.insert(reason_variable.index_);
 
-		//ignore variables at level 0 -> these are unit clauses (in future need to take care, these might be assumptions)
+          //ignore variables at level 0 -> these are unit clauses (in future need to take care, these might be assumptions)
 		if (state_.assignments_.GetAssignmentLevel(reason_variable) == 0) { continue; }
 
 		//ignore variable if it was already processed
@@ -396,7 +397,6 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 
 		//label it as seen so we do not process the same variable twice in the future for the current conflict
 		seen_.Insert(reason_variable.index_);
-                state_.update_vars_analyzer_.insert(reason_variable.index_);
 
 		//experimental for now, might remove
 		if (internal_parameters_.bump_decision_variables == true || state_.assignments_.GetAssignmentPropagator(reason_variable) != NULL)
