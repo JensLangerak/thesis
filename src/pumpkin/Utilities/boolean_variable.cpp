@@ -27,12 +27,12 @@ bool BooleanVariable::IsUndefined() const
 	return index_ == 0;
 }
 
-bool BooleanVariable::operator==(BooleanVariable variable)
+bool BooleanVariable::operator==(BooleanVariable variable) const
 {
 	return index_ == variable.index_;
 }
 
-bool BooleanVariable::operator!=(BooleanVariable variable)
+bool BooleanVariable::operator!=(BooleanVariable variable) const
 {
 	return index_ != variable.index_;
 }

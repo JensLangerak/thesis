@@ -158,6 +158,9 @@ private:
 	int num_current_decision_level_literals_;
 	int num_trail_literals_examined_;
         void LogUsedVars();
+
+      public:
+        int restarts_counter_debug = 0;
 };
 
 } //end Pumpkin namespace

@@ -36,6 +36,8 @@ protected:
   void AddPropagator(SolverState & state);
   bool propagator_added_= false;
   WatchedPseudoBooleanConstraint2 * CreateWatchedConstraint(PseudoBooleanConstraint constraint, SolverState & state);
+
+public:
   PropagatorPseudoBoolean2 * propagator_; // TODO
 
 };

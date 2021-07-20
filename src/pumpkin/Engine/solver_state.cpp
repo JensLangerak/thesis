@@ -233,7 +233,7 @@ bool SolverState::AddUnitClauses(std::vector<BooleanLiteral>& units)
 
 PropagatorGeneric* SolverState::AddClause(std::vector<BooleanLiteral>& literals)
 {
-	runtime_assert(IsPropagationComplete());
+	runtime_assert(IsPropagationComplete() || decision_level_ ==0);
 	runtime_assert(literals.size() > 1); //for now we do not allow adding a unit clause using this method because it's unclear what's the correct output if the unit clause was already set at the root to the opposite value	
 
 	if (1==2 && literals.size() == 2 && use_binary_clause_propagator_)

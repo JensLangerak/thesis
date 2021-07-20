@@ -3,7 +3,7 @@
 #include "runtime_assert.h"
 
 #include <iostream>
-
+#include "../Propagators/Dynamic/Pairs/explantion_pb_pairs_constraint.h"
 namespace Pumpkin
 {
 SolutionTracker::SolutionTracker() :
@@ -32,6 +32,8 @@ bool SolutionTracker::UpdateBestSolution(const BooleanAssignmentVector& solution
 		if (new_upper_bound < upper_bound_) 
 		{ 
 			std::cout << "o " << new_upper_bound << "\nc t = " << stopwatch_.TimeElapsedInSeconds() << "\n";
+//                  std::cout << "Time in pairs " << std::to_string(ExplanationPbPairsConstraint::time_used_) << " ms " << std::endl;
+//                  std::cout << "Size of pairs " << std::to_string(ExplanationPbPairsConstraint::avg_pair_size_) << "  " << std::endl;
                         simple_sat_solver::logger::Logger::Log2("New upperbound: " + std::to_string(new_upper_bound));
 			upper_bound_ = new_upper_bound;
 			time_stamps_.AddTimePoint(time_t(stopwatch_.TimeElapsedInSeconds()), new_upper_bound);

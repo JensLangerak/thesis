@@ -11,14 +11,14 @@
 namespace simple_sat_solver::pseudo_boolean {
 class OpbParser {
 public:
-  static sat::SatProblem Parse(std::string path);
+  static sat::SatProblem *Parse(std::string path);
 
 private:
-  OpbParser(std::ifstream *fstream) : fstream(fstream), problem(0){};
+  OpbParser(std::ifstream *fstream) : fstream(fstream), problem(new sat::SatProblem(0)){};
 
   void Parse();
   std::ifstream *fstream;
-  sat::SatProblem problem;
+  sat::SatProblem * problem;
   std::vector<sat::WeightedLit> read_min_line(std::stringstream &stringstream);
   sat::WeightedLit getWeightedLit(int w, std::string basic_string);
 

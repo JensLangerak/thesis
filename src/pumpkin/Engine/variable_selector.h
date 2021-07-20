@@ -46,6 +46,8 @@ public:
 	double increment_, max_threshold_, decay_factor_;
 
   BitStringMap bit_strings_;
+
+        double GetActiviy(BooleanVariable variable);
 };
 
 } //end Pumpkin namespace

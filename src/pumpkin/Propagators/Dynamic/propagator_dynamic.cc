@@ -4,11 +4,12 @@
 
 #include "propagator_dynamic.h"
 #include "../../Engine/solver_state.h"
+#include "BottomLayers/watched_bottom_layers_constraint.h"
 #include "Pairs/watched_pb_pairs_constraint.h"
 #include "PseudoBoolean/watched_pseudo_boolean_constraint_2.h"
+#include "Sum/watched_pb_sum_constraint.h"
 #include "reason_dynamic_constraint.h"
 #include "watched_dynamic_constraint.h"
-#include "Sum/watched_pb_sum_constraint.h"
 namespace Pumpkin {
 template <class Watched>
 ReasonGeneric *
@@ -62,4 +63,5 @@ void PropagatorDynamic<Watched>::Synchronise(SolverState &state) {
 template class PropagatorDynamic<WatchedPseudoBooleanConstraint2>;
 template class PropagatorDynamic<WatchedPbPairsConstraint>;
 template class PropagatorDynamic<WatchedPbSumConstraint>;
+template class PropagatorDynamic<WatchedBottomLayersConstraint>;
 }

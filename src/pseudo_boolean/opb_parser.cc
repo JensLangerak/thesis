@@ -9,7 +9,7 @@
 #include <sstream>
 namespace simple_sat_solver::pseudo_boolean {
 
-sat::SatProblem OpbParser::Parse(std::string path) {
+sat::SatProblem * OpbParser::Parse(std::string path) {
   std::ifstream file_stream(path);
   if (!file_stream.is_open()) {
     std::cout << "Cannot open file: " << path << std::endl;
@@ -39,7 +39,7 @@ void OpbParser::Parse() {
       }
       std::vector<sat::WeightedLit> clause = read_min_line(ss);
       for (auto w : clause)
-        problem.AddToMinimize(w);
+        problem->AddToMinimize(w);
     } else {
       ss.clear();
       ss << line;
@@ -73,7 +73,7 @@ sat::WeightedLit OpbParser::getWeightedLit(int w, std::string key) {
   if (complement)
     key.erase(0,1);
   if (string_lit_map.count(key) == 0) {
-    sat::Lit l = problem.AddNewVar();
+    sat::Lit l = problem->AddNewVar();
     string_lit_map[key] = l;
   }
   sat::Lit l = string_lit_map[key];
@@ -144,12 +144,12 @@ void OpbParser::read_constraint(std::stringstream &ss) {
         if (weights[i] == 1)
           lits_1.push_back(lits[i]);
       }
-      problem.AtMostOne(lits_1);
+      problem->AtMostOne(lits_1);
     } else if (max > 1) {
-      problem.AddConstraint(
+      problem->AddConstraint(
           new sat::PseudoBooleanConstraint(lits, weights, 0, max));
     } else if(max == 0){
-      problem.None(lits);
+      problem->None(lits);
     } else{
       throw "Error";
     }
@@ -166,12 +166,12 @@ void OpbParser::read_constraint(std::stringstream &ss) {
         if (weights[i] == 1)
           lits_1.push_back(invers_lits[i]);
       }
-      problem.AtMostOne(lits_1);
+      problem->AtMostOne(lits_1);
     } else if (inverse_max > 1) {
-      problem.AddConstraint(
+      problem->AddConstraint(
           new sat::PseudoBooleanConstraint(invers_lits, weights, 0, inverse_max));
     } else if(inverse_max == 0){
-      problem.None(invers_lits);
+      problem->None(invers_lits);
     } else{
       throw "Error";
     }

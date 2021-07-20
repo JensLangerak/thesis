@@ -18,19 +18,22 @@ enum class SolverType {
   INCREMENTAL,
   PROPAGATOR,
   PAIRS,
-  TOPDOWN
+  TOPDOWN,
+  BOTTOMLAYERS
 };
 class Benchmark {
 public:
   void Main(int argc, char *argv[]);
   void Main();
+  void MainOrder();
   virtual ~Benchmark() = default;
   SolverType solver_type_ = SolverType::ENCODER;
   double delay_factor_ = 0;
   std::string problem_file_full_path_;
   std::string log_dir_;
   int start_penalty_ = 10000;
-  int solve_time_ = 900;
+  int solve_time_ = 600;
+  int probe_time_ = 10;
 protected:
   Benchmark()= default;
   void Init(int argc, char **argv);
@@ -44,6 +47,9 @@ protected:
   Pumpkin::ProblemSpecification ConvertSatToPumpkin(sat::SatProblem *problem);
   Pumpkin::IConstraintAdder<Pumpkin::PseudoBooleanConstraint> *optimisation_adder_;
   Pumpkin::IConstraintAdder<Pumpkin::PseudoBooleanConstraint> *pb_adder_;
+  Pumpkin::ProblemSpecification
+  CreateProblemOrderLiterals(Pumpkin::ProblemSpecification specification,
+                             Pumpkin::SolverState &state);
 };
 }
 

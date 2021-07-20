@@ -1,0 +1,3 @@
+add_library(pb_bottom_layers
+       database_bottom_layers.cc database_bottom_layers.h explanation_bottom_layers_constraint.cc explanation_bottom_layers_constraint.h propagator_bottom_layers.cc propagator_bottom_layers.h watched_bottom_layers_constraint.cc watched_bottom_layers_constraint.h sum_node.cc sum_node.h bottom_layers_adder.cc bottom_layers_adder.h)
+target_link_libraries(pb_bottom_layers propagator_generic encoders propagator_dynamic)

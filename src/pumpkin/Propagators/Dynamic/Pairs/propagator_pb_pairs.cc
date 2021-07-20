@@ -3,6 +3,7 @@
 //
 
 #include "propagator_pb_pairs.h"
+#include "explantion_pb_pairs_constraint.h"
 #include "../../../Engine/solver_state.h"
 namespace Pumpkin {
 bool PropagatorPbPairs::PropagateLiteral(BooleanLiteral true_literal,
@@ -88,5 +89,7 @@ void PropagatorPbPairs::Synchronise(SolverState &state) {
 
 
 }
-PropagatorPbPairs::PropagatorPbPairs(int64_t num_variables)    : PropagatorDynamic(), pseudo_boolean_database_(num_variables){}
+PropagatorPbPairs::PropagatorPbPairs(int64_t num_variables)    : PropagatorDynamic(), pseudo_boolean_database_(num_variables){
+  ExplanationPbPairsConstraint::InitLits(num_variables);
+}
 }

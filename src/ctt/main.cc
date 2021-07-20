@@ -477,11 +477,11 @@ int main(int argc, char *argv[]) {
   if (argc >= 4) {
     benchmark.Main(argc, argv);
   } else {
-    std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/comp07.ctt";
+    std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/comp13.ctt";
     std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/ctt/logs_a4";
     std::string test_dir = "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/";
 
-    benchmark.solver_type_ = simple_sat_solver::benchmark::SolverType::ENCODER;
+    benchmark.solver_type_ = simple_sat_solver::benchmark::SolverType::PAIRS;
     benchmark.problem_file_full_path_ =test_file;
     benchmark.log_dir_ = log_dir;
     benchmark.delay_factor_ = 0.0;

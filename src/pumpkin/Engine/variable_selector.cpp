@@ -13,6 +13,12 @@ VariableSelector::VariableSelector(int num_variables, double decay_factor):
 {
 }
 
+double VariableSelector::GetActiviy(BooleanVariable variable) {
+
+  double value = heap_.GetKeyValue(variable.index_ - 1);
+  return value;
+
+}
 void VariableSelector::BumpActivity(BooleanVariable boolean_variable)
 {
 	double value = heap_.GetKeyValue(boolean_variable.index_ - 1);

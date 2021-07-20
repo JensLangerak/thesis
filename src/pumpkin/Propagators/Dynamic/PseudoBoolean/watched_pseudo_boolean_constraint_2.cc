@@ -29,7 +29,7 @@ WatchedPseudoBooleanConstraint2::WatchedPseudoBooleanConstraint2(
     lit_sum_ += weights[i];
   }
   for (BooleanLiteral l : literals) {
-    lit_count_[l.ToPositiveInteger()] = 0;
+    lit_usages_[l.Variable()] = 0;
   }
   std::sort(original_literals_.begin(), original_literals_.end(),
             CompareByWeight);
@@ -123,7 +123,7 @@ void WatchedPseudoBooleanConstraint2::UpdateCounts(
     std::vector<BooleanLiteral> &lits, SolverState &state) {
   propagate_count_++;
   for (BooleanLiteral l : lits) {
-    lit_count_[l.ToPositiveInteger()]++;
+    UpdateLitCount(l);
   }
   if (encoder_->encoding_strategy_ ==
           DYNAMIC ||
@@ -138,7 +138,7 @@ void WatchedPseudoBooleanConstraint2::UpdateCounts(
         int sum = 0;
         for (auto wl : unencoded_constraint_literals_) {
           BooleanLiteral l = wl.literal;
-          if (lit_count_[l.ToPositiveInteger()] * wl.weight >
+          if (GetLitCount(l) * wl.weight >
               max_ * encoder_->add_delay) {
             sum += wl.weight;
           }
@@ -156,7 +156,7 @@ void WatchedPseudoBooleanConstraint2::UpdateCounts(
             INCREMENTAL) {
           if (encoder_->EncodingPartialAdded()) {
             for (BooleanLiteral l : lits) {
-              if (lit_count_[l.ToPositiveInteger()] *
+              if (GetLitCount(l) *
                       lit_weights_[l.ToPositiveInteger()] >
                   max_ * encoder_->add_delay)
                 add_next_literals_.push_back(l);
@@ -164,7 +164,7 @@ void WatchedPseudoBooleanConstraint2::UpdateCounts(
           } else {
             for (auto wl : unencoded_constraint_literals_) {
               BooleanLiteral l = wl.literal;
-              if (lit_count_[l.ToPositiveInteger()] *
+              if (GetLitCount(l)*
                       lit_weights_[l.ToPositiveInteger()] >
                   max_ * encoder_->add_delay) {
                 add_next_literals_.push_back(l);
@@ -202,7 +202,7 @@ void WatchedPseudoBooleanConstraint2::AddScheduledEncoding(SolverState &state) {
         int count_trigger =
             max_ * encoder_->add_delay;
         int l2_count =
-            lit_count_[l2.literal.ToPositiveInteger()];
+            GetLitCount(l2.literal);
         int count_factor = l2.weight * l2_count;
         if (count_factor * 1.1 > count_trigger) {
           std::vector<int> bit_s2 =
@@ -232,5 +232,17 @@ void WatchedPseudoBooleanConstraint2::AddScheduledEncoding(SolverState &state) {
 
   }
 
+}
+void WatchedPseudoBooleanConstraint2::UpdateLitCount(BooleanLiteral lit) {
+  BooleanVariable var = lit.Variable();
+  if (lit_usages_.count(var) == 0)
+    lit_usages_[var]= 0;
+  lit_usages_[var]++;
+}
+int WatchedPseudoBooleanConstraint2::GetLitCount(BooleanLiteral lit) {
+  BooleanVariable var = lit.Variable();
+  if (lit_usages_.count(var) == 0)
+    return 0;
+  return lit_usages_[var];
 }
 } // namespace Pumpkin

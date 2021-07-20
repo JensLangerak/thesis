@@ -171,8 +171,8 @@ private:
 	int decision_level_;
 
       public:
-  std::set<int> update_vars_conflict_clause_;
-  std::set<int> update_vars_analyzer_;
+//  std::set<int> update_vars_conflict_clause_;
+//  std::set<int> update_vars_analyzer_;
 
 };
 

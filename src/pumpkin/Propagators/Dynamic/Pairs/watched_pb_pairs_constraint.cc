@@ -16,13 +16,13 @@ WatchedPbPairsConstraint::WatchedPbPairsConstraint(
   max_weight_ = 0;
   for (int i = 0; i < literals.size(); ++i) {
     intput_liters_.push_back(WeightedLiteral(literals[i], weights[i]));
-    lit_weights_[literals[i].ToPositiveInteger()] = weights[i];
+    lit_weights_[literals[i]] = weights[i];
     if (weights[i] > max_weight_)
       max_weight_ = weights[i];
     lit_sum_ += weights[i];
   }
   for (BooleanLiteral l : literals) {
-    lit_count_[l.ToPositiveInteger()] = 0;
+    lit_count_[l] = 0;
   }
   log_id_ = next_log_id_;
   ++next_log_id_;

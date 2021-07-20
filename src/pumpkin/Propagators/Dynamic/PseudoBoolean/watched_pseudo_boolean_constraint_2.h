@@ -34,6 +34,9 @@ public:
 
   int max_weight_;
   std::unordered_map<int, uint32_t> lit_weights_;
+  std::unordered_map<BooleanVariable, int> lit_usages_;
+  void UpdateLitCount(BooleanLiteral lit);
+  int GetLitCount(BooleanLiteral lit);
 
   struct DecisionLevelCount {
     int level;
@@ -48,7 +51,6 @@ public:
 
 
   int propagate_count_ = 0;
-  std::unordered_map<int, int> lit_count_;
 
   std::vector<BooleanLiteral> add_next_literals_;
 

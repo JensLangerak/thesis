@@ -87,6 +87,7 @@ SolverOutput ConstraintSatisfactionSolver::Solve(std::vector<BooleanLiteral>& as
 	}
 
 	CleanUp();
+        std::cout << "restarts: " <<restarts_counter_debug << std::endl;
 	return SolverOutput(runtime, timeout, solution, cost, core);
 }
 
@@ -349,7 +350,7 @@ ConflictAnalysisResultClausal ConstraintSatisfactionSolver::AnalyseConflict(Prop
 	state_.variable_selector_.BumpActivity(unique_implication_point_literal.Variable());
 	learned_clause_literals_.push_back(~unique_implication_point_literal);
 
-        state_.update_vars_analyzer_.insert(unique_implication_point_literal.VariableIndex());
+//        state_.update_vars_analyzer_.insert(unique_implication_point_literal.VariableIndex());
 
         ConflictAnalysisResultClausal analysis_result(learned_clause_literals_, ~unique_implication_point_literal, backtrack_level_);
 	assert(analysis_result.CheckCorrectnessAfterConflictAnalysis(state_));
@@ -387,7 +388,7 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 		//assigned
 		BooleanLiteral reason_literal = (*explanation)[i];
 		BooleanVariable reason_variable = reason_literal.Variable();
-          state_.update_vars_analyzer_.insert(reason_variable.index_);
+//          state_.update_vars_analyzer_.insert(reason_variable.index_);
 
           //ignore variables at level 0 -> these are unit clauses (in future need to take care, these might be assumptions)
 		if (state_.assignments_.GetAssignmentLevel(reason_variable) == 0) { continue; }
@@ -426,9 +427,9 @@ void ConstraintSatisfactionSolver::ProcessConflictPropagator(PropagatorGeneric *
 PropagatorGeneric * ConstraintSatisfactionSolver::ProcessConflictAnalysisResult(ConflictAnalysisResultClausal& result)
 {
 
-        for (BooleanLiteral l : result.learned_clause_literals) {
-          state_.update_vars_conflict_clause_.insert(l.VariableIndex());
-        }
+//        for (BooleanLiteral l : result.learned_clause_literals) {
+//          state_.update_vars_conflict_clause_.insert(l.VariableIndex());
+//        }
 
 	//unit clauses are treated in a special way: they are added as decision literals at decision level 0. This might change in the future if a better idea presents itself
 	if (result.learned_clause_literals.size() == 1)
@@ -572,6 +573,9 @@ bool ConstraintSatisfactionSolver::ShouldRestart()
 	//using the glucose restart strategy as described in "Evaluating CDCL Restart Schemes" -> currently using the original version with simple moving averages instead of the exponential decays
 	runtime_assert(internal_parameters_.restart_strategy_ == InternalParameters::RestartStrategy::GLUCOSE);
 
+        if (counters_.conflicts_until_restart < -1000)
+          return true;
+
 	//should postpone the restart?
 	if (counters_.conflicts >= 10000 && state_.GetNumberOfAssignedVariables() > 1.4*state_.simple_moving_average_block.GetCurrentValue())
 	{
@@ -612,6 +616,7 @@ void ConstraintSatisfactionSolver::PerformRestartDuringSearch()
 	}
 
 	counters_.num_restarts++;
+        restarts_counter_debug++;
 
 	if (internal_parameters_.restart_strategy_ == InternalParameters::RestartStrategy::LUBY)
 	{
@@ -630,7 +635,7 @@ void ConstraintSatisfactionSolver::PerformRestartDuringSearch()
 		runtime_assert(1 == 2);
 	}
 
-        LogUsedVars();
+//        LogUsedVars();
 
 
         state_.AddScheduledEncodings();
@@ -728,22 +733,22 @@ bool ConstraintSatisfactionSolver::IsSeenCleared() const
 	return true;
 }
 void ConstraintSatisfactionSolver::LogUsedVars() {
-  std::string analyze_vars;
-  for (int i : state_.update_vars_analyzer_) {
-    analyze_vars += " " + std::to_string(i);
-  }
-  simple_sat_solver::logger::Logger::Log2("Analyzed conflict vars:" + analyze_vars);
-
-
-  std::string clause_vars;
-  for (int i : state_.update_vars_conflict_clause_) {
-    clause_vars += " " + std::to_string(i);
-  }
-  simple_sat_solver::logger::Logger::Log2("Learned clause vars:" + clause_vars);
-
-
-  state_.update_vars_conflict_clause_.clear();
-  state_.update_vars_analyzer_.clear();
+//  std::string analyze_vars;
+//  for (int i : state_.update_vars_analyzer_) {
+//    analyze_vars += " " + std::to_string(i);
+//  }
+//  simple_sat_solver::logger::Logger::Log2("Analyzed conflict vars:" + analyze_vars);
+//
+//
+//  std::string clause_vars;
+//  for (int i : state_.update_vars_conflict_clause_) {
+//    clause_vars += " " + std::to_string(i);
+//  }
+//  simple_sat_solver::logger::Logger::Log2("Learned clause vars:" + clause_vars);
+//
+//
+//  state_.update_vars_conflict_clause_.clear();
+//  state_.update_vars_analyzer_.clear();
 
 }
 

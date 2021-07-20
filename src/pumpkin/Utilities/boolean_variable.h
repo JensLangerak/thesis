@@ -2,6 +2,7 @@
 #define BOOLEAN_VARIABLE_H
 
 #include <stdlib.h>
+#include <string>
 
 namespace Pumpkin
 {
@@ -18,8 +19,8 @@ public:
 
 	bool IsUndefined() const; //returns true or false if the variable is considered undefined. Internally a special code_ for undefined variables is kept to distinguish it, i.e. the never-used index zero variable
 
-	bool operator==(BooleanVariable); //compares if two variables are identical
-	bool operator!=(BooleanVariable);
+	bool operator==(BooleanVariable) const; //compares if two variables are identical
+	bool operator!=(BooleanVariable) const;
 
 	size_t ToPositiveInteger() const; //used for the VectorObjectIndexed
 
@@ -27,5 +28,17 @@ public:
 };
 
 } //end Pumpkin namespace
+
+
+namespace std
+{
+template<> struct hash<Pumpkin::BooleanVariable>
+{
+  std::size_t operator()(Pumpkin::BooleanVariable const& s) const noexcept
+  {
+    return std::hash<long>{}(s.index_);
+  }
+};
+}
 
 #endif // !BOOLEAN_VARIABLE_H

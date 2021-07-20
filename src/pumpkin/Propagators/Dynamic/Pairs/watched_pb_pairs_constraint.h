@@ -29,7 +29,7 @@ public:
   uint32_t lit_sum_ =0 ;
 
   int max_weight_;
-  std::unordered_map<int, uint32_t> lit_weights_;
+  std::unordered_map<BooleanLiteral, uint32_t> lit_weights_;
 
   struct DecisionLevelCount {
     int level;
@@ -44,7 +44,7 @@ public:
 
 
   int propagate_count_ = 0;
-  std::unordered_map<int, int> lit_count_;
+  std::unordered_map<BooleanLiteral, int> lit_count_;
 
   std::vector<BooleanLiteral> add_next_literals_;
   PairsDatabase * pairs_database_;
