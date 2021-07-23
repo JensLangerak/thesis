@@ -37,7 +37,7 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification*
 	use_glucose_bumping_(false),
 	use_clause_minimisation_(parameters.GetBooleanParameter("clause-minimisation"))
 {
-	for (BooleanLiteral unit_literal : problem_specification->unit_clauses_) { state_.AddUnitClause(unit_literal); }
+  for (BooleanLiteral unit_literal : problem_specification->unit_clauses_) { state_.AddUnitClause(unit_literal); }
 	for (auto& clause : problem_specification->clauses_) { state_.AddClause(clause); }
         for (auto pb : problem_specification->pseudo_boolean_constraints_) {
           pb.pseudo_boolean_adder
@@ -124,10 +124,13 @@ ConstraintSatisfactionSolver::SolverExecutionFlag ConstraintSatisfactionSolver::
 {
 	Initialise(time_limit_in_seconds, assumptions);
         simple_sat_solver::logger::Logger::Log2("nr lits: " + std::to_string(state_.GetNumberOfVariables()));
+        int nr_clauses = state_.propagator_clausal_.clause_database_.permanent_clauses_.size();
+        simple_sat_solver::logger::Logger::Log2("nr clauses: " + std::to_string(nr_clauses));
 
 
 	//check failure by unit propagation at root level - perhaps this could be done as part of a preprocessing step?
-	if (SetUnitClauses() == false) { return SolverExecutionFlag::UNSAT; }
+  state_.propagator_clausal_.next_position_on_trail_to_propagate_ = 0;
+  if (SetUnitClauses() == false) { return SolverExecutionFlag::UNSAT; }
 
 	while (stopwatch_.IsWithinTimeLimit())
 	{
@@ -135,9 +138,11 @@ ConstraintSatisfactionSolver::SolverExecutionFlag ConstraintSatisfactionSolver::
 		BooleanLiteral next_decision_literal = PeekNextDecisionLiteral();
 
 		//a full assignment has been built, stop the search
-		if (next_decision_literal.IsUndefined()) { return SolverExecutionFlag::SAT; }
+		if (next_decision_literal.IsUndefined()) {
+                  return SolverExecutionFlag::SAT; }
 		//a decision literal may be already assigned only if it is a conflicting assumption, stop the search
-		if (state_.assignments_.IsAssigned(next_decision_literal)) { return SolverExecutionFlag::UNSAT_UNDER_ASSUMPTIONS; }
+		if (state_.assignments_.IsAssigned(next_decision_literal)) {
+                  return SolverExecutionFlag::UNSAT_UNDER_ASSUMPTIONS; }
 
 		int64_t num_assigned_variables_old = state_.GetNumberOfAssignedVariables();
 		state_.EnqueueDecisionLiteral(next_decision_literal);
@@ -149,10 +154,35 @@ ConstraintSatisfactionSolver::SolverExecutionFlag ConstraintSatisfactionSolver::
 		{
 			bool success = ResolveConflict(conflicting_propagator);
 			//if the conflict could not be resolved, then UNSAT has been detected, stop the search
-			if (success == false) { return SolverExecutionFlag::UNSAT; }
+			if (success == false) {
+                          return SolverExecutionFlag::UNSAT; }
 
 			if (ShouldRestart()) { PerformRestartDuringSearch(); }
-		}
+		} else {
+//                  for (auto c : state_.propagator_clausal_.clause_database_.permanent_clauses_) {
+//                    bool sat = false;
+//                    for (auto b : c->literals_) {
+//                      if (!state_.assignments_.IsAssignedFalse(b)) {
+//                        sat = true;
+//                        break;
+//                      }
+//                    }
+//                    if (!sat) {
+//                      auto test= c->GetWatchedLiterals();
+//                      std::vector<BooleanLiteral> l;
+//                      std::vector<int> assign_level;
+//                      for (int i = 0; i < c->literals_.Size(); ++i) {
+//                        l.push_back(c->literals_[i]);
+//                        assign_level.push_back(state_.assignments_.GetAssignmentLevel(c->literals_[i]));
+//                      }
+//                      PerformRestartDuringSearch();
+
+//                    }
+//
+//
+//                  }
+
+                }
 	}
 	return SolverExecutionFlag::TIMEOUT;
 }

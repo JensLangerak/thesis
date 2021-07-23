@@ -19,7 +19,7 @@ WatchedPseudoBooleanConstraint2* DatabasePseudoBoolean2::AddPermanentConstraint(
   for (BooleanLiteral l : constraint.literals) {
     line += std::to_string(l.VariableIndex()) + " ";
   }
-  simple_sat_solver::logger::Logger::Log2("constraint added: id " + std::to_string(watched->log_id_) + " vars " + line);
+//  simple_sat_solver::logger::Logger::Log2("constraint added: id " + std::to_string(watched->log_id_) + " vars " + line);
 
 
 
@@ -30,7 +30,7 @@ WatchedPseudoBooleanConstraint2* DatabasePseudoBoolean2::AddPermanentConstraint(
     int lits_before = state.GetNumberOfVariables();
     watched->encoder_->Encode(state);
     int lits_after = state.GetNumberOfVariables();
-    simple_sat_solver::logger::Logger::Log2("constraint encoded: id " + std::to_string(watched->log_id_) + " vars_first " + std::to_string(lits_before + 1) + " vars_last " + std::to_string(lits_after));
+//    simple_sat_solver::logger::Logger::Log2("constraint encoded: id " + std::to_string(watched->log_id_) + " vars_first " + std::to_string(lits_before + 1) + " vars_last " + std::to_string(lits_after));
   }
   permanent_constraints_.push_back(watched);
   AddWatchers(watched);

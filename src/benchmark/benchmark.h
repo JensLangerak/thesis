@@ -43,13 +43,21 @@ protected:
   virtual Pumpkin::IConstraintAdder<Pumpkin::PseudoBooleanConstraint> *
   CreatePbConstraintWrapper(SolverType solver_type);
   virtual void CheckSolutionCorrectness(Pumpkin::ProblemSpecification *specification,
-                           Pumpkin::SolverOutput output) {};
+                           Pumpkin::SolverOutput output);
   Pumpkin::ProblemSpecification ConvertSatToPumpkin(sat::SatProblem *problem);
   Pumpkin::IConstraintAdder<Pumpkin::PseudoBooleanConstraint> *optimisation_adder_;
   Pumpkin::IConstraintAdder<Pumpkin::PseudoBooleanConstraint> *pb_adder_;
   Pumpkin::ProblemSpecification
   CreateProblemOrderLiterals(Pumpkin::ProblemSpecification specification,
                              Pumpkin::SolverState &state);
+  void ParseArgument(std::string basic_string);
+  void ParseKey(std::string basic_string);
+  void ParseKeyValue(std::string basic_string, std::string basic_string_1);
+  void OrderLitUsingHamming(std::vector<Pumpkin::BooleanLiteral> &output_lits,
+                            std::vector<uint32_t> &output_weights,
+                            Pumpkin::SolverState &state,
+                            std::vector<Pumpkin::BooleanLiteral> input_lits,
+                            std::vector<uint32_t> input_weights);
 };
 }
 

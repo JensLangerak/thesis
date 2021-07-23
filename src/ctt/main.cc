@@ -17,6 +17,7 @@
 //#include "../solver_wrappers/i_solver.h"
 //#include "../solver_wrappers/pumpkin.h"
 #include "../benchmark/benchmark.h"
+#include "../logger/logger.h"
 #include "ctt.h"
 #include "ctt_benchmark.h"
 #include "ctt_converter.h"
@@ -473,21 +474,30 @@ using namespace simple_sat_solver::ctt;
 using namespace simple_sat_solver::benchmark;
 int main(int argc, char *argv[]) {
 
-  CttBenchmark benchmark;
-  if (argc >= 4) {
-    benchmark.Main(argc, argv);
-  } else {
-    std::string test_file = "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/comp13.ctt";
-    std::string log_dir="/home/jens/CLionProjects/SimpleSatSolver/data/ctt/logs_a4";
-    std::string test_dir = "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/";
+  try {
+    CttBenchmark benchmark;
+    if (argc >= 4) {
+      benchmark.Main(argc, argv);
+    } else {
+      std::string test_file =
+          "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/comp11.ctt";
+      std::string log_dir =
+          "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/logs_a4";
+      std::string test_dir =
+          "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/";
 
-    benchmark.solver_type_ = simple_sat_solver::benchmark::SolverType::PAIRS;
-    benchmark.problem_file_full_path_ =test_file;
-    benchmark.log_dir_ = log_dir;
-    benchmark.delay_factor_ = 0.0;
-    benchmark.start_penalty_ = 100000;
+      benchmark.solver_type_ = simple_sat_solver::benchmark::SolverType::ENCODER;
+      benchmark.problem_file_full_path_ = test_file;
+      benchmark.log_dir_ = log_dir;
+      benchmark.delay_factor_ = 0.0;
+      benchmark.start_penalty_ = 100000;
 
-    benchmark.Main();
+      benchmark.Main();
+    }
+  } catch(const char* s) {
+    std::cout << s << std::endl;
+    simple_sat_solver::logger::Logger::Log2("Error: " + std::string(s));
+    simple_sat_solver::logger::Logger::End();
   }
   return 0;
 //  if (argc >= 4) {

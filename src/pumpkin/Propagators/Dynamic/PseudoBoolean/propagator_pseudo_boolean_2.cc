@@ -87,10 +87,17 @@ void PropagatorPseudoBoolean2::Synchronise(SolverState &state) {
   for (auto constraint : pseudo_boolean_database_.permanent_constraints_) {
     constraint->Synchronise(state);
     if (next_position_on_trail_to_propagate_ > 0) {
+      auto test =state.trail_.back();
     assert(constraint->CountCorrect(state, state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_ - 1)));
   }}
 
 
 }
 PropagatorPseudoBoolean2::PropagatorPseudoBoolean2(int64_t num_variables)    : PropagatorDynamic(), pseudo_boolean_database_(num_variables){}
+void PropagatorPseudoBoolean2::Reset(SolverState &state) {
+  PropagatorGeneric::Reset(state);
+  for (auto c : pseudo_boolean_database_.permanent_constraints_) {
+    c->Reset(state);
+  }
+}
 }

@@ -94,7 +94,7 @@ void UpperBoundSearch::LinearSearch(ConstraintSatisfactionSolver& solver, Linear
 		{
 			runtime_assert(pseudo_boolean_encoder_.DebugCheckSatisfactionOfEncodedConstraints(output.solution));
 			int64_t new_internal_upper_bound = objective_function.ComputeSolutionCost(output.solution);
-			runtime_assert(new_internal_upper_bound < internal_upper_bound);
+//			runtime_assert(new_internal_upper_bound < internal_upper_bound);
 			internal_upper_bound = new_internal_upper_bound;
 						
 			solution_tracker.UpdateBestSolution(output.solution); //note that this may fail if we introduced auxiliary variables during the core-guided phase: the aux variables might be set to higher values than they should, and setting them to zero does not change the original solution
@@ -102,12 +102,14 @@ void UpperBoundSearch::LinearSearch(ConstraintSatisfactionSolver& solver, Linear
 			SetValueSelectorValues(solver, objective_function, output.solution);
 
 			int new_upper_bound_on_free_terms = new_internal_upper_bound - objective_function.GetConstantTerm() - 1; //recall that core-guided phase might raise the lower bound, need to take that into account
-			if (new_upper_bound_on_free_terms < 0) { break; }
+			if (new_upper_bound_on_free_terms < 0) {
+                          break; }
 			bool success = StrengthenUpperBound(
 				sum_literals,
 				new_upper_bound_on_free_terms,
 				solver);
-			if (!success) { break; }
+			if (!success) {
+                          break; }
 		}
 		else if (output.ProvenInfeasible())
 		{

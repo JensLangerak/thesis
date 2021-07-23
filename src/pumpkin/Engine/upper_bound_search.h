@@ -53,6 +53,8 @@ private:
 	EncoderGeneralisedTotaliser pseudo_boolean_encoder_;
 //	PropagatorCounterSinglePseudoBoolean *upper_bound_propagator_; //should not be deleted by the class if passed to SolverState
         IConstraintAdder<PseudoBooleanConstraint> * upper_bound_adder_ = nullptr;
+
+      public:
         IPseudoBooleanConstraintModifier * upper_bound_constraint_ = nullptr;
 	std::vector<BooleanLiteral> helper_;
 };

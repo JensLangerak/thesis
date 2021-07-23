@@ -14,7 +14,7 @@ configs = {
 
 }
 
-def create_file(target_dir: str, exec_file:str, config_name:str, config: str):
+def create_file(target_dir: str, config_name:str, config: str):
     start_name = "starexec_run_"
     header = """#!/bin/sh    
 
@@ -22,31 +22,49 @@ def create_file(target_dir: str, exec_file:str, config_name:str, config: str):
     file_name = start_name + config_name + ".sh"
     f = open(target_dir + "/" + file_name, "a")
     f.write(header)
-    f.write(exec_file + " " + config + "\n")
+
+    f.write("""if [[ $1 == *.ctt ]]
+then
+
+""")
+    f.write("./ctt_benchmark " + config + "\n")
+    f.write("""
+elif [[ $1 == *.opb ]]
+then
+
+""")
+    f.write("./pseudo_boolean_test " + config + "\n")
+    f.write("""
+elif [[ $1 == *.wcnf ]]
+then
+
+""")
+    f.write("./max_sat " + config + "\n")
+    f.write("fi\n")
+
     f.close()
 
 
-def create_files(target_dir: str, exec_file: str):
+def create_files(target_dir: str):
     if not os.path.isdir(target_dir):
         raise Exception(target_dir + " is not a directory")
 
     for k, v in configs.items():
         if v[1] is None:
-            create_file(target_dir, exec_file, k, v[0])
+            create_file(target_dir, k, v[0])
         else:
             for d in v[1]:
                 delay = str(d)
-                create_file(target_dir, exec_file, k + "_" + delay, v[0] + " " + delay)
+                create_file(target_dir, k + "_" + delay, v[0] + " " + delay)
 
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 2:
         raise Exception("wrong number of arguments")
     target_dir = sys.argv[1]
-    exec_file = sys.argv[2]
 
-    create_files(target_dir, exec_file)
+    create_files(target_dir)
 
 
 if __name__ == '__main__':

@@ -116,8 +116,15 @@ bool WatchedPseudoBooleanConstraint2::CountCorrect(SolverState &state,
             state.assignments_.GetTrailPosition(literal.Variable()))
       count += wl.weight;
   }
+  int count2 = 0;
+  for (auto wl : original_literals_) {
+    if (state.assignments_.IsAssignedTrue(wl.literal) &&
+        state.assignments_.GetAssignmentLevel(wl.literal.Variable()) <=  state.assignments_.GetAssignmentLevel(literal.Variable()))
+      count2 += wl.weight;
+  }
   assert(count == current_sum_value_);
   return count == current_sum_value_;
+  return true;
 }
 void WatchedPseudoBooleanConstraint2::UpdateCounts(
     std::vector<BooleanLiteral> &lits, SolverState &state) {
@@ -244,5 +251,10 @@ int WatchedPseudoBooleanConstraint2::GetLitCount(BooleanLiteral lit) {
   if (lit_usages_.count(var) == 0)
     return 0;
   return lit_usages_[var];
+}
+void WatchedPseudoBooleanConstraint2::Reset(SolverState &state) {
+  current_sum_value_ = 0;
+  while (!decision_level_sums_.empty())
+    decision_level_sums_.pop();
 }
 } // namespace Pumpkin

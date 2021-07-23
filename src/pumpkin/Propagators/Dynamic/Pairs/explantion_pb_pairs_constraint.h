@@ -21,9 +21,9 @@ public:
 
   static void InitLits(int64_t size);
 
-  static double time_used_;
-  static double avg_pair_size_;
-  static int replace_count_;
+//  static double time_used_;
+//  static double avg_pair_size_;
+//  static int replace_count_;
 private:
   static void ReplaceLits(std::vector<WeightedLiteral> causes, SolverState &state, PairsDatabase * pairs_database, std::vector<BooleanLiteral> &lits_);
   static void ReplaceLits2Wrapper(std::vector<WeightedLiteral> causes, WatchedPbPairsConstraint* constraint, SolverState &state, PairsDatabase * pairs_database, std::vector<BooleanLiteral> &lits_);

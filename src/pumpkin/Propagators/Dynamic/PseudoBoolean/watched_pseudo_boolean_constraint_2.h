@@ -54,7 +54,7 @@ public:
 
   std::vector<BooleanLiteral> add_next_literals_;
 
-
+  void Reset(SolverState &state);
 };
 } // namespace Pumpkin
 

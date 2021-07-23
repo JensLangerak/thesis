@@ -59,5 +59,8 @@ PropagatorGeneric::GetNextLiteralToPropagate(SolverState &state) {
   BooleanLiteral return_literal = state.GetLiteralFromTrailAtPosition(next_position_on_trail_to_propagate_);
   return return_literal;
 }
+void PropagatorGeneric::Reset(SolverState &state) {
+  next_position_on_trail_to_propagate_ = 0;
+}
 
 } //end Pumpkin namespace

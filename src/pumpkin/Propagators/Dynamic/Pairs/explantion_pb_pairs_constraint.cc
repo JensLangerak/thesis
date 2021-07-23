@@ -7,13 +7,13 @@
 #include <unordered_set>
 #include <chrono>
 
-//#define REPLACEMODE_CAUSE
+#define REPLACEMODE_CAUSE
 namespace Pumpkin {
 using std::chrono::high_resolution_clock;
 using std::chrono::duration;
-double ExplanationPbPairsConstraint::time_used_ = 0.0;
-double ExplanationPbPairsConstraint::avg_pair_size_ = 0.0;
-int ExplanationPbPairsConstraint::replace_count_ =0;
+//double ExplanationPbPairsConstraint::time_used_ = 0.0;
+//double ExplanationPbPairsConstraint::avg_pair_size_ = 0.0;
+//int ExplanationPbPairsConstraint::replace_count_ =0;
 
 void ExplanationPbPairsConstraint::InitExplanationPbPairsConstraint(
     WatchedPbPairsConstraint *constraint, SolverState &state,
@@ -44,21 +44,17 @@ void ExplanationPbPairsConstraint::InitExplanationPbPairsConstraint(
   }
 
 
-  auto t1 = high_resolution_clock::now();
+//  auto t1 = high_resolution_clock::now();
 #ifdef REPLACEMODE_CAUSE
   ReplaceLits(causes, state, constraint->pairs_database_, lits_);
 #else
   ReplaceLits2(causes, constraint, state, constraint->pairs_database_, lits_);
 #endif
 
-  auto t2 = high_resolution_clock::now();
-  duration<double, std::milli> ms_double = t2 - t1;
-  auto time_used_old = time_used_;
-  time_used_ += ms_double.count();
-  if (((int) (time_used_old / 5000)) <  ((int) (time_used_ / 5000))) {
-    std::cout << "Pair time " << std::to_string(time_used_) << std::endl;
-    std::cout << "Pair size " << std::to_string(avg_pair_size_) << std::endl;
-  }
+//  auto t2 = high_resolution_clock::now();
+//  duration<double, std::milli> ms_double = t2 - t1;
+//  auto time_used_old = time_used_;
+//  time_used_ += ms_double.count();
 
   // TODO not sure if >= should be possible or that is should be ==
   if (sum < constraint->max_) {
@@ -112,22 +108,17 @@ void ExplanationPbPairsConstraint::InitExplanationPbPairsConstraint(
       sum += wl.weight;
     }
   }
-  auto t1 = high_resolution_clock::now();
+//  auto t1 = high_resolution_clock::now();
 #ifdef REPLACEMODE_CAUSE
   ReplaceLits(causes, state, constraint->pairs_database_, lits_);
 #else
   ReplaceLits2(causes, constraint, state, constraint->pairs_database_, lits_);
 #endif
   assert(sum + l_w > constraint->max_);
-  auto t2 = high_resolution_clock::now();
-  duration<double, std::milli> ms_double = t2 - t1;
-  auto time_used_old = time_used_;
-  time_used_ += ms_double.count();
-  if (((int) (time_used_old / 5000)) <  ((int) (time_used_ / 5000))) {
-    std::cout << "Pair time " << std::to_string(time_used_) << std::endl;
-    std::cout << "Pair size " << std::to_string(avg_pair_size_) << std::endl;
-  }
-  // TODO trim lits if to many
+//  auto t2 = high_resolution_clock::now();
+//  duration<double, std::milli> ms_double = t2 - t1;
+//  auto time_used_old = time_used_;
+//  time_used_ += ms_double.count();
   explanation->Init(lits_);
 }
 void ExplanationPbPairsConstraint::ReplaceLits2Wrapper(
@@ -165,10 +156,10 @@ replaced_lits.clear();
     auto pairs = pairs_database->pairs_[l];
     BooleanLiteral candidate = BooleanLiteral();
 
-    double sp = pairs.size();
+//    double sp = pairs.size();
 //    avg_pair_size_ = (avg_pair_size_ * replace_count_ + sp) / (replace_count_ + 1);
-    avg_pair_size_ = avg_pair_size_ * 0.9 + 0.1 * sp;
-    replace_count_++;
+//    avg_pair_size_ = avg_pair_size_ * 0.9 + 0.1 * sp;
+//    replace_count_++;
 
       for (auto p : pairs) {
         BooleanLiteral other = p.first;

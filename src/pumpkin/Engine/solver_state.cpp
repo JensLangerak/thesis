@@ -346,6 +346,8 @@ void SolverState::PerformStateReset()
 	{
 		num_removed_learned_clauses = propagator_clausal_.clause_database_.NumLearnedClauses();
 		propagator_clausal_.clause_database_.RemoveAllLearnedClauses();
+          for (PropagatorGeneric* propagator : additional_propagators_) {
+            propagator->Reset(*this); }
 	}
 
 	propagator_clausal_.Synchronise(*this);
@@ -372,12 +374,17 @@ bool SolverState::IsPropagationComplete()
 }
 void SolverState::AddScheduledEncodings() {
   int start_lits = GetNumberOfVariables();
+  int start_clauses = propagator_clausal_.clause_database_.permanent_clauses_.size();
   for (auto c : scheduled_dynamic_constraints_) {
     c->AddScheduledEncoding(*this);
   }
   scheduled_dynamic_constraints_.clear();
   if (GetNumberOfVariables() > start_lits)
     simple_sat_solver::logger::Logger::Log2("nr lits: " + std::to_string(GetNumberOfVariables()));
+  int nr_clauses = propagator_clausal_.clause_database_.permanent_clauses_.size();
+  if (nr_clauses > start_clauses)
+    simple_sat_solver::logger::Logger::Log2("nr clauses: " + std::to_string(nr_clauses));
+
 }
 
 

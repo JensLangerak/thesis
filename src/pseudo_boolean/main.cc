@@ -81,9 +81,10 @@ int main(int argc, char *argv[]) {
   } else {
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/leberre/opb-paranoid/misc2010/datasets/caixa/normalized-1096.cudf.paranoid.opb";
 //    std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j60/normalized-j6017_10-unsat.opb";
-//  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j60/normalized-j6039_2-sat.opb";
+//  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j90/normalized-j9023_9-unsat.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-sat.opb";
-  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j120/normalized-j1201_7-sat.opb";
+//    std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j120/normalized-j1201_7-sat.opb";
+  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3035_6-unsat.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j120/normalized-j12012_9-unsat.opb";
 //  std::string test_file = "/home/jens/Downloads/normalized-PB09/OPT-SMALLINT-LIN/flexray/normalized-fx30.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-sat.opb";
@@ -92,10 +93,10 @@ int main(int argc, char *argv[]) {
 
 
 
-    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::PROPAGATOR;
+    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::ENCODER;
     benchnark.problem_file_full_path_ =test_file;
     benchnark.log_dir_ = log_dir;
-    benchnark.delay_factor_ = 0.1;
+    benchnark.delay_factor_ = 10.;
     benchnark.start_penalty_ = 100000;
 
     benchnark.Main();

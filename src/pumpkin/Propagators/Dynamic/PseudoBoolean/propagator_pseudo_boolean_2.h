@@ -29,6 +29,7 @@ public:
   void GrowDatabase() override {
     pseudo_boolean_database_.watch_list_true_.Grow(); }
   ~PropagatorPseudoBoolean2() = default;
+  virtual void Reset(SolverState &state);
 
 protected:
 

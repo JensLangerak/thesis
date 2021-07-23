@@ -29,7 +29,11 @@ private:
 	Stopwatch stopwatch_;
 	int64_t upper_bound_;
 	BooleanAssignmentVector best_solution_;
+
+      public:
 	bool is_optimal_;
+
+      private:
 	TimeStamps time_stamps_;	
 	LinearBooleanFunction objective_function_;
 };

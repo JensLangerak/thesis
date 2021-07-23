@@ -165,7 +165,10 @@ private:
 	int64_t saved_state_num_root_literal_assignments_;
 
 //private class variables--------------------------
+      public:
 	std::vector<BooleanLiteral> trail_;
+
+      private:
 	std::vector<int> trail_delimiter_; //[i] is the position where the i-th decision level ends (exclusive) on the trail.
 	bool use_binary_clause_propagator_;
 	int decision_level_;
