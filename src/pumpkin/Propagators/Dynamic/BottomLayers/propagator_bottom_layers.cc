@@ -71,7 +71,8 @@ bool PropagatorBottomLayers::PropagateLiteral(BooleanLiteral true_literal,
     for (int i = 0; i < constraint->nodes_.size(); ++i) {
       for (WeightedLiteral l : constraint->nodes_[i].sum_literals) {
         if (!state.assignments_.IsAssigned(l.literal)) {
-          if (slack < l.weight) {
+          int wdiff = l.weight - constraint->nodes_[i].current_sum_;
+          if (slack < wdiff) {
             state.EnqueuePropagatedLiteral(
                 ~l.literal, this, reinterpret_cast<uint64_t>(constraint));
           }

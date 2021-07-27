@@ -1,5 +1,6 @@
 #include "upper_bound_search.h"
 #include "../../logger/logger.h"
+#include "../Propagators/Dynamic/BottomLayers/bottom_layers_adder.h"
 #include "../Utilities/stopwatch.h"
 #include "preprocessor.h"
 
@@ -170,6 +171,7 @@ BooleanAssignmentVector UpperBoundSearch::ComputeExtendedSolution(const BooleanA
 		BooleanVariable variable(i + 1);
 		assumptions[i] = BooleanLiteral(variable, reference_solution[variable]);
 	}
+
 	SolverOutput output = solver.Solve(assumptions, time_limit_in_seconds);
 	runtime_assert(output.HasSolution()); //although it could be that the solver timeout, for now we consider this strange
 	return output.solution;

@@ -35,8 +35,9 @@ void Benchmark::MainOrder() {
   simple_sat_solver::logger::Logger::Log2("RunTime: " +
                                           std::to_string(probe_time_));
 
-  optimisation_adder_ = CreatePbConstraintWrapper(solver_type_);
-  pb_adder_ = CreatePbConstraintWrapper(SolverType::PROPAGATOR);
+//  optimisation_adder_ = CreatePbConstraintWrapper(solver_type_);
+  optimisation_adder_ = CreatePbConstraintWrapper(SolverType::ENCODER);
+  pb_adder_ = CreatePbConstraintWrapper(SolverType::ENCODER);
   //  pb_adder_ = CreatePbConstraintWrapper(solver_type_);
   ProblemSpecification problem = GetProblem();
 
@@ -84,7 +85,7 @@ void Benchmark::MainOrder() {
                                             std::to_string(probe_time_));
   }
 
-  optimisation_adder_ = CreatePbConstraintWrapper(solver_type_);
+  optimisation_adder_ = CreatePbConstraintWrapper(SolverType::ENCODER);
 
   parameter_handler = ConstraintOptimisationSolver::CreateParameterHandler();
   parameter_handler.optimisation_constraint_wrapper_ = optimisation_adder_;
@@ -143,9 +144,10 @@ void Benchmark::MainOrder() {
 }
 
 void Benchmark::Main() {
-  MainOrder();
-  return;
+//  MainOrder();
+//  return;
   WriteHeader();
+//  solver_type_=SolverType::ENCODER;
   optimisation_adder_ = CreatePbConstraintWrapper(solver_type_);
 //    pb_adder_ = CreatePbConstraintWrapper(SolverType::ENCODER);
   pb_adder_ = CreatePbConstraintWrapper(solver_type_);
@@ -390,7 +392,7 @@ struct WeightedCountLiteral {
 };
 Pumpkin::ProblemSpecification Benchmark::CreateProblemOrderLiterals(
     Pumpkin::ProblemSpecification specification, Pumpkin::SolverState &state) {
-  bool use_count = true;
+  bool use_count = false;
   bool use_hamming = false;
   auto old_pb_adder = pb_adder_;
   Pumpkin::PropagatorPseudoBoolean2 *propagator_adder =
@@ -434,7 +436,7 @@ Pumpkin::ProblemSpecification Benchmark::CreateProblemOrderLiterals(
         count = propagator_adder->pseudo_boolean_database_
                     .permanent_constraints_[i]
                     ->GetLitCount(c.literals[i]);
-//        count = rand();
+        count = rand();
         count = cs;
         cs--;
         clitsl.push_back(
@@ -492,7 +494,7 @@ Pumpkin::ProblemSpecification Benchmark::CreateProblemOrderLiterals(
                     .back()
                     ->GetLitCount(pw.literal);
       }
-//      count = rand();
+      count = rand();
       count = c;
       c --;
       clitsl.push_back(WeightedCountLiteral(pw.literal, pw.weight, count));

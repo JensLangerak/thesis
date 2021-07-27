@@ -38,7 +38,12 @@ public:
 
   ~DatabasePbSum() = default; // override;
 private:
-  void AddWatchers(WatchedPbSumConstraint *constraint);
+  void AddWatchers(WatchedPbSumConstraint *constraint, SolverState &state);
+  void UpdateInput(WatchedPbSumConstraint *constraint,
+                   WeightedLiteral weighted_lit);
+  void UpdateOutput(WatchedPbSumConstraint *constraint,
+                    WeightedLiteral weighted_lit);
+  void CheckConstraint(WatchedPbSumConstraint *constraint, SolverState &state);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_SUM_DATABASE_PB_SUM_H_

@@ -32,7 +32,7 @@ public:
   std::string problem_file_full_path_;
   std::string log_dir_;
   int start_penalty_ = 10000;
-  int solve_time_ = 600;
+  int solve_time_ = 900;
   int probe_time_ = 10;
 protected:
   Benchmark()= default;

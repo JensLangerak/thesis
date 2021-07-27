@@ -68,6 +68,8 @@ void Logger::LogToFile(Logger::LogItem &log_item) {
   file_ << ms_all.count() << " " << log_item.message << "\n";
 }
 void Logger::End() {
+
+  simple_sat_solver::logger::Logger::Log2("Closing file:");
   mutex_.lock();
   if (Logger::instance_ != nullptr) {
     instance_->EndLog();

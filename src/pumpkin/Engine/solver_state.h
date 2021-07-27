@@ -177,6 +177,7 @@ private:
 //  std::set<int> update_vars_conflict_clause_;
 //  std::set<int> update_vars_analyzer_;
 
+  int64_t num_restarts = 0;
 };
 
 } //end Pumpkin namespace

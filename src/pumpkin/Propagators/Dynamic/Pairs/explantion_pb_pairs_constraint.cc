@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <chrono>
 
-#define REPLACEMODE_CAUSE
+//#define REPLACEMODE_CAUSE
 namespace Pumpkin {
 using std::chrono::high_resolution_clock;
 using std::chrono::duration;

@@ -9,6 +9,7 @@
 #include "../Encoders/i_encoder.h"
 #include <stack>
 #include <unordered_map>
+#include <unordered_set>
 namespace Pumpkin {
 struct WeightedLiteral;
 class SolverState;
@@ -26,14 +27,14 @@ public:
 
   std::vector<WeightedLiteral> current_literals_;
   std::vector<WeightedLiteral> original_literals_;
-  std::vector<WeightedLiteral> unencoded_constraint_literals_;
+  std::unordered_set<BooleanLiteral> unencoded_constraint_literals_;
   int max_;
   int current_sum_value_;
   uint32_t lit_sum_ =0 ;
   IEncoder<PseudoBooleanConstraint> *encoder_;
 
   int max_weight_;
-  std::unordered_map<int, uint32_t> lit_weights_;
+  std::unordered_map<BooleanLiteral, uint32_t> lit_weights_;
   std::unordered_map<BooleanVariable, int> lit_usages_;
   void UpdateLitCount(BooleanLiteral lit);
   int GetLitCount(BooleanLiteral lit);
@@ -51,10 +52,13 @@ public:
 
 
   int propagate_count_ = 0;
+  int last_restart_ = 0;
 
   std::vector<BooleanLiteral> add_next_literals_;
 
   void Reset(SolverState &state);
+  void AddUsingHammingDistance(SolverState &state);
+  void AddUsingActivity(SolverState &state);
 };
 } // namespace Pumpkin
 

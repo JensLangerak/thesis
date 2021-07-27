@@ -44,7 +44,6 @@ ConstraintSatisfactionSolver::ConstraintSatisfactionSolver(ProblemSpecification*
               ->AddConstraintWithModifier(pb, state_);
         }
 
-
          state_.variable_selector_.Reset(parameters.GetIntegerParameter("seed"));
 }
 
@@ -646,6 +645,7 @@ void ConstraintSatisfactionSolver::PerformRestartDuringSearch()
 	}
 
 	counters_.num_restarts++;
+        state_.num_restarts++;
         restarts_counter_debug++;
 
 	if (internal_parameters_.restart_strategy_ == InternalParameters::RestartStrategy::LUBY)
@@ -684,7 +684,8 @@ void ConstraintSatisfactionSolver::PerformRestartToRoot()
 		state_.propagator_clausal_.clause_database_.PromoteAndReduceTemporaryClauses();
 	}
 
-	counters_.num_restarts++;
+  state_.num_restarts++;
+  counters_.num_restarts++;
 
 	if (internal_parameters_.restart_strategy_ == InternalParameters::RestartStrategy::LUBY)
 	{

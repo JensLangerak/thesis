@@ -32,7 +32,7 @@ public:
 
   ~DatabaseBottomLayers() = default;// override;
 private:
-  void AddWatchers(WatchedBottomLayersConstraint *constraint);
+  void AddWatchers(WatchedBottomLayersConstraint *constraint, SolverState & state);
 
 
 };

@@ -147,7 +147,7 @@ bool WatchedBottomLayersConstraint::CountCorrect(SolverState &state,
     int v_max = 0;
     for (auto lit : n.sum_literals) {
       if (state.assignments_.IsAssignedTrue(lit.literal)) {
-        if (lit.weight > v)
+        if (lit.weight > v_max)
           v_max = lit.weight;
       }
       if (state.assignments_.IsAssignedTrue(lit.literal) && max_position >= state.assignments_.GetTrailPosition(lit.literal.Variable())) {
@@ -167,6 +167,15 @@ bool WatchedBottomLayersConstraint::CountCorrect(SolverState &state,
 //      int i2 = state.assignments_.GetTrailPosition(n.inputs_debug[0].literal.Variable());
 //      int i3 = state.GetCurrentDecisionLevel();
      assert(t);
+    }
+    if (v != n.current_sum_) {
+      bool a0 = state.assignments_.IsAssigned(n.sum_literals[0].literal);
+      bool a1 = state.assignments_.IsAssignedTrue(n.sum_literals[1].literal);
+      bool b1 = state.assignments_.IsAssigned(n.sum_literals[0].literal);
+      bool b2 = state.assignments_.IsAssignedTrue(n.sum_literals[1].literal);
+      int test = 2;
+
+
     }
     assert(s <= v_max);
     assert(v == n.current_sum_);

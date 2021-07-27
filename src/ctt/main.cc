@@ -480,7 +480,7 @@ int main(int argc, char *argv[]) {
       benchmark.Main(argc, argv);
     } else {
       std::string test_file =
-          "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/comp11.ctt";
+          "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/comp12.ctt";
       std::string log_dir =
           "/home/jens/CLionProjects/SimpleSatSolver/data/ctt/logs_a4";
       std::string test_dir =
@@ -489,7 +489,7 @@ int main(int argc, char *argv[]) {
       benchmark.solver_type_ = simple_sat_solver::benchmark::SolverType::ENCODER;
       benchmark.problem_file_full_path_ = test_file;
       benchmark.log_dir_ = log_dir;
-      benchmark.delay_factor_ = 0.0;
+      benchmark.delay_factor_ = 0.1;
       benchmark.start_penalty_ = 100000;
 
       benchmark.Main();
