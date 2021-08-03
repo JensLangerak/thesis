@@ -5,6 +5,8 @@
 #include "generalized_totaliser.h"
 #include "../../../../logger/logger.h"
 #include "../../../Engine/solver_state.h"
+#include "../../../../pumpkin/Propagators/Dynamic/Encoders/generalized_totaliser.h"
+
 #include <iostream>
 #include <numeric>
 namespace Pumpkin {

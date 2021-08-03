@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <chrono>
 
-//#define REPLACEMODE_CAUSE
+#define REPLACEMODE_CAUSE
 namespace Pumpkin {
 using std::chrono::high_resolution_clock;
 using std::chrono::duration;
@@ -46,7 +46,7 @@ void ExplanationPbPairsConstraint::InitExplanationPbPairsConstraint(
 
 //  auto t1 = high_resolution_clock::now();
 #ifdef REPLACEMODE_CAUSE
-  ReplaceLits(causes, state, constraint->pairs_database_, lits_);
+  ReplaceLits(causes, state, constraint->pairs_database_, lits_, constraint);
 #else
   ReplaceLits2(causes, constraint, state, constraint->pairs_database_, lits_);
 #endif
@@ -110,7 +110,7 @@ void ExplanationPbPairsConstraint::InitExplanationPbPairsConstraint(
   }
 //  auto t1 = high_resolution_clock::now();
 #ifdef REPLACEMODE_CAUSE
-  ReplaceLits(causes, state, constraint->pairs_database_, lits_);
+  ReplaceLits(causes, state, constraint->pairs_database_, lits_, constraint);
 #else
   ReplaceLits2(causes, constraint, state, constraint->pairs_database_, lits_);
 #endif
@@ -166,8 +166,19 @@ replaced_lits.clear();
         if (causes.find(other) != causes.end() &&
             replaced_lits.find(other) == replaced_lits.end()) {
           candidate = other;
-          if (p.second->added_)
-            break;
+          if (p.second->added_) {
+            int trail_position =
+                state.assignments_.GetTrailPosition(l.Variable());
+            trail_position =
+                std::max(trail_position,
+                         state.assignments_.GetTrailPosition(other.Variable()));
+            if (state.assignments_.IsAssignedTrue(p.second->outputs_.back().literal)
+                && state.assignments_.GetTrailPosition(p.second->outputs_.back().literal.Variable()) >= trail_position
+                ) {
+              break;
+
+            }
+          }
         }
     }
     if (candidate.code_ == 0) {
@@ -189,6 +200,8 @@ replaced_lits.clear();
   }
 
   BooleanLiteral prev = BooleanLiteral();
+  if (unreplaced_lits.size() > 1)
+    state.scheduled_dynamic_constraints_.push_back(constraint);
   for (auto l : unreplaced_lits) {
     lits_.push_back(l);
 //    if (pairs_database->pairs_.find(l) != pairs_database->pairs_.end()) {
@@ -208,7 +221,7 @@ replaced_lits.clear();
 
 void ExplanationPbPairsConstraint::ReplaceLits(
     std::vector<WeightedLiteral> causes, SolverState &state,
-    PairsDatabase *pairs_database, std::vector<BooleanLiteral> &lits_) {
+    PairsDatabase *pairs_database, std::vector<BooleanLiteral> &lits_, WatchedPbPairsConstraint * constraint) {
 
   std::vector<WeightedLiteral> unreplaced_lits;
   std::unordered_set<int> handled_indices;
@@ -274,8 +287,8 @@ void ExplanationPbPairsConstraint::ReplaceLits(
         assert(node->outputs_.back().weight ==
                node->inputs_[0].weight + node->inputs_[1].weight);
         if (node->added_) {
-          assert(
-              state.assignments_.IsAssignedTrue(node->outputs_.back().literal));
+          if(!state.assignments_.IsAssignedTrue(node->outputs_.back().literal))
+            continue;
           int assignment_pos =
               state.assignments_.GetTrailPosition(l.literal.Variable());
           assignment_pos = std::max(
@@ -320,6 +333,8 @@ void ExplanationPbPairsConstraint::ReplaceLits(
     }
   }
 
+  if (unreplaced_lits.size() > 1)
+    state.scheduled_dynamic_constraints_.push_back(constraint);
   for (int i = 0; i + 1 < unreplaced_lits.size(); i += 2) {
     pairs_database->CreateNode(unreplaced_lits[i], unreplaced_lits[i + 1],
                                state);

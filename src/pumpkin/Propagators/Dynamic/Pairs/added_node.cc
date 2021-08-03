@@ -54,6 +54,8 @@ void AddedNode::AddEncoding(SolverState& state) {
   }
 
   assert(inputs_[0].weight + inputs_[1].weight == outputs_.back().weight);
+  if (outputs_.back().literal.IsUndefined())
+    outputs_.back().literal = BooleanLiteral(state.CreateNewVariable(), true);
   sum_clause.push_back(outputs_.back().literal);
   auto added_sum_clause = state.propagator_clausal_.clause_database_.AddPermanentClause(sum_clause, state);
   clauses_.push_back(added_sum_clause);

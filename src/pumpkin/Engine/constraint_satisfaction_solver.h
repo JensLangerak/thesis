@@ -161,6 +161,21 @@ private:
 
       public:
         int restarts_counter_debug = 0;
+        void LogLearnedClause(ConflictAnalysisResultClausal analysis_result);
+
+        double average_depth_ =0 ;
+        int literals_count_ =0;
+        int constraint_count_=0;
+        double average_number_ = 0;
+        double average_depth_m2_=0;
+        int literals_count_m2_ = 0;
+        double average_max_distance_ = 0;
+        double max_distance_count = 0;
+        double average_distance_ = 0;
+        double average_distance_count_ = 0;
+        std::vector<int> depth_count_;
+
+
 };
 
 } //end Pumpkin namespace

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <assert.h>
 #include <iostream>
+#include "../Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean_2.h"
+#include "../Propagators/Dynamic/Encoders/generalized_totaliser.h"
 
 namespace Pumpkin
 {
@@ -336,11 +338,15 @@ bool ConstraintSatisfactionSolver::ResolveConflict(PropagatorGeneric *conflict_p
 
 	while (conflict_propagator != NULL)
 	{
+                state_.propagator_clausal_.log_learned = false;
 		UpdateConflictCounters();
 
 		if (state_.GetCurrentDecisionLevel() == 0) { return false; } //conflict found at the root level - unsatisfiability is detected
 
 		ConflictAnalysisResultClausal analysis_result = AnalyseConflict(conflict_propagator);
+
+                if (state_.propagator_clausal_.log_learned)
+                LogLearnedClause(analysis_result);
 
 		conflict_propagator = ProcessConflictAnalysisResult(analysis_result);
 	}
@@ -764,6 +770,23 @@ bool ConstraintSatisfactionSolver::IsSeenCleared() const
 	return true;
 }
 void ConstraintSatisfactionSolver::LogUsedVars() {
+  return;
+
+  simple_sat_solver::logger::Logger::Log2("PB Average depth: " + std::to_string(average_depth_));
+  simple_sat_solver::logger::Logger::Log2("PB Lit count: " + std::to_string(literals_count_));
+  simple_sat_solver::logger::Logger::Log2("PB Average number in conflict: " + std::to_string(average_number_));
+  simple_sat_solver::logger::Logger::Log2("PB Number conflicts: " + std::to_string(constraint_count_));
+  simple_sat_solver::logger::Logger::Log2("PB Average depth m2: " + std::to_string(average_depth_m2_));
+  simple_sat_solver::logger::Logger::Log2("PB Lit count m2: " + std::to_string(literals_count_m2_));
+  simple_sat_solver::logger::Logger::Log2("PB Average max distance: " + std::to_string(average_max_distance_));
+  simple_sat_solver::logger::Logger::Log2("PB Average distance: " + std::to_string(average_distance_));
+
+  std::string depth_count;
+  for (int i = 0; i < depth_count_.size(); i++) {
+    depth_count += " " + std::to_string(depth_count_[i]);
+  }
+  simple_sat_solver::logger::Logger::Log2("PB depth counts:" + depth_count);
+
 //  std::string analyze_vars;
 //  for (int i : state_.update_vars_analyzer_) {
 //    analyze_vars += " " + std::to_string(i);
@@ -780,6 +803,80 @@ void ConstraintSatisfactionSolver::LogUsedVars() {
 //
 //  state_.update_vars_conflict_clause_.clear();
 //  state_.update_vars_analyzer_.clear();
+
+}
+void ConstraintSatisfactionSolver::LogLearnedClause(
+    ConflictAnalysisResultClausal analysis_result) {
+  PropagatorPseudoBoolean2 * prop = nullptr;
+  for (auto p : state_.additional_propagators_) {
+    if(PropagatorPseudoBoolean2 * v = dynamic_cast<PropagatorPseudoBoolean2*>(p)) {
+      prop = v;
+      break;
+    }
+  }
+  if (prop == nullptr)
+    return;
+
+  for (WatchedPseudoBooleanConstraint2 * c : prop->pseudo_boolean_database_.permanent_constraints_) {
+    if (GeneralizedTotaliser *encoder =
+            dynamic_cast<GeneralizedTotaliser*>(c->encoder_)) {
+
+      std::vector<BooleanLiteral> found_lits;
+      std::vector<BooleanLiteral> propagated_lits;
+      for (BooleanLiteral l : analysis_result.learned_clause_literals) {
+        if (encoder->IsEncoded(l)) {
+          found_lits.push_back(l);
+        } else if (c->unencoded_constraint_literals_.count(l) > 0 || c->unencoded_constraint_literals_.count(~l) > 0) {
+          propagated_lits.push_back(l);
+        }
+      }
+
+      for (BooleanLiteral l : found_lits) {
+        int depth = encoder->GetDepth(l);
+        while (depth >= depth_count_.size())
+          depth_count_.push_back(0);
+        depth_count_[depth] ++;
+      }
+
+      constraint_count_++;
+      average_number_ = average_number_ * (constraint_count_ - 1.) / constraint_count_;
+      average_number_ += ((double)found_lits.size())/ constraint_count_;
+      for (BooleanLiteral l : found_lits) {
+        literals_count_++;
+        double depth = encoder->GetDepth(l);
+        average_depth_ = (average_depth_ * (literals_count_ - 1.)) / (literals_count_);
+        average_depth_ += depth / literals_count_;
+      }
+      if (found_lits.size() >= 2) {
+        for (BooleanLiteral l : found_lits) {
+          literals_count_m2_++;
+          double depth = encoder->GetDepth(l);
+          average_depth_m2_ =
+              (average_depth_ * (literals_count_m2_ - 1.)) / (literals_count_m2_);
+          average_depth_m2_ += depth / literals_count_m2_;
+        }
+
+        int max_distance = 0;
+        for (int i = 0; i < found_lits.size(); ++i) {
+          for (int j =i + 1 ; j < found_lits.size(); ++j) {
+            BooleanLiteral l1 = found_lits[i];
+            BooleanLiteral l2 = found_lits[j];
+            int distance = encoder->Distance(l1,l2);
+            if (distance > max_distance)
+              max_distance = distance;
+
+            average_distance_count_++;
+            average_distance_ = average_distance_ * (average_distance_count_ - 1.) / average_distance_count_;
+            average_distance_ += (double(distance) / average_distance_count_);
+          }
+        }
+        max_distance_count++;
+        average_max_distance_ = (average_max_distance_ * (max_distance_count - 1.)) / max_distance_count;
+        average_max_distance_ += double(max_distance) / max_distance_count;
+      }
+    }
+  }
+
 
 }
 

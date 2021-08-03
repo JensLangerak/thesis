@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 //  }
 
 
-    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::INCREMENTAL;
+    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::PAIRS;
     benchnark.problem_file_full_path_ =test_file;
     benchnark.log_dir_ = log_dir;
     benchnark.delay_factor_ = 0.1;

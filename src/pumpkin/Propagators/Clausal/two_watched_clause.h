@@ -46,8 +46,9 @@ public:
 	bool lbd_update_protection_;
 	bool locked_in_propagation_;
 	bool is_learned_;
-	
-	//only clause_ database should create clauses - will forbid others to create todo
+//  bool marked = false;
+
+  //only clause_ database should create clauses - will forbid others to create todo
 	friend ClauseDatabase;
 
 	//only the clause database can create clauses

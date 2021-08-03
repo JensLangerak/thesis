@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-#define HALVE_COUNTS
+//#define HALVE_COUNTS
 #define MAX_COUNTS
 
 //#define USE_ACTIVITY
@@ -88,6 +88,7 @@ void WatchedPseudoBooleanConstraint2::Synchronise(SolverState &state) {
 }
 bool WatchedPseudoBooleanConstraint2::CountCorrect(SolverState &state,
                                                    BooleanLiteral literal) {
+  return true;
   if (encoder_->EncodingAdded()) {
     return true;
   }

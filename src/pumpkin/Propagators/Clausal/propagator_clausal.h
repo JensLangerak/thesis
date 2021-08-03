@@ -57,6 +57,10 @@ public:
 
 	TwoWatchedClause *failure_clause_;
 	ExplanationGenerator<ExplanationClausal> explanation_generator_;
+public:
+  bool log_learned;
+
+        bool mark_clause = false;
 };
 
 } //end Pumpkin namespace

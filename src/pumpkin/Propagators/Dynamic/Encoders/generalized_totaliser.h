@@ -57,7 +57,7 @@ public:
     ~Node();
     std::vector<WeightedLiteral> GetCurrentSumSet();
   };
-  std::unordered_map<int, Node*> node_map;
+  std::unordered_map<BooleanLiteral, Node*> node_map;
   Node * root_ = nullptr;
   Node * update_node = nullptr;
   int depth = 0;
@@ -70,6 +70,10 @@ public:
   int GetValueIndex(Node * n, int value);
   int AddValueIndex(SolverState &state, Node *n, int value);
   int TreeValid(SolverState &state, Node *node);
+
+  int GetDepth(BooleanLiteral l);
+  int Distance(BooleanLiteral l, BooleanLiteral r);
+  bool IsEncoded(BooleanLiteral l);
 };
 }
 #endif // SIMPLESATSOLVER_SRC_PUMPKIN_PROPAGATORS_DYNAMIC_ENCODERS_GENERALIZED_TOTALISER_H_

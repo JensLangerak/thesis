@@ -30,12 +30,14 @@ void GeneralizedTotaliser::Encode(SolverState &state,
   //  simple_sat_solver::logger::Logger::Log2("Add encoding: ID " +
   //  std::to_string(log_id_) + " added vars " + std::to_string(current_lits) +
   //  " " + std::to_string(new_lits) + " " +std::to_string(variables_.size()));
+  state.propagator_clausal_.mark_clause = true;
   for (auto c : added_clauses) {
     if (c.size() == 1)
       state.AddUnitClause(c[0]);
     else
       state.AddClause(c);
   }
+  state.propagator_clausal_.mark_clause = false;
 }
 
 bool GeneralizedTotaliser::IsAdded(BooleanLiteral lit) {
@@ -107,7 +109,7 @@ GeneralizedTotaliser::CreateLeaf(SolverState &state, BooleanLiteral literal) {
   Node *n = new Node();
   //  n->variables.push_back(literal);
   n->counting_variables.push_back(literal);
-  node_map[literal.ToPositiveInteger()] = n;
+  node_map[literal] = n;
   uint32_t w = lit_weights_[literal.ToPositiveInteger()];
   n->counting_variables_weights.push_back(w);
   //  n->variables_weights.push_back(w);
@@ -349,7 +351,7 @@ int GeneralizedTotaliser::AddValueIndex(SolverState &state,
   BooleanLiteral l = BooleanLiteral(state.CreateNewVariable(), true);
   int index = n->counting_variables.size();
   n->counting_variables.push_back(l);
-  node_map[l.ToPositiveInteger()] = n;
+  node_map[l] = n;
   n->counting_variables_weights.push_back(value);
   n->values_map[value] = index;
 
@@ -395,6 +397,48 @@ int GeneralizedTotaliser::TreeValid(SolverState &state,
   }
 
   return value;
+}
+int GeneralizedTotaliser::GetDepth(BooleanLiteral l) {
+  if (node_map.count(l) == 0)
+    l = ~l;
+  if (node_map.count(l) == 0)
+    return -1;
+  Node * n = node_map[l];
+  int index = n->index;
+  int depth = 0;
+  while(index > 1) {
+    index /= 2;
+    depth++;
+  }
+  return depth;
+}
+bool GeneralizedTotaliser::IsEncoded(BooleanLiteral l) {
+  return node_map.count(l) != 0 || node_map.count(~l) != 0;
+}
+int GeneralizedTotaliser::Distance(BooleanLiteral l, BooleanLiteral r) {
+  if ((!IsEncoded(l)) || (!IsEncoded(r)))
+    return -1;
+  if (node_map.count(l) == 0)
+    l = ~l;
+  if (node_map.count(r) == 0)
+    r = ~r;
+
+  Node * n_l = node_map[l];
+  Node * n_r = node_map[r];
+  int distance = 0;
+  int d_l = GetDepth(l);
+  int d_r = GetDepth(r);
+  while (n_l != n_r) {
+    distance++;
+    if (d_l > d_r) {
+      n_r = n_r->parent;
+      d_r++;
+    } else {
+      n_l = n_l->parent;
+      d_l++;
+    }
+  }
+  return distance;
 }
 
 GeneralizedTotaliser::Node::~Node() {

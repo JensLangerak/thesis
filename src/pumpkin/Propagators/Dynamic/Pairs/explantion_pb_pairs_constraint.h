@@ -25,7 +25,7 @@ public:
 //  static double avg_pair_size_;
 //  static int replace_count_;
 private:
-  static void ReplaceLits(std::vector<WeightedLiteral> causes, SolverState &state, PairsDatabase * pairs_database, std::vector<BooleanLiteral> &lits_);
+  static void ReplaceLits(std::vector<WeightedLiteral> causes, SolverState &state, PairsDatabase * pairs_database, std::vector<BooleanLiteral> &lits_, WatchedPbPairsConstraint * constraint);
   static void ReplaceLits2Wrapper(std::vector<WeightedLiteral> causes, WatchedPbPairsConstraint* constraint, SolverState &state, PairsDatabase * pairs_database, std::vector<BooleanLiteral> &lits_);
   static void ReplaceLits2(std::unordered_set<BooleanLiteral> &causes, WatchedPbPairsConstraint * constraint, SolverState &state, PairsDatabase * pairs_database, std::vector<BooleanLiteral> &lits_);
 

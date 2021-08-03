@@ -39,8 +39,10 @@ ExplanationGeneric * PropagatorClausal::ExplainLiteralPropagation(BooleanLiteral
 	runtime_assert(propagating_clause->literals_[0] == literal); //the convention is that the propagating literal is at the 0th position
 	//set an explanation for the propagation based on the propagating clause
 	ExplanationClausal* explanation = explanation_generator_.GetAnExplanationInstance();
-	explanation->Initialise(propagating_clause->literals_, 0);	
-	return explanation;
+	explanation->Initialise(propagating_clause->literals_, 0);
+//  if (propagating_clause->marked)
+//    log_learned = true;
+  return explanation;
 }
 
 ExplanationGeneric * PropagatorClausal::ExplainFailure(SolverState &state)
@@ -49,6 +51,8 @@ ExplanationGeneric * PropagatorClausal::ExplainFailure(SolverState &state)
 
 	ExplanationClausal* explanation = explanation_generator_.GetAnExplanationInstance();
 	explanation->Initialise(failure_clause_->literals_);
+//        if (failure_clause_->marked)
+//          log_learned = true;
 	return explanation;
 }
 
@@ -96,6 +100,8 @@ PropagatorGeneric* PropagatorClausal::AddPermanentClause(std::vector<BooleanLite
 	runtime_assert(state.IsPropagationComplete() || state.GetCurrentDecisionLevel() == 0);
 
 	TwoWatchedClause* new_clause = clause_database_.AddPermanentClause(literals, state);
+//        if (mark_clause)
+//          new_clause->marked  = true;
 
 	//enqueue and propagate
 	//we are relying on the fact that the clause has selected the 'best' watchers already

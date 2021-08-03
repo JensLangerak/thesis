@@ -11,6 +11,7 @@ using namespace benchmark;
 class MaxSatBenchMark : public Benchmark {
 protected:
   Pumpkin::ProblemSpecification GetProblem() override;
+  void ClusterWeights(Pumpkin::ProblemSpecification & problems, int clusters);
 };
 }
 
