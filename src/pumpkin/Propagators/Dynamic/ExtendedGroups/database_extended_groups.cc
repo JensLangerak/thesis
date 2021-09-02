@@ -1,25 +1,24 @@
 //
-// Created by jens on 07-06-21.
+// Created by jens on 10-08-21.
 //
 
-#include "database_pb_pairs.h"
+#include "database_extended_groups.h"
 #include "../../../Utilities/problem_specification.h"
 #include "../../../Engine/solver_state.h"
-#include "watched_pb_pairs_constraint.h"
+#include "watched_extended_groups_constraint.h"
 
 namespace Pumpkin {
 
-DatabasePbPairs::DatabasePbPairs(uint64_t num_vars) : watch_list_true_(num_vars){}
-WatchedPbPairsConstraint *
-DatabasePbPairs::AddPermanentConstraint(PseudoBooleanConstraint &constraint,
+DatabaseExtendedGroups::DatabaseExtendedGroups(uint64_t num_vars) : watch_list_true_(num_vars){}
+WatchedExtendedGroupsConstraint *
+DatabaseExtendedGroups::AddPermanentConstraint(PseudoBooleanConstraint &constraint,
                                         SolverState &state) {
-  WatchedPbPairsConstraint * watched = new WatchedPbPairsConstraint(constraint);
-  watched->pairs_database_ = &pairs_database_;
+  WatchedExtendedGroupsConstraint * watched = new WatchedExtendedGroupsConstraint(constraint);
   permanent_constraints_.push_back(watched);
   AddWatchers(watched);
   return watched;
 }
-DatabasePbPairs::~DatabasePbPairs() {
+DatabaseExtendedGroups::~DatabaseExtendedGroups() {
   for (auto *c : permanent_constraints_) {
     for (WeightedLiteral l : c->intput_liters_) {
       watch_list_true_.Remove(l.literal, c);
@@ -27,7 +26,7 @@ DatabasePbPairs::~DatabasePbPairs() {
     delete c;
   }
 }
-void DatabasePbPairs::AddWatchers(WatchedPbPairsConstraint *constraint) {
+void DatabaseExtendedGroups::AddWatchers(WatchedExtendedGroupsConstraint *constraint) {
   for (WeightedLiteral lit : constraint->intput_liters_) {
     watch_list_true_.Add(lit.literal, lit.weight, constraint);
   }

@@ -97,7 +97,7 @@ void PropagatorClausal::BumpClauseActivityAndUpdateLBD(TwoWatchedClause* clause,
 
 PropagatorGeneric* PropagatorClausal::AddPermanentClause(std::vector<BooleanLiteral>& literals, SolverState& state)
 {
-	runtime_assert(state.IsPropagationComplete() || state.GetCurrentDecisionLevel() == 0);
+//	runtime_assert(state.IsPropagationComplete() || state.GetCurrentDecisionLevel() == 0);
 
 	TwoWatchedClause* new_clause = clause_database_.AddPermanentClause(literals, state);
 //        if (mark_clause)

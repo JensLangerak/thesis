@@ -7,10 +7,10 @@
 namespace simple_sat_solver::max_sat {
 Pumpkin::ProblemSpecification MaxSatBenchMark::GetProblem() {
   Pumpkin::ProblemSpecification problem =Pumpkin::ProblemSpecification::ReadMaxSATFormula(problem_file_full_path_);
-//  ClusterWeights(problem, 5);
-  for (int i =0; i < problem.weighted_literals_.size(); ++i) {
-    problem.weighted_literals_[i].weight = 1;
-  }
+  ClusterWeights(problem, 5);
+//  for (int i =0; i < problem.weighted_literals_.size(); ++i) {
+//    problem.weighted_literals_[i].weight = 1;
+//  }
   return problem;
 }
 

@@ -7,12 +7,13 @@ configs = {
     # "encoder": ("0 $1 $2", [0]),
     # "dynamic": ("1 $1 $2", [5, 10, 100]),
     # "dynamic": ("1 $1 $2", [0, 5, 10, 100, 1000, 10000]),
-    # "incremental": ("2 $1 $2", [5, 10, 100]),
+    "incremental": ("2 $1 $2", [5, 10, 100]),
     # "incremental": ("2 $1 $2", [0, 5, 10, 100, 1000, 10000]),
     # "propagator": ("3 $1 $2", None),
-    "pairs": ("4 $1 $2", None),
+    # "pairs": ("4 $1 $2", None),
     # "topdown": ("5 $1 $2", [5, 10, 100, 1000, 10000]),
     # "bottomlayers": ("6 $1 $2", None),
+    # "extendedgroups": ("7 $1 $2", None),
 
 }
 

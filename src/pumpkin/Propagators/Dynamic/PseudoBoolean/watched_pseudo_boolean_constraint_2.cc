@@ -10,9 +10,9 @@
 #include <unordered_set>
 
 //#define HALVE_COUNTS
-#define MAX_COUNTS
+//#define MAX_COUNTS
 
-//#define USE_ACTIVITY
+#define USE_ACTIVITY
 
 namespace Pumpkin {
 bool CompareByWeight(const WeightedLiteral &a, WeightedLiteral &b) {

@@ -10,6 +10,7 @@
 #include "Sum/watched_pb_sum_constraint.h"
 #include "reason_dynamic_constraint.h"
 #include "watched_dynamic_constraint.h"
+#include "ExtendedGroups/watched_extended_groups_constraint.h"
 namespace Pumpkin {
 template <class Watched>
 ReasonGeneric *
@@ -64,4 +65,5 @@ template class PropagatorDynamic<WatchedPseudoBooleanConstraint2>;
 template class PropagatorDynamic<WatchedPbPairsConstraint>;
 template class PropagatorDynamic<WatchedPbSumConstraint>;
 template class PropagatorDynamic<WatchedBottomLayersConstraint>;
+template class PropagatorDynamic<WatchedExtendedGroupsConstraint>;
 }

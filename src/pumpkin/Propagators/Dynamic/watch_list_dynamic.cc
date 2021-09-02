@@ -8,6 +8,7 @@
 #include "watcher_dynamic_constraint.h"
 #include "Sum/watched_pb_sum_constraint.h"
 #include "BottomLayers/watched_bottom_layers_constraint.h"
+#include "ExtendedGroups/watched_extended_groups_constraint.h"
 namespace Pumpkin {
 
 template <class Watched, class Watcher>
@@ -86,4 +87,5 @@ template class WatchListDynamic<WatchedPseudoBooleanConstraint2, WatcherDynamicC
 template class WatchListDynamic<WatchedPbPairsConstraint, WatcherDynamicConstraint<WatchedPbPairsConstraint>>;
 template class WatchListDynamic<WatchedPbSumConstraint, WatcherDynamicConstraint<WatchedPbSumConstraint>>;
 template class WatchListDynamic<WatchedBottomLayersConstraint, WatcherDynamicConstraint<WatchedBottomLayersConstraint>>;
+template class WatchListDynamic<WatchedExtendedGroupsConstraint, WatcherDynamicConstraint<WatchedExtendedGroupsConstraint>>;
 } // namespace Pumpkin

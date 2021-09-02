@@ -19,7 +19,8 @@ enum class SolverType {
   PROPAGATOR,
   PAIRS,
   TOPDOWN,
-  BOTTOMLAYERS
+  BOTTOMLAYERS,
+  EXTENDEDGROUPS
 };
 class Benchmark {
 public:

@@ -8,6 +8,7 @@
 #include <iostream>
 #include "../Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean_2.h"
 #include "../Propagators/Dynamic/Encoders/generalized_totaliser.h"
+#include "../Propagators/Dynamic/ExtendedGroups/propagator_extended_groups.h"
 
 namespace Pumpkin
 {

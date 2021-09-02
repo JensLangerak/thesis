@@ -11,6 +11,7 @@
 #include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totaliser.h"
 #include "../pumpkin/Propagators/Dynamic/Encoders/generalized_totliser_sum_root.h"
 #include "../pumpkin/Propagators/Dynamic/Pairs/pb_pairs_adder.h"
+#include "../pumpkin/Propagators/Dynamic/ExtendedGroups/extended_groups_adder.h"
 #include "../pumpkin/Propagators/Dynamic/PseudoBoolean/propagator_pseudo_boolean_2.h"
 #include "../pumpkin/Propagators/Dynamic/PseudoBoolean/pseudo_boolean_adder.h"
 #include "../pumpkin/Utilities/bit_string_map.h"
@@ -234,6 +235,8 @@ std::string Benchmark::GetEncoderName() {
     return "topdown";
   case SolverType::BOTTOMLAYERS:
     return "bottomlayers";
+  case SolverType::EXTENDEDGROUPS:
+    return "extendedgroups";
   }
 }
 Pumpkin::IConstraintAdder<Pumpkin::PseudoBooleanConstraint> *
@@ -284,6 +287,11 @@ Benchmark::CreatePbConstraintWrapper(SolverType solver_type) {
     auto prop = new PropagatorBottomLayers(0);
     auto adder = new BottomLayersAdder(prop);
     return adder;
+  }
+  case SolverType::EXTENDEDGROUPS: {
+    auto prop = new PropagatorExtendedGroups(0);
+    auto pb_adder = new PbExtendedGroupsAdder(prop);
+    return pb_adder;
   }
   }
 }
