@@ -1,0 +1,5 @@
+add_library(pb_sum_propagator database_pb_sum.cc database_pb_sum.h InputPropagator/explanation_pb_sum_constraint_input.cc InputPropagator/explanation_pb_sum_constraint_input.h InputPropagator/propagator_pb_sum_input.cc InputPropagator/propagator_pb_sum_input.h InputPropagator/reason_pb_sum_constraint_input.cc InputPropagator/reason_pb_sum_constraint_input.h watch_list_pb_sum.cc watch_list_pb_sum.h watched_pb_sum_constraint.cc watched_pb_sum_constraint.h watcher_pb_sum_constraint.cc watcher_pb_sum_constraint.h
+        OuputPropagator/explanation_pb_sum_constraint_output.cc OuputPropagator/explanation_pb_sum_constraint_output.h
+        OuputPropagator/reason_pb_sum_constraint_output.cc OuputPropagator/reason_pb_sum_constraint_output.h
+        OuputPropagator/propagator_pb_sum_output.cc OuputPropagator/propagator_pb_sum_output.h)
+target_link_libraries(pb_sum_propagator propagator_generic encoders)

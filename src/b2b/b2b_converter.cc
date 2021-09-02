@@ -3,6 +3,7 @@
 //
 
 #include "b2b_converter.h"
+#include "../sat/constraints/cardinality_constraint.h"
 namespace simple_sat_solver::b2b {
 
 using sat::Lit;
@@ -20,6 +21,7 @@ sat::SatProblem B2bConverter::ToSat() {
   AddOneMeetingPerPersonTime();
   AddMaxMeetings();
   AddMeetingOnce();
+  AddWaitSlots();
   return sat_problem_;
 }
 
@@ -82,11 +84,11 @@ void B2bConverter::AddMaxMeetings() {
     for (int m = 0; m < nr_meetings_; m++) {
       at_most_k.emplace_back(GetMeetingTimeslotIndex(m, t));
     }
-    sat_problem_.AtMostK(nr_locations_, at_most_k);
+    sat_problem_.AddConstraint(new ::simple_sat_solver::sat::CardinalityConstraint(at_most_k, 0, nr_locations_));
   }
 }
 std::vector<int> B2bConverter::DecodeSolution(std::vector<bool> solution) {
-  if (solution.size() != sat_problem_.GetNrVars())
+  if (solution.size() < sat_problem_.GetNrVars())
     throw "Solution has not enough vars";
   std::vector<int> result;
   for (int m = 0; m < nr_meetings_; m++) {
@@ -164,6 +166,30 @@ void B2bConverter::AddMeetingOnce() {
       exactly_once.push_back(Lit(GetMeetingTimeslotIndex(m, t)));
     }
     sat_problem_.ExactlyOne(exactly_once);
+  }
+}
+void B2bConverter::AddWaitSlots() {
+  for (int p = 0; p < nr_persons_; ++p) {
+    int meeting_before_index = sat_problem_.AddNewVars(nr_timeslots_);
+    sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, 0)), Lit(meeting_before_index)});
+    for (int t = 1; t < nr_timeslots_; ++t) {
+      sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, t)), Lit(meeting_before_index + t)});
+      sat_problem_.AddClause({~Lit(meeting_before_index + t - 1), Lit(meeting_before_index + t)});
+    }
+
+    int meeting_after_index = sat_problem_.AddNewVars(nr_timeslots_);
+    for (int t = 0; t < nr_timeslots_ - 1; ++t) {
+      sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, t)), Lit(meeting_after_index + t)});
+      sat_problem_.AddClause({~Lit(meeting_before_index + t + 1), Lit(meeting_after_index + t)});
+    }
+    sat_problem_.AddClause({~Lit(GetPersonTimeslotIndex(p, nr_timeslots_-1)), Lit(meeting_after_index + nr_timeslots_ - 1)});
+
+    for (int t = 0; t < nr_timeslots_; ++t) {
+      int w = sat_problem_.AddNewVar();
+      sat_problem_.AddClause({~Lit(meeting_before_index + t), ~Lit(meeting_after_index + t), Lit(GetPersonTimeslotIndex(p, t)), Lit(w)});
+//      sat_problem_.AddClause({Lit(w)});
+      sat_problem_.AddToMinimize(Lit(w));
+    }
   }
 }
 } // namespace simple_sat_solver::b2b

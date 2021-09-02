@@ -101,11 +101,30 @@ int SatProblem::AddNewVar() {
   ++nr_vars_;
   return nr_vars_ - 1;
 }
-int SatProblem::AddNewVars(int nr_vars){
+int SatProblem::AddNewVars(int nr_vars) {
   if (nr_vars <= 0)
     throw "nr_vars should be larger than 0";
   int res = nr_vars_;
   nr_vars_ += nr_vars;
   return res;
+}
+void SatProblem::AddConstraint(IConstraint *constraint) {
+  constraints.push_back(constraint);
+}
+std::vector<IConstraint*> SatProblem::GetConstraints() const {
+  return constraints;
+}
+std::vector<WeightedLit> SatProblem::GetMinimizeLit() { return minimize_; }
+SatProblem::~SatProblem() {
+  for (auto c : constraints)
+    delete c;
+}
+SatProblem::SatProblem(const SatProblem &problem) : nr_vars_(problem.nr_vars_){
+  clauses_ = problem.clauses_;
+  minimize_ = problem.minimize_;
+  for (IConstraint * c: problem.constraints) {
+    constraints.push_back(c->Clone());
+  }
+
 };
 } // namespace simple_sat_solver::sat

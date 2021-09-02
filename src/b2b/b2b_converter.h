@@ -78,6 +78,7 @@ private:
   int nr_persons_;
   int nr_timeslots_;
   int nr_locations_;
+  void AddWaitSlots();
 };
 } // namespace simple_sat_solver::b2b
 

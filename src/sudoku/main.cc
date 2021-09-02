@@ -8,7 +8,7 @@
 #include "../sat/sat_problem.h"
 #include "../solver_wrappers/i_solver.h"
 #include "../solver_wrappers/simple_solver.h"
-#include "../solver_wrappers/crypto_mini_sat.h"
+//#include "../solver_wrappers/crypto_mini_sat.h"
 #include "benchmark_parser.h"
 #include "encoder.h"
 
@@ -38,7 +38,7 @@ bool TestSudoku(std::string path) {
   Sudoku sudoku = BenchmarkParser::Parse(path);
   sat::SatProblem p = Encoder(sudoku.sub_size).Encode(sudoku);
   //solver_wrappers::ISolver *s = new solver_wrappers::SimpleSolver();
-  solver_wrappers::ISolver *s = new solver_wrappers::CryptoMiniSat();
+  solver_wrappers::ISolver *s = new solver_wrappers::SimpleSolver();
   bool res = s->Solve(p);
   std::vector<bool> sat_solution = s->GetSolution();
   delete s;

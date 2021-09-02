@@ -15,13 +15,14 @@ public:
   /// \param p
   /// \return true when p is satisfiable.
   virtual bool Solve(const sat::SatProblem &p) = 0;
+  virtual bool Optimize(const sat::SatProblem &p) = 0;
 
   /// Return the solution found be solve. Should only be used after Solver
   /// returns true.
   /// \return the solution found by solve.
   virtual std::vector<bool> GetSolution() const = 0;
 
-  virtual ~ISolver() = 0;
+  virtual ~ISolver();
 
 protected:
   ISolver(){};

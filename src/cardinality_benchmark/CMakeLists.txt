@@ -1,0 +1,6 @@
+add_library(cardinality_benchmark_lib parser.cc parser.h)
+target_link_libraries(cardinality_benchmark_lib sat solvers)
+
+
+add_executable(cardinality_benchmark main.cc)
+target_link_libraries(cardinality_benchmark cardinality_benchmark_lib)

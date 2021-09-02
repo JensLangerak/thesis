@@ -16,6 +16,7 @@ class CryptoMiniSat : public ISolver {
 public:
   inline CryptoMiniSat() : solved_(false){};
   bool Solve(const sat::SatProblem &p) override;
+  bool Optimize(const sat::SatProblem &p) override;
   std::vector<bool> GetSolution() const override;
   ~CryptoMiniSat() {}
 

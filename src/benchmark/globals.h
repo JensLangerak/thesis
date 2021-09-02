@@ -1,0 +1,12 @@
+//
+// Created by jens on 20-07-21.
+//
+
+#ifndef SIMPLESATSOLVER_SRC_BENCHMARK_GLOBALS_H_
+#define SIMPLESATSOLVER_SRC_BENCHMARK_GLOBALS_H_
+namespace globals {
+
+
+}
+
+#endif // SIMPLESATSOLVER_SRC_BENCHMARK_GLOBALS_H_

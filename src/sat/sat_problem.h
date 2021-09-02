@@ -7,6 +7,7 @@
 
 #include "types.h"
 #include <vector>
+#include "constraints/i_constraint.h"
 
 namespace simple_sat_solver::sat {
 // TODO allow perhaps arbitrary id types
@@ -20,6 +21,7 @@ public:
   /// create helper vars and therefore increase the final amount of vars.
   /// \param nr_vars the number of vars int the sat problem.
   explicit SatProblem(int nr_vars) : nr_vars_(nr_vars < 0 ? 0 : nr_vars){};
+  SatProblem() : SatProblem(0) {};
 
   /// Add the clause to the sat problem.
   /// \param lits the clause
@@ -38,6 +40,8 @@ public:
   /// \param k the max number of lits that is allowed to be true.
   /// \param lits
   void AtMostK(int k, const std::vector<Lit> &lits);
+//  void AddCardinalityConstraint(const std::vector<Lit> &lits, int min, int max);
+  void AddConstraint(IConstraint* constraint);
 
   /// Add a constraint the exactly one of the given lits must be true.
   /// \param lits
@@ -69,6 +73,16 @@ public:
 
   int AddNewVars(int nr_vars);
 
+  std::vector<IConstraint*> GetConstraints() const;
+
+  inline void AddToMinimize(Lit l) {minimize_.push_back(WeightedLit(l,1));};
+  inline void AddToMinimize(WeightedLit l) {minimize_.push_back(l);};
+
+  std::vector<WeightedLit> GetMinimizeLit();
+  ~SatProblem();
+
+  SatProblem(const SatProblem & problem);
+
 private:
   // TODO move to types
   static bool TestLit(const Lit &l, const std::vector<bool> &vars);
@@ -77,6 +91,8 @@ private:
 
   int nr_vars_;
   std::vector<std::vector<Lit>> clauses_;
+  std::vector<IConstraint*> constraints;
+  std::vector<WeightedLit> minimize_; //TODO different optimize functions
 };
 } // namespace simple_sat_solver::sat
 

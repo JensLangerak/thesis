@@ -1,0 +1,1 @@
+add_library(pseudo_boolean_encoders EncoderGeneralisedTotaliserCP19_2.cc EncoderGeneralisedTotaliserCP19_2.h)
