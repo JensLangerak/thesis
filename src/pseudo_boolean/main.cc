@@ -85,7 +85,8 @@ int main(int argc, char *argv[]) {
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-sat.opb";
 //    std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j120/normalized-j1201_7-sat.opb";
 //    std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3035_6-unsat.opb";
-  std::string test_file = "/home/jens/Downloads/PB16-used/PB16/normalized-PB16/DEC-SMALLINT-LIN/elffers/SUMINEQ/normalized-sumineqArity3houseP064.opb";
+//  std::string test_file = "/home/jens/Downloads/PB16-used/PB16/normalized-PB16/DEC-SMALLINT-LIN/elffers/SUMINEQ/normalized-sumineqArity3houseP064.opb";
+std::string test_file = "/home/jens/datasets/pb16/elffers/normalized-vertexcover-grid6x23.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j120/normalized-j12012_9-unsat.opb";
 //  std::string test_file = "/home/jens/Downloads/normalized-PB09/OPT-SMALLINT-LIN/flexray/normalized-fx30.opb";
 //  std::string test_file = "/home/jens/Downloads/PB10/normalized-PB10/DEC-SMALLINT-LIN/oliveras/j30/normalized-j3041_5-sat.opb";
@@ -94,7 +95,7 @@ int main(int argc, char *argv[]) {
 
 
 
-    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::PROPAGATOR;
+    benchnark.solver_type_ = simple_sat_solver::benchmark::SolverType::INCREMENTAL;
     benchnark.problem_file_full_path_ =test_file;
     benchnark.log_dir_ = log_dir;
     benchnark.delay_factor_ = 0.1;
